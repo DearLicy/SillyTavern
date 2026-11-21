@@ -8,7 +8,8 @@ const report={mode:'release build + fake authenticated provider + real browser m
  const context=await browser.newContext({viewport:{width:390,height:844},permissions:['microphone','clipboard-read','clipboard-write'],colorScheme:theme});
  const fixture=JSON.parse(fs.readFileSync('.tmp/management-fixture.json'));fixture.settings.themeMode=theme;fixture.settings.provider={kind:'openaiCompatible',baseUrl:'https://api.deepseek.com',model:'fake-multimodal',models:['fake-multimodal'],rememberKey:true};fixture.messages=fixture.messages.filter(m=>m.threadId==='thread_gu');fixture.threads=fixture.threads.map(t=>({...t,contextMemo:'',summarizedThroughMessageId:null}));
  await context.addInitScript(data=>{if(!localStorage.getItem('media-seeded')){localStorage.setItem('flutter.dreamtide.v2.state',JSON.stringify(JSON.stringify(data)));localStorage.setItem('flutter.dreamtide.provider.apiKey.web',JSON.stringify('fake-browser-key'));localStorage.setItem('media-seeded','1');}},fixture);
- const page=await context.newPage();const errors=[],calls=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+ const page=await context.newPage();page.setDefaultTimeout(20000);const errors=[],calls=[];page.on('pageerror',e=>errors.push(e.stack || e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+ const step=name=>console.log(JSON.stringify({theme,step:name}));
  let visionCount=0;let searchCount=0,asrCount=0,ttsCount=0,ocrCount=0;
  await page.route('https://api.deepseek.com/**',async route=>{ try {
   const req=route.request();const path=new URL(req.url()).pathname;calls.push(path);
@@ -33,34 +34,31 @@ const report={mode:'release build + fake authenticated provider + real browser m
   await click(action);
   await (await chooser).setFiles({name:'photo.png',mimeType:'image/png',buffer:pixel});
   await page.waitForTimeout(1500);
-   if (action === '从相册选择') {
-     const before=await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve(document.querySelector('flt-canvas-container')?.toDataURL?.()?.length || 0)))));
-   }
  };
- const type=async(text)=>{const box=page.getByRole('textbox').last();await box.focus();await page.keyboard.press('Control+A');await page.keyboard.type(text);await page.waitForTimeout(150)};
+ const type=async(text)=>{const box=page.getByRole('textbox').last();await box.focus();await page.keyboard.press('Control+A');await page.keyboard.insertText(text);await page.waitForTimeout(150)};
  await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/Dreamtide/'),{waitUntil:'networkidle'});await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());await page.waitForTimeout(500);
- await goto('/profile');await page.waitForTimeout(800);await click('更换头像');await file('从相册选择');
+ step('avatar');await goto('/profile');await page.waitForTimeout(800);await click('更换头像');await file('从相册选择');
  assert.equal((await read()).owner.avatarReference ?? null,null);
  await page.screenshot({path:`.tmp/avatar-preview-${theme}.png`});
- // Save is below the viewport; semantics activation follows actual UI scroll.
+ // Activate the accessible Save action; widget tests separately cover scrolling.
  await page.getByRole('button',{name:'保存资料',exact:true}).evaluate(e=>e.click());await page.waitForTimeout(850);
  let data=await read();assert(data.owner.avatarReference);
- await goto('/chat/thread_gu');await click('更多功能');await file('从相册发送图片');await click('发送');await page.waitForTimeout(800);
+ step('image chat');await goto('/chat/thread_gu');await click('更多功能');await file('从相册发送图片');await click('发送');await page.waitForTimeout(800);
  assert(visionCount>=1,'model request must contain actual bytes');data=await read();const image=data.messages.find(m=>m.kind==='image');assert(image.localPath&&!JSON.stringify(data).includes('base64'));
  await page.screenshot({path:`.tmp/vision-chat-${theme}.png`});
  await click('更多');await click('重新生成上一条');assert(visionCount>=2);
- await click('更多功能');await file('识别图片文字');await page.getByRole('textbox').last().waitFor({state:'attached'});assert.match(await snap(),/图片识别出的文字/);await click('填入输入框');
+ step('OCR');await click('更多功能');await file('识别图片文字');await page.getByRole('textbox').last().waitFor({state:'attached'});assert.match(await snap(),/图片识别出的文字/);await click('填入输入框');
  assert.equal(await page.getByRole('textbox').last().inputValue(),'图片识别出的文字');assert.equal(ocrCount,1);
- await type('搜索今天的消息');await click('更多功能');await click('开启联网搜索');await click('发送');await page.waitForTimeout(500);assert.equal(searchCount,1);data=await read();assert(data.messages.at(-1).sources.length===1);
+ step('search');await type('搜索今天的消息');await click('更多功能');await click('开启联网搜索');await click('发送');await page.waitForTimeout(500);assert.equal(searchCount,1);data=await read();assert(data.messages.at(-1).sources.length===1);
  await page.getByRole('button',{name:/^联网来源/}).last().evaluate(e=>e.click());await page.waitForTimeout(500);assert.match(await snap(),/官方测试来源/);await page.screenshot({path:`.tmp/search-sources-${theme}.png`});await page.keyboard.press('Escape');await page.waitForTimeout(500);
- await click('语音输入');await click('开始录音');await page.waitForTimeout(1800);assert.match(await snap(),/正在录音/);await page.screenshot({path:`.tmp/voice-recording-${theme}.png`});await click('结束并转文字');await page.waitForTimeout(800);assert.equal(asrCount,1);assert.match(await page.getByRole('textbox').last().inputValue(),/这是语音转成的草稿/);
+ step('recording + ASR');await click('语音输入');await click('开始录音');await page.waitForTimeout(1800);assert.match(await snap(),/正在录音/);await page.screenshot({path:`.tmp/voice-recording-${theme}.png`});await click('结束并转文字');await page.waitForTimeout(800);assert.equal(asrCount,1);assert.match(await page.getByRole('textbox').last().inputValue(),/这是语音转成的草稿/);
  assert(!(await read()).messages.some(m=>m.text==='这是语音转成的草稿'));
  // Open a real message action via long press, request and play actual WAV.
 
  await page.screenshot({path:`.tmp/voice-draft-${theme}.png`});
  const el=page.getByText(/看见你发来的图片了/).last();const rect=await el.boundingBox();assert(rect);await page.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await page.mouse.down();await page.waitForTimeout(800);await page.mouse.up();await page.waitForTimeout(400);
- await click('朗读消息');await click('生成语音');await page.waitForTimeout(700);assert.equal(ttsCount,1);await click('播放语音');await page.waitForTimeout(1300);await click('关闭');
- await goto('/backup');await click('复制完整备份');await page.waitForTimeout(550);
+ step('TTS');await click('朗读消息');await click('生成语音');await page.waitForTimeout(700);assert.equal(ttsCount,1);await click('播放语音');await page.waitForTimeout(1300);await click('关闭');
+ step('backup restore');await goto('/backup');await click('复制完整备份');await page.waitForTimeout(550);
  const backup=await page.evaluate(()=>navigator.clipboard.readText());const envelope=JSON.parse(backup);
  assert.equal(envelope.format,'dreamtide.media.v1');assert(Object.keys(envelope.attachments).length>=2);assert(!backup.includes('fake-browser-key'));
  await click('从 JSON 恢复');await type(backup);await click('覆盖恢复');await page.waitForTimeout(600);

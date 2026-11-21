@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import '../domain/models.dart';
 import 'conversation_summary.dart';
 import 'context_assembler.dart';
+import 'openai_stream_decoder.dart';
 
 class AiClientException implements Exception {
   const AiClientException(this.message);
@@ -334,13 +335,22 @@ $safeConversationExcerpt
 
   String _contentText(dynamic content) {
     if (content is String) return content;
+    if (content is Map) {
+      final type = content['type'];
+      if (type != null && type != 'text' && type != 'output_text') return '';
+      final text = content['text'] ?? content['value'];
+      return text is String ? text : (text is Map ? _contentText(text) : '');
+    }
     if (content is! List) return '';
-    return content
-        .whereType<Map>()
-        .where((block) => block['type'] == null || block['type'] == 'text')
-        .map((block) => block['text'])
-        .whereType<String>()
-        .join();
+    return content.map(_contentText).join();
+  }
+
+  String _firstText(Iterable<dynamic> candidates) {
+    for (final candidate in candidates) {
+      final text = _contentText(candidate);
+      if (text.isNotEmpty) return text;
+    }
+    return '';
   }
 
   Future<String> _streamOpenAi({
@@ -352,8 +362,17 @@ $safeConversationExcerpt
     required Future<void>? abortTrigger,
   }) async {
     var budget = maxOutputTokens;
+    var cancelled = false;
+    abortTrigger?.then((_) => cancelled = true);
     _OpenAiAttempt? attempt;
+    // Exactly one compatibility fallback, against the SAME configured endpoint,
+    // with identical messages/model/key. Never treat reasoning as visible text.
     for (var index = 0; index < 2; index++) {
+      if (cancelled) {
+        throw http.RequestAbortedException(
+          _endpoint(config.baseUrl, '/chat/completions'),
+        );
+      }
       attempt = await _streamOpenAiAttempt(
         config: config,
         apiKey: apiKey,
@@ -361,29 +380,29 @@ $safeConversationExcerpt
         onUpdate: onUpdate,
         maxOutputTokens: budget,
         abortTrigger: abortTrigger,
+        streaming: index == 0,
       );
       if (attempt.text.trim().isNotEmpty) return attempt.text.trim();
-
-      // Reasoning-compatible providers stream hidden reasoning before visible
-      // content. A small max_tokens budget can be consumed entirely by that
-      // reasoning, producing an otherwise successful but empty reply.
-      final needsLargerBudget =
-          attempt.reasoningCharacters > 0 || attempt.finishReason == 'length';
-      if (!needsLargerBudget || index == 1) break;
-      if (budget == null) {
-        budget = 4096;
-      } else {
+      if (attempt.finishReason == 'content_filter') {
+        throw const AiClientException('供应商拦截了这次回复（content_filter），未返回可见正文。');
+      }
+      if (attempt.finishReason == 'tool_calls' ||
+          attempt.finishReason == 'function_call') {
+        throw const AiClientException('供应商返回了工具调用而非聊天正文，请选择支持直接对话的模型。');
+      }
+      if (budget != null &&
+          (attempt.reasoningCharacters > 0 ||
+              attempt.finishReason == 'length')) {
+        // Preserve an unbounded provider default when no budget was supplied;
+        // never accidentally shrink an explicit larger budget to 4096.
         final expanded = budget * 2;
-        budget = expanded < 1536 ? 1536 : (expanded > 4096 ? 4096 : expanded);
+        budget = expanded < 1536 ? 1536 : expanded;
       }
     }
-
     if ((attempt?.reasoningCharacters ?? 0) > 0) {
-      throw const AiClientException(
-        '模型只生成了内部推理，没有返回正文。已自动扩大输出额度重试；请在供应商端检查该模型的推理额度，或更换模型后重试。',
-      );
+      throw const AiClientException('供应商只返回了内部推理，没有正文；已尝试非流式兼容请求。请检查该模型的推理配置。');
     }
-    throw const AiClientException('模型返回了空内容。接口已连通，但供应商没有给出可见正文；请重试或更换模型。');
+    throw const AiClientException('供应商的流式及非流式请求均未返回聊天正文。请检查所选模型与接口配置，或稍后重试。');
   }
 
   Future<_OpenAiAttempt> _streamOpenAiAttempt({
@@ -393,18 +412,19 @@ $safeConversationExcerpt
     required void Function(String fullText) onUpdate,
     required int? maxOutputTokens,
     required Future<void>? abortTrigger,
+    required bool streaming,
   }) async {
     final uri = _endpoint(config.baseUrl, '/chat/completions');
     final request =
         http.AbortableRequest('POST', uri, abortTrigger: abortTrigger)
           ..headers.addAll({
-            'Authorization': 'Bearer $apiKey',
+            'Authorization': 'Bearer ${apiKey.trim()}',
             'Content-Type': 'application/json',
-            'Accept': 'text/event-stream',
+            'Accept': streaming ? 'text/event-stream' : 'application/json',
           })
           ..body = jsonEncode({
             'model': config.model,
-            'stream': true,
+            'stream': streaming,
             'temperature': 0.85,
             if (maxOutputTokens != null) 'max_tokens': maxOutputTokens,
             'messages': [
@@ -415,14 +435,21 @@ $safeConversationExcerpt
     final response = await _client.send(request);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final body = await response.stream.bytesToString();
-      throw AiClientException(_providerHttpError(response.statusCode, body));
+      throw AiClientException(
+        _providerHttpError(response.statusCode, body, apiKey: apiKey),
+      );
     }
 
     final contentType = response.headers['content-type']?.toLowerCase() ?? '';
     if (contentType.contains('application/json') &&
         !contentType.contains('event-stream')) {
       final body = await response.stream.bytesToString();
-      final decoded = jsonDecode(body);
+      Object? decoded;
+      try {
+        decoded = jsonDecode(body);
+      } on FormatException {
+        throw const AiClientException('供应商返回的内容不是有效 JSON，请检查接口地址。');
+      }
       if (decoded is! Map) {
         throw const AiClientException('供应商返回了无法解析的模型响应');
       }
@@ -430,48 +457,29 @@ $safeConversationExcerpt
         Map<String, dynamic>.from(decoded),
         onUpdate: onUpdate,
         announce: true,
+        apiKey: apiKey,
       );
     }
 
     final buffer = StringBuffer();
     final reasoning = StringBuffer();
     String? finishReason;
-    var sawFrames = false;
-    await for (final line
-        in response.stream
-            .transform(utf8.decoder)
-            .transform(const LineSplitter())) {
-      final trimmed = line.trim();
-      final payload = trimmed.startsWith('data:')
-          ? trimmed.substring(5).trim()
-          : trimmed.startsWith('{')
-          ? trimmed
-          : '';
-      if (payload.isEmpty || payload == '[DONE]') continue;
-      try {
-        final map = Map<String, dynamic>.from(jsonDecode(payload) as Map);
-        sawFrames = true;
-        final parsed = _parseOpenAiPayload(
-          map,
-          onUpdate: null,
-          announce: false,
-        );
-        if (parsed.text.isNotEmpty) {
-          buffer.write(parsed.text);
-          onUpdate(buffer.toString());
-        }
-        if (parsed.reasoningText.isNotEmpty) {
-          reasoning.write(parsed.reasoningText);
-        }
-        finishReason = parsed.finishReason ?? finishReason;
-      } catch (_) {
-        // Providers occasionally send keep-alive or vendor-specific frames.
-      }
-    }
-    if (!sawFrames && buffer.isEmpty && reasoning.isEmpty) {
-      throw const AiClientException(
-        '供应商返回了无法识别的流式格式，请确认该地址支持 OpenAI Chat Completions 接口。',
+    await for (final map in decodeOpenAiFrames(response.stream)) {
+      final parsed = _parseOpenAiPayload(
+        map,
+        onUpdate: null,
+        announce: false,
+        apiKey: apiKey,
       );
+      if (parsed.text.isNotEmpty) {
+        if (parsed.snapshot) buffer.clear();
+        buffer.write(parsed.text);
+        onUpdate(buffer.toString());
+      }
+      if (parsed.reasoningText.isNotEmpty) {
+        reasoning.write(parsed.reasoningText);
+      }
+      finishReason = parsed.finishReason ?? finishReason;
     }
     return _OpenAiAttempt(
       text: buffer.toString(),
@@ -484,41 +492,59 @@ $safeConversationExcerpt
     Map<String, dynamic> map, {
     required void Function(String fullText)? onUpdate,
     required bool announce,
+    required String apiKey,
   }) {
+    final code = map['code'];
+    final failureCode =
+        code != null &&
+        code != 0 &&
+        code != 200 &&
+        code != '0' &&
+        code != '200' &&
+        code != 'success';
+    if (map['error'] != null ||
+        map['type'] == 'error' ||
+        map['success'] == false ||
+        (map['choices'] == null && failureCode && map['message'] is String)) {
+      throw AiClientException(
+        _providerHttpError(200, jsonEncode(map), apiKey: apiKey),
+      );
+    }
     final choices = map['choices'];
     if (choices is! List || choices.isEmpty || choices.first is! Map) {
       return const _OpenAiAttempt(text: '', reasoningText: '');
     }
     final choice = Map<String, dynamic>.from(choices.first as Map);
-    final delta = choice['delta'] is Map
-        ? Map<String, dynamic>.from(choice['delta'] as Map)
-        : const <String, dynamic>{};
+    final rawDelta = choice['delta'];
+    final delta = rawDelta is Map ? rawDelta : const {};
     final message = choice['message'] is Map
-        ? Map<String, dynamic>.from(choice['message'] as Map)
-        : const <String, dynamic>{};
-    final content = _contentText(
-      delta['content'] ?? message['content'] ?? choice['text'],
-    );
-    final reasoning = _textValue(
-      delta['reasoning_content'] ??
-          delta['reasoning'] ??
-          message['reasoning_content'] ??
-          message['reasoning'],
-    );
-    if (announce && content.trim().isNotEmpty) {
-      onUpdate?.call(content.trim());
-    }
+        ? choice['message'] as Map
+        : const {};
+    final incremental = _firstText([
+      delta['content'],
+      delta['text'],
+      if (rawDelta is String) rawDelta,
+    ]);
+    final content = incremental.isNotEmpty
+        ? incremental
+        : _firstText([message['content'], choice['text']]);
+    final reasoning = _firstText([
+      delta['reasoning_content'],
+      delta['reasoning'],
+      message['reasoning_content'],
+      message['reasoning'],
+    ]);
+    if (announce && content.trim().isNotEmpty) onUpdate?.call(content.trim());
     return _OpenAiAttempt(
       text: content,
       reasoningText: reasoning,
       finishReason: choice['finish_reason'] as String?,
+      snapshot:
+          incremental.isEmpty && _contentText(message['content']).isNotEmpty,
     );
   }
 
-  String _textValue(dynamic value) =>
-      value is String ? value : _contentText(value);
-
-  String _providerHttpError(int statusCode, String body) {
+  String _providerHttpError(int statusCode, String body, {String? apiKey}) {
     String? detail;
     try {
       final decoded = jsonDecode(body);
@@ -526,6 +552,8 @@ $safeConversationExcerpt
         final error = decoded['error'];
         if (error is Map && error['message'] is String) {
           detail = (error['message'] as String).trim();
+        } else if (error is String) {
+          detail = error;
         } else if (decoded['message'] is String) {
           detail = (decoded['message'] as String).trim();
         }
@@ -534,8 +562,16 @@ $safeConversationExcerpt
     final safeDetail = detail == null
         ? ''
         : _redactCredentialText(
-            detail,
+            apiKey == null || apiKey.trim().isEmpty
+                ? detail
+                : detail.replaceAll(apiKey.trim(), '[已隐藏凭据]'),
           ).runes.take(240).map(String.fromCharCode).join();
+    if ([502, 503, 504].contains(statusCode)) {
+      return '供应商网关暂时不可用（HTTP $statusCode），请稍后重试。';
+    }
+    if (statusCode == 200) {
+      return safeDetail.isEmpty ? '供应商返回了错误响应，未生成聊天正文。' : '供应商返回错误：$safeDetail';
+    }
     return safeDetail.isEmpty
         ? '模型请求失败（HTTP $statusCode），请检查密钥、模型和供应商地址'
         : '模型请求失败（HTTP $statusCode）：$safeDetail';
@@ -649,8 +685,10 @@ class _OpenAiAttempt {
     required this.text,
     required this.reasoningText,
     this.finishReason,
+    this.snapshot = false,
   });
 
+  final bool snapshot;
   final String text;
   final String reasoningText;
   final String? finishReason;

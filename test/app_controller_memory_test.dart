@@ -387,6 +387,78 @@ void main() {
     },
   );
 
+  test(
+    'upstream error preserves partial speech and exposes retry without marking it edited',
+    () async {
+      final initial = buildSeedData();
+      var requests = 0;
+      final ai = AiClient(
+        client: MockClient(
+          (_) async => http.Response.bytes(
+            utf8.encode(
+              ++requests == 1
+                  ? 'data: {"choices":[{"delta":{"content":"刚说到这里"}}]}\n\n'
+                        'data: {"error":{"message":"上游连接中断"}}\n\n'
+                  : 'data: {"choices":[{"delta":{"content":"这次完整说完了。"}}]}\n\n'
+                        'data: [DONE]\n\n',
+            ),
+            200,
+            headers: {'content-type': 'text/event-stream'},
+          ),
+        ),
+      );
+      final controller = AppController(
+        store: FakeStore(
+          initial.copyWith(
+            settings: initial.settings.copyWith(
+              provider: const ProviderConfig(
+                baseUrl: 'https://compatible.example',
+                model: 'chosen-model',
+              ),
+            ),
+          ),
+        ),
+        keyStore: _MemoryKeyStore(),
+        aiClient: ai,
+      );
+      addTearDown(controller.dispose);
+      for (
+        var attempt = 0;
+        attempt < 20 && controller.state.loading;
+        attempt++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      await controller.sendMessage(initial.threads.first.id, '接着说');
+      final partial = controller.state.data.messages.last;
+      expect(partial.text, '刚说到这里');
+      expect(partial.interrupted, isTrue);
+      expect(partial.editedAt, isNull);
+      expect(controller.state.error, contains('上游连接中断'));
+      expect(controller.state.generatingThreadId, isNull);
+      expect(
+        controller.state.data.relationships.first.interactionCount,
+        initial.relationships.first.interactionCount,
+      );
+
+      final user = controller.state.data.messages
+          .where((m) => m.threadId == initial.threads.first.id && !m.fromAi)
+          .last;
+      await controller.retryLastTurn(initial.threads.first.id);
+      await controller.flush();
+      final messages = controller.state.data.messages;
+      expect(messages.where((m) => m.id == user.id), hasLength(1));
+      expect(messages.where((m) => m.id == partial.id), isEmpty);
+      expect(messages.last.text, '这次完整说完了。');
+      expect(messages.last.interrupted, isFalse);
+      expect(controller.state.error, isNull);
+      expect(
+        controller.state.data.relationships.first.interactionCount,
+        initial.relationships.first.interactionCount + 1,
+      );
+    },
+  );
+
   test('regenerate replaces the latest assistant reply only', () async {
     final initial = buildSeedData();
     final data = initial.copyWith(

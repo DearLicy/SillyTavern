@@ -781,18 +781,14 @@ class AppController extends StateNotifier<ApplicationState> {
             if (message.id != visiblePreview.id)
               message
             else
-              message.copyWith(
-                interrupted: true,
-                editedAt: DateTime.now(),
-                sources: sources,
-              ),
+              message.copyWith(interrupted: true, sources: sources),
         ];
         _appendMessages(
           [],
           threadId,
           baseMessages: messages.where((e) => e.isRenderable).toList(),
         );
-        shouldSummarize = true;
+        state = state.copyWith(error: '回复中断：$error');
       } else {
         if (aiMessageId != null) {
           final current = state.data;
