@@ -115,7 +115,7 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
       if (!mounted) return;
       setState(() => _saveStatus = DtButtonStatus.success);
       await Future<void>.delayed(const Duration(milliseconds: 300));
-      if (mounted) {
+      if (mounted && ModalRoute.of(context)?.isCurrent == true) {
         if (context.canPop()) {
           context.pop();
         } else {

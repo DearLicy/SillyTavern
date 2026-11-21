@@ -66,6 +66,8 @@ jobs:
         if: always()
         with:
           name: browser-qa-evidence
+          include-hidden-files: true
+          if-no-files-found: error
           retention-days: 7
           path: |
             .tmp/*-light.png

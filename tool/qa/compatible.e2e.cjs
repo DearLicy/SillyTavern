@@ -1,6 +1,7 @@
 // Run from the repository root. Fake provider only; see tool/qa/README.md.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
+const { fillFlutterText } = require('./flutter-input.cjs');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 (async () => {
   const browser = await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE,headless:true,args:['--no-sandbox','--disable-dev-shm-usage'],env:{...process.env,TMPDIR:process.cwd()+'/.tmp',TMP:process.cwd()+'/.tmp',TEMP:process.cwd()+'/.tmp'}});
@@ -37,7 +38,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
       await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());
       await page.getByRole('textbox').last().waitFor({state:'attached'});
       assert.match(await page.title(),/Dreamtide|触梦/);
-      const send=async text=>{await page.getByRole('textbox').last().focus();await page.keyboard.press('Control+A');await page.keyboard.insertText(text);await page.waitForTimeout(150);await page.getByRole('button',{name:'发送',exact:true}).evaluate(e=>e.click())};
+      const send=async text=>{await fillFlutterText(page,page.getByRole('textbox').last(),text);await page.getByRole('button',{name:'发送',exact:true,disabled:false}).evaluate(e=>e.click())};
       const read=()=>page.evaluate(()=>JSON.parse(JSON.parse(localStorage.getItem('flutter.dreamtide.v2.state'))));
       await send('请自然接话');
       await page.getByRole('button',{name:'长按消息操作 兼容回退回复成功',exact:true}).waitFor();

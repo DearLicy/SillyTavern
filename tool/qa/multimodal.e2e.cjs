@@ -1,5 +1,6 @@
 // Run from the repository root. See tool/qa/README.md.
 const assert=require('node:assert/strict');const fs=require('fs');
+const { fillFlutterText }=require('./flutter-input.cjs');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const pixel=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=','base64');
 const wav=Buffer.alloc(32044);wav.write('RIFF');wav.writeUInt32LE(32036,4);wav.write('WAVEfmt ',8);wav.writeUInt32LE(16,16);wav.writeUInt16LE(1,20);wav.writeUInt16LE(1,22);wav.writeUInt32LE(16000,24);wav.writeUInt32LE(32000,28);wav.writeUInt16LE(2,32);wav.writeUInt16LE(16,34);wav.write('data',36);wav.writeUInt32LE(32000,40);
@@ -35,7 +36,7 @@ const report={mode:'release build + fake authenticated provider + real browser m
   await (await chooser).setFiles({name:'photo.png',mimeType:'image/png',buffer:pixel});
   await page.waitForTimeout(1500);
  };
- const type=async(text)=>{const box=page.getByRole('textbox').last();await box.focus();await page.keyboard.press('Control+A');await page.keyboard.insertText(text);await page.waitForTimeout(150)};
+ const type=(text)=>fillFlutterText(page,page.getByRole('textbox').last(),text);
  await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/Dreamtide/'),{waitUntil:'networkidle'});await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());await page.waitForTimeout(500);
  step('avatar');await goto('/profile');await page.waitForTimeout(800);await click('更换头像');await file('从相册选择');
  assert.equal((await read()).owner.avatarReference ?? null,null);

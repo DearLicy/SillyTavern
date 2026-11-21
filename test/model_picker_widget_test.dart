@@ -1,5 +1,7 @@
+import 'package:dreamtide/router/app_router.dart';
 import 'package:dreamtide/domain/models.dart';
 import 'package:dreamtide/ui/components/dt_model_picker.dart';
+import 'package:dreamtide/ui/screens/about_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -7,6 +9,38 @@ import 'fixtures/sample_data.dart';
 import 'widget_test.dart' as shared;
 
 void main() {
+  testWidgets('provider save feedback never pops a subsequently opened page', (
+    tester,
+  ) async {
+    final initial = buildSeedData();
+    final container = await shared.start(
+      tester,
+      initial.copyWith(
+        settings: initial.settings.copyWith(
+          ageConfirmed: true,
+          provider: const ProviderConfig(
+            model: 'qa-model',
+            models: ['qa-model'],
+          ),
+        ),
+      ),
+    );
+    addTearDown(container.dispose);
+    final router = container.read(appRouterProvider);
+    router.push('/provider');
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('保存'));
+    await tester.tap(find.text('保存'));
+    await tester.pump(const Duration(milliseconds: 1));
+    router.push('/about');
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.pumpAndSettle();
+    expect(find.byType(AboutPage), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   for (final dark in [false, true]) {
     testWidgets(
       'large model catalog searches and selects without overflow (${dark ? 'dark' : 'light'})',
