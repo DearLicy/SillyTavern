@@ -1,0 +1,9 @@
+{
+  "name": "dreamtide-browser-qa",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Development-only browser checks; never bundled into the app",
+  "devDependencies": {
+    "playwright": "1.64.1"
+  }
+}

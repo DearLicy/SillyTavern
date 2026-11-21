@@ -963,6 +963,36 @@ class ProviderConfig {
   final bool rememberKey;
   final List<String> models;
 
+  /// Root, /v1 and completion/catalog URLs may name the same API. A different
+  /// origin or tenant path must never inherit another supplier's saved key.
+  bool sharesCredentialScopeWith(ProviderConfig other) {
+    String? scope(String value) {
+      final uri = Uri.tryParse(value.trim());
+      if (uri == null ||
+          !['http', 'https'].contains(uri.scheme) ||
+          uri.host.isEmpty ||
+          uri.userInfo.isNotEmpty ||
+          uri.hasQuery ||
+          uri.hasFragment) {
+        return null;
+      }
+      var path = uri.path.replaceAll(RegExp(r'/+$'), '');
+      path = path.replaceFirst(
+        RegExp(r'/(chat/completions|messages|models)$'),
+        '',
+      );
+      path = path.replaceFirst(RegExp(r'/v1$'), '');
+      if (uri.host.toLowerCase() == 'api.deepseek.com' &&
+          path == '/anthropic') {
+        path = '';
+      }
+      return '${uri.scheme}://${uri.host.toLowerCase()}:${uri.port}$path';
+    }
+
+    final current = scope(baseUrl);
+    return current != null && current == scope(other.baseUrl);
+  }
+
   ProviderConfig copyWith({
     ProviderKind? kind,
     String? baseUrl,

@@ -12,6 +12,8 @@ permissions:
 env:
   FLUTTER_VERSION: 3.35.1
   TMPDIR: ${{ github.workspace }}/.tmp
+  TMP: ${{ github.workspace }}/.tmp
+  TEMP: ${{ github.workspace }}/.tmp
 
 jobs:
   analyze-test:
@@ -41,6 +43,35 @@ jobs:
           cache: true
       - run: mkdir -p .tmp && flutter pub get
       - run: flutter build web --release --base-href "/Dreamtide/"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated browser QA dependencies
+        env:
+          npm_config_cache: ${{ github.workspace }}/.tmp/npm-cache
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.tmp/pw-browsers
+        run: |
+          mkdir -p .tmp/qa
+          cp tool/qa/package*.json .tmp/qa/
+          npm ci --prefix .tmp/qa --ignore-scripts --no-audit --no-fund
+          node .tmp/qa/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Verify provider, avatar and multimodal workflows
+        env:
+          PLAYWRIGHT_BROWSERS_PATH: ${{ github.workspace }}/.tmp/pw-browsers
+          PLAYWRIGHT_MODULE: ${{ github.workspace }}/.tmp/qa/node_modules/playwright
+        run: |
+          dart run tool/qa/export_fixture.dart
+          bash tool/qa/run-browser-checks.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: browser-qa-evidence
+          retention-days: 7
+          path: |
+            .tmp/*-light.png
+            .tmp/*-dark.png
+            .tmp/*-report.json
+            .tmp/browser-*.log
 
   android:
     runs-on: ubuntu-latest

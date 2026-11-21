@@ -106,6 +106,8 @@ class AppController extends StateNotifier<ApplicationState> {
   int _generation = 0;
   int _lifecycleGeneration = 0;
   int _providerGeneration = 0;
+  int _providerChanges = 0;
+  Future<void> _providerWrites = Future<void>.value();
   final Set<String> _summaryInFlight = {};
   final Map<String, DateTime> _summaryRetryAfter = {};
   final Map<String, Completer<void>> _summaryAbortTriggers = {};
@@ -337,47 +339,95 @@ class AppController extends StateNotifier<ApplicationState> {
     required ProviderConfig config,
     String? apiKey,
   }) async {
+    if (_providerChanges > 0) throw const AiClientException('供应商配置正在更新，请稍后重试。');
+    _checkProviderKeyScope(config, apiKey);
+    final epoch = _providerGeneration;
     final key = apiKey?.trim().isNotEmpty == true
         ? apiKey!.trim()
         : await _keyStore.read(
             persistent: state.data.settings.provider.rememberKey,
           );
+    if (!mounted || epoch != _providerGeneration) {
+      throw const AiClientException('配置已改变，请重新拉取模型。');
+    }
     return _aiClient.fetchModels(config: config, apiKey: key ?? '');
+  }
+
+  void _checkProviderKeyScope(ProviderConfig config, String? apiKey) {
+    if (apiKey?.trim().isNotEmpty != true &&
+        !config.sharesCredentialScopeWith(state.data.settings.provider)) {
+      throw const AiClientException('更换供应商地址后，请填写该供应商的 API Key。');
+    }
+  }
+
+  Future<void> _changeProvider(Future<void> Function(int epoch) action) async {
+    final epoch = ++_providerGeneration;
+    _providerChanges++;
+    if (_activeGenerationAbort != null || state.generatingThreadId != null) {
+      _stopActiveGeneration();
+    }
+    _cancelPendingSummaries();
+    _tools.cancelAll();
+    final previous = _providerWrites;
+    final done = Completer<void>();
+    _providerWrites = done.future;
+    try {
+      await previous;
+      if (!mounted) return;
+      await action(epoch);
+    } finally {
+      _providerChanges--;
+      done.complete();
+    }
   }
 
   Future<void> saveProvider({
     required ProviderConfig config,
     String? apiKey,
   }) async {
-    ++_providerGeneration;
-    _tools.cancelAll();
-    final effectiveKey = apiKey != null && apiKey.trim().isNotEmpty
-        ? apiKey.trim()
-        : await _keyStore.read(
-            persistent: state.data.settings.provider.rememberKey,
-          );
-    if (effectiveKey != null && effectiveKey.trim().isNotEmpty) {
-      await _keyStore.write(
-        effectiveKey.trim(),
-        persistent: config.rememberKey,
-      );
-      _hasApiKey = true;
+    if (_providerChanges > 0) {
+      throw const AiClientException('供应商配置正在更新，请稍后重试。');
     }
-    _commit(
-      state.data.copyWith(
-        settings: state.data.settings.copyWith(provider: config),
-      ),
-    );
-    state = state.copyWith(hasApiKey: _hasApiKey);
-    await flush();
+    _checkProviderKeyScope(config, apiKey);
+    await _changeProvider((epoch) async {
+      if (epoch != _providerGeneration) {
+        throw const AiClientException('配置已改变，请重试保存。');
+      }
+      final effectiveKey = apiKey != null && apiKey.trim().isNotEmpty
+          ? apiKey.trim()
+          : await _keyStore.read(
+              persistent: state.data.settings.provider.rememberKey,
+            );
+      if (!mounted || epoch != _providerGeneration) {
+        throw const AiClientException('配置已改变，请重试保存。');
+      }
+      if (effectiveKey != null && effectiveKey.trim().isNotEmpty) {
+        await _keyStore.write(
+          effectiveKey.trim(),
+          persistent: config.rememberKey,
+        );
+        _hasApiKey = true;
+      }
+      if (!mounted || epoch != _providerGeneration) {
+        throw const AiClientException('配置已改变，请重试保存。');
+      }
+      _commit(
+        state.data.copyWith(
+          settings: state.data.settings.copyWith(provider: config),
+        ),
+      );
+      state = state.copyWith(hasApiKey: _hasApiKey);
+      await flush();
+    });
   }
 
   Future<void> clearProviderKey() async {
-    ++_providerGeneration;
-    _tools.cancelAll();
-    await _keyStore.clear();
-    _hasApiKey = false;
-    state = state.copyWith(hasApiKey: false);
+    await _changeProvider((_) async {
+      await _keyStore.clear();
+      if (!mounted) return;
+      _hasApiKey = false;
+      state = state.copyWith(hasApiKey: false);
+    });
   }
 
   Future<void> sendMessage(
@@ -389,6 +439,10 @@ class AppController extends StateNotifier<ApplicationState> {
     bool searchWeb = false,
     void Function()? onAccepted,
   }) async {
+    if (_providerChanges > 0) {
+      state = state.copyWith(error: '供应商配置正在更新，请稍后再发送。');
+      return;
+    }
     final trimmed = text.trim();
     final isImage = kind == MessageKind.image && localPath?.isNotEmpty == true;
     if (trimmed.isEmpty && !isImage) return;
@@ -1021,6 +1075,7 @@ class AppController extends StateNotifier<ApplicationState> {
     int lifecycleGeneration,
   ) async {
     if (!mounted ||
+        _providerChanges > 0 ||
         lifecycleGeneration != _lifecycleGeneration ||
         !_summaryInFlight.add(threadId)) {
       return;
@@ -1407,6 +1462,31 @@ class AppController extends StateNotifier<ApplicationState> {
 
   String exportBackup() => state.data.encode();
 
+  Future<void> _withBackupProvider(
+    AppData data,
+    Future<void> Function() apply,
+  ) async {
+    if (_providerChanges > 0) {
+      throw const AiClientException('供应商配置正在更新，请稍后恢复备份。');
+    }
+    await _changeProvider((epoch) async {
+      final current = state.data.settings.provider;
+      final restored = data.settings.provider;
+      // Backups contain configuration, never credentials. An existing key may
+      // survive only when both its supplier and storage mode remain unchanged.
+      if (!current.sharesCredentialScopeWith(restored) ||
+          current.rememberKey != restored.rememberKey) {
+        await _keyStore.clear();
+        _hasApiKey = false;
+        if (mounted) state = state.copyWith(hasApiKey: false);
+      }
+      if (!mounted || epoch != _providerGeneration) {
+        throw const AiClientException('配置已改变，请重试恢复。');
+      }
+      await apply();
+    });
+  }
+
   Future<void> importBackup(String raw) async {
     if (raw.length > 72 * 1024 * 1024) throw const FormatException('备份过大');
     final decoded = jsonDecode(raw.trim());
@@ -1421,17 +1501,16 @@ class AppController extends StateNotifier<ApplicationState> {
     if (data.schemaVersion != 2) {
       throw const FormatException('只支持 Dreamtide V2 备份');
     }
-    _cancelActiveGeneration();
-    _cancelPendingSummaries();
-    _tools.cancelAll();
-    state = state.copyWith(clearGenerating: true);
-    ++_generation;
-    ++_lifecycleGeneration;
-    _summaryRetryAfter.clear();
-    _saveTimer?.cancel();
-    await _writeData(data);
-    _commit(data);
-    state = state.copyWith(clearGenerating: true);
+    await _withBackupProvider(data, () async {
+      state = state.copyWith(clearGenerating: true);
+      ++_generation;
+      ++_lifecycleGeneration;
+      _summaryRetryAfter.clear();
+      _saveTimer?.cancel();
+      await _writeData(data);
+      _commit(data);
+      state = state.copyWith(clearGenerating: true);
+    });
   }
 
   Future<void> resetData() async {
@@ -1443,14 +1522,21 @@ class AppController extends StateNotifier<ApplicationState> {
     ++_lifecycleGeneration;
     _summaryRetryAfter.clear();
     _saveTimer?.cancel();
-    await _attachmentStore?.clear();
-    await _keyStore.clear();
-    await _saveQueue;
-    await _store.clear();
-    _hasApiKey = false;
-    _commit(buildEmptyData());
-    state = state.copyWith(hasApiKey: false, clearGenerating: true);
-    await flush();
+    await _changeProvider((_) async {
+      await _keyStore.clear();
+      _hasApiKey = false;
+      state = state.copyWith(hasApiKey: false);
+      await _attachmentStore?.clear();
+      await _saveQueue;
+      await _store.clear();
+      _commit(buildEmptyData());
+      state = state.copyWith(
+        hasApiKey: false,
+        clearGenerating: true,
+        clearError: true,
+      );
+      await flush();
+    });
   }
 
   @override

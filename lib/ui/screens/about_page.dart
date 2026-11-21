@@ -12,7 +12,7 @@ class AboutPage extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return DtDetailPage(
       title: '关于 Dreamtide',
-      subtitle: 'V2.0.6 · 本地优先 AI 梦境恋爱 IM',
+      subtitle: 'V2.0.7 · 本地优先 AI 梦境恋爱 IM',
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [

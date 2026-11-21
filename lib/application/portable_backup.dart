@@ -78,14 +78,15 @@ extension PortableBackup on AppController {
           message['localPath'] = replacements[message['localPath']];
         }
       }
-      _cancelActiveGeneration();
-      _cancelPendingSummaries();
-      _tools.cancelAll();
-      ++_generation;
-      ++_lifecycleGeneration;
-      _snapshot = _snapshot.copyWith(clearGenerating: true);
-      final before = _snapshot.data;
-      await _saveManagementChange(before, AppData.fromJson(json));
+      final restored = AppData.fromJson(json);
+      await _withBackupProvider(restored, () async {
+        ++_generation;
+        ++_lifecycleGeneration;
+        _summaryRetryAfter.clear();
+        _snapshot = _snapshot.copyWith(clearGenerating: true);
+        final before = _snapshot.data;
+        await _saveManagementChange(before, restored);
+      });
     } catch (_) {
       // Do not remove references already accepted into the live state.
       for (final reference in replacements.values) {

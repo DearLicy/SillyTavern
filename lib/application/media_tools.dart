@@ -2,6 +2,9 @@ part of 'app_controller.dart';
 
 extension MediaTools on AppController {
   Future<(String, String)> _toolCredentials() async {
+    if (_providerChanges > 0) {
+      throw const AiClientException('供应商配置正在更新，请稍后重试。');
+    }
     final epoch = _lifecycleGeneration;
     final providerEpoch = _providerGeneration;
     final config = _snapshot.data.settings.provider;

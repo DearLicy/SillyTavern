@@ -10,7 +10,7 @@ import '../../domain/models.dart';
 import '../components/dt_controls.dart';
 import '../components/dt_detail_page.dart';
 import '../components/dt_input.dart';
-import '../components/dt_sheet.dart';
+import '../components/dt_model_picker.dart';
 
 class ProviderPage extends ConsumerStatefulWidget {
   const ProviderPage({super.key});
@@ -52,6 +52,7 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
     _request++;
     setState(() {
       _models = [];
+      _names.clear();
       _model = '';
       _error = null;
       _fetching = false;
@@ -121,48 +122,22 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
           context.go('/messages');
         }
       }
-    } catch (_) {
+    } catch (error) {
       if (mounted) {
         setState(() {
           _saveStatus = DtButtonStatus.idle;
-          _error = '保存失败，请重试';
+          _error = error is AiClientException ? error.message : '保存失败，请重试';
         });
       }
     }
   }
 
   Future<void> _pickModel() async {
-    final picked = await showDtSheet<String>(
+    final picked = await showDtModelPicker(
       context: context,
-      builder: (context) => SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '选择默认模型',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-                ),
-              ),
-              const SizedBox(height: 12),
-              for (final id in _models)
-                DtSettingRow(
-                  icon: FIcons.box,
-                  title: _names[id] ?? id,
-                  subtitle: _names[id] != null && _names[id] != id ? id : null,
-                  trailing: id == _model
-                      ? const Icon(FIcons.check, size: 18)
-                      : null,
-                  onTap: () => Navigator.pop(context, id),
-                ),
-            ],
-          ),
-        ),
-      ),
+      models: _models,
+      names: _names,
+      selected: _model,
     );
     if (picked != null && mounted) setState(() => _model = picked);
   }
@@ -237,7 +212,11 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
                     enableSuggestions: false,
                     decoration: InputDecoration(
                       labelText: state.hasApiKey
-                          ? 'API Key（留空保留已保存密钥）'
+                          ? (_config.sharesCredentialScopeWith(
+                                  state.data.settings.provider,
+                                )
+                                ? 'API Key（留空保留已保存密钥）'
+                                : 'API Key（新供应商需重新填写）')
                           : 'API Key',
                       hintText: '粘贴你的密钥',
                       suffixIcon: DtIconButton(
