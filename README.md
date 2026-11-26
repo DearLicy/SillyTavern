@@ -22,7 +22,7 @@
   <img src="assets/screenshots/05-dream-space.png" width="220" alt="梦境空间" />
 </div>
 
-## 这不是另一个 AI Chat
+## 面向角色与长期互动的 LLM 前端
 
 SillyTavern APP 是一个面向角色扮演的 LLM 前端：用户通过角色卡、人设、世界观、记忆与导演模式，与多个 AI 角色进行持续互动。
 

@@ -86,7 +86,7 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            '属于自己的私人梦境恋爱宇宙',
+                            'LLM Frontend for Power Users',
                             style: TextStyle(
                               fontSize: 14,
                               color: dark
