@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dreamtide/application/app_controller.dart';
-import 'package:dreamtide/data/image_content.dart';
-import 'package:dreamtide/domain/models.dart';
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/data/image_content.dart';
+import 'package:sillytavern_app/domain/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fixtures/fake_store.dart';
@@ -37,6 +37,7 @@ Future<AppController> start(FakeStore store, MemoryAttachments files) async {
   final c = AppController(
     store: store,
     keyStore: FakeKeyStore(),
+    toolKeyStore: FakeKeyStore(),
     attachmentStore: files,
   );
   addTearDown(c.dispose);

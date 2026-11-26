@@ -42,7 +42,7 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           cache: true
       - run: mkdir -p .tmp && flutter pub get
-      - run: flutter build web --release --base-href "/Dreamtide/"
+      - run: flutter build web --release --base-href "/SillyTavern/"
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -114,8 +114,8 @@ jobs:
           mkdir -p .tmp/ipa/Payload
           cp -R build/ios/iphoneos/Runner.app .tmp/ipa/Payload/
           cd .tmp/ipa
-          zip -qry ../../build/Dreamtide-unsigned.ipa Payload
+          zip -qry ../../build/SillyTavern-unsigned.ipa Payload
       - uses: actions/upload-artifact@v4
         with:
           name: ios-unsigned
-          path: build/Dreamtide-unsigned.ipa
+          path: build/SillyTavern-unsigned.ipa

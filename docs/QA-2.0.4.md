@@ -8,7 +8,7 @@
 | --- | --- |
 | `flutter analyze --no-pub` | 无问题 |
 | `flutter test --no-pub` | 86 项通过 |
-| Web release | 构建通过，Pages base href 为 `/Dreamtide/` |
+| Web release | 构建通过，Pages base href 为 `/SillyTavern/` |
 | Android release | arm64-v8a、armeabi-v7a、x86_64 三种 APK 构建通过 |
 | iOS | 本地为 Linux，未运行 Xcode 构建；以 macOS CI 的独立结果为准 |
 

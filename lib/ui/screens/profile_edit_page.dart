@@ -50,7 +50,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
     final owner = ref.watch(appControllerProvider).data.owner;
     return DtDetailPage(
       title: '个人资料',
-      subtitle: '本地身份，不会上传到 Dreamtide 服务器',
+      subtitle: '本地身份，不会上传到 SillyTavern 服务器',
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -81,7 +81,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                   onChanged: (_) => setState(() {}),
                   decoration: const InputDecoration(
                     labelText: '昵称',
-                    hintText: '你在 Dreamtide 的显示名',
+                    hintText: '你在 SillyTavern 的显示名',
                   ),
                 ),
                 const SizedBox(height: 12),

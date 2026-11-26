@@ -61,6 +61,13 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
                     '${data.characters.length} 位角色 · ${data.relationships.length} 段关系',
                 actions: [
                   DtIconButton(
+                    icon: Icons.badge_outlined,
+                    tooltip: '角色卡',
+                    onTap: () => context.push('/character-cards'),
+                    soft: false,
+                  ),
+                  const SizedBox(width: 4),
+                  DtIconButton(
                     icon: Icons.person_add_alt_1_rounded,
                     tooltip: '创建角色',
                     onTap: () => context.push('/character/new'),

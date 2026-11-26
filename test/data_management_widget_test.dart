@@ -1,10 +1,10 @@
-import 'package:dreamtide/application/app_controller.dart';
-import 'package:dreamtide/data/initial_data.dart';
-import 'package:dreamtide/router/app_router.dart';
-import 'package:dreamtide/ui/components/dt_controls.dart';
-import 'package:dreamtide/ui/components/dt_edit_sheet.dart';
-import 'package:dreamtide/ui/components/dt_input.dart';
-import 'package:dreamtide/ui/theme/dt_theme.dart';
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/data/initial_data.dart';
+import 'package:sillytavern_app/router/app_router.dart';
+import 'package:sillytavern_app/ui/components/dt_controls.dart';
+import 'package:sillytavern_app/ui/components/dt_edit_sheet.dart';
+import 'package:sillytavern_app/ui/components/dt_input.dart';
+import 'package:sillytavern_app/ui/theme/dt_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

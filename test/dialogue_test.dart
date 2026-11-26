@@ -1,4 +1,4 @@
-import 'package:dreamtide/domain/dialogue.dart';
+import 'package:sillytavern_app/domain/dialogue.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

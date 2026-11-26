@@ -7,7 +7,7 @@ import 'attachment_store_base.dart';
 AttachmentStore createAttachmentStore() => _WebAttachmentStore();
 
 class _WebAttachmentStore implements AttachmentStore {
-  static const _databaseName = 'dreamtide.attachments';
+  static const _databaseName = 'sillytavern.attachments';
   static const _storeName = 'images';
   Database? _database;
 

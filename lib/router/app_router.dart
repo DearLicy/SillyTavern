@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../ui/screens/about_page.dart';
 import '../ui/screens/backup_page.dart';
 import '../ui/screens/character_detail_page.dart';
+import '../ui/screens/character_cards_page.dart';
 import '../ui/screens/character_editor_page.dart';
 import '../ui/screens/chat_page.dart';
 import '../ui/screens/chat_data_page.dart';
@@ -22,6 +23,8 @@ import '../ui/screens/provider_page.dart';
 import '../ui/screens/safety_page.dart';
 import '../ui/screens/scene_page.dart';
 import '../ui/screens/settings_page.dart';
+import '../ui/screens/tool_settings_page.dart';
+import '../ui/screens/world_books_page.dart';
 import '../ui/shell/root_shell.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -72,6 +75,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/chat-history/:threadId',
         builder: (context, state) =>
             ChatHistoryPage(threadId: state.pathParameters['threadId']!),
+      ),
+      GoRoute(
+        path: '/character-cards',
+        builder: (context, state) => const CharacterCardsPage(),
       ),
       GoRoute(
         path: '/character/new',
@@ -132,6 +139,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/provider',
         builder: (context, state) => const ProviderPage(),
+      ),
+      GoRoute(
+        path: '/tools',
+        builder: (context, state) => const ToolSettingsPage(),
+      ),
+      GoRoute(
+        path: '/world-books',
+        builder: (context, state) => const WorldBooksPage(),
+      ),
+      GoRoute(
+        path: '/world-book/:bookId',
+        builder: (context, state) =>
+            WorldBookEditorPage(bookId: state.pathParameters['bookId']!),
+      ),
+      GoRoute(
+        path: '/world-info/:entryId',
+        builder: (context, state) =>
+            WorldInfoEditorPage(entryId: state.pathParameters['entryId']!),
       ),
       GoRoute(path: '/safety', builder: (context, state) => const SafetyPage()),
       GoRoute(path: '/backup', builder: (context, state) => const BackupPage()),

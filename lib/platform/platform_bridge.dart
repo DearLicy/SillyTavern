@@ -5,7 +5,7 @@ class PlatformBridge {
   const PlatformBridge();
 
   static const MethodChannel _channel = MethodChannel(
-    'com.dearlicy.dreamtide/platform',
+    'com.dearlicy.sillytavern/platform',
   );
 
   Future<String> platformName() async {

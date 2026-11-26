@@ -77,7 +77,7 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
                           ),
                           const SizedBox(height: 28),
                           const Text(
-                            '触梦 · Dreamtide',
+                            'SillyTavern APP',
                             style: TextStyle(
                               fontSize: 30,
                               fontWeight: FontWeight.w900,
@@ -117,7 +117,7 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
                                 ),
                                 const SizedBox(height: 16),
                                 const Text(
-                                  'Dreamtide 是本地优先的虚构角色恋爱与角色扮演空间，包含成人向文字内容。所有性相关内容仅限明确成年、自愿的虚构角色。',
+                                  'SillyTavern 是本地优先的虚构角色恋爱与角色扮演空间，包含成人向文字内容。所有性相关内容仅限明确成年、自愿的虚构角色。',
                                   style: TextStyle(fontSize: 14, height: 1.65),
                                 ),
                                 const SizedBox(height: 12),
@@ -183,7 +183,9 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
                                         ),
                                       ),
                                       const SizedBox(height: 12),
-                                      const Text('Dreamtide 不面向未成年人提供。请关闭应用。'),
+                                      const Text(
+                                        'SillyTavern APP 不面向未成年人提供。请关闭应用。',
+                                      ),
                                       const SizedBox(height: 16),
                                       DtButton(
                                         label: '返回',

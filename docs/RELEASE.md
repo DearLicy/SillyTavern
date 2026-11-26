@@ -1,6 +1,6 @@
 # 构建与 GitHub 发布
 
-Dreamtide 只通过 GitHub 分发，不上架应用商店。
+SillyTavern 只通过 GitHub 分发，不上架应用商店。
 
 ## Android
 
@@ -24,7 +24,7 @@ GitHub Release 提供 unsigned IPA。用户自签流程：
 
 1. 安装 iLoader；
 2. 在 iLoader 中安装 LiveContainer 与 SideStore；
-3. 导入 `Dreamtide-unsigned.ipa`；
+3. 导入 `SillyTavern-unsigned.ipa`；
 4. 使用自己的 Apple ID 完成签名；
 5. 按 SideStore 提示完成续签。
 
@@ -34,13 +34,13 @@ GitHub Release 提供 unsigned IPA。用户自签流程：
 flutter build ios --release --no-codesign
 ```
 
-把 `Runner.app` 放入 `Payload/`，压缩为 `Dreamtide-unsigned.ipa`：
+把 `Runner.app` 放入 `Payload/`，压缩为 `SillyTavern-unsigned.ipa`：
 
 ```bash
 mkdir -p .tmp/ipa/Payload
 cp -R build/ios/iphoneos/Runner.app .tmp/ipa/Payload/
 cd .tmp/ipa
-zip -qry ../../build/Dreamtide-unsigned.ipa Payload
+zip -qry ../../build/SillyTavern-unsigned.ipa Payload
 cd ../..
 ```
 
@@ -49,7 +49,7 @@ cd ../..
 ## Web
 
 ```bash
-flutter build web --release --base-href "/Dreamtide/"
+flutter build web --release --base-href "/SillyTavern/"
 ```
 
 GitHub Pages 发布 `build/web`。Web 是完整 BYOK 客户端，但受浏览器本地存储、CORS 与第三方供应商接口差异限制。
@@ -59,7 +59,7 @@ GitHub Pages 发布 `build/web`。Web 是完整 BYOK 客户端，但受浏览器
 每个 GitHub Release 应包含：
 
 - Android APK 文件；
-- `Dreamtide-unsigned.ipa`；
+- `SillyTavern-unsigned.ipa`；
 - `SHA256SUMS.txt`；
 - 自签安装说明；
 - 版本更新日志；

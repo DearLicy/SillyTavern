@@ -11,8 +11,8 @@ class AboutPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return DtDetailPage(
-      title: '关于 Dreamtide',
-      subtitle: 'V2.0.7 · 本地优先 AI 梦境恋爱 IM',
+      title: '关于 SillyTavern',
+      subtitle: '本地优先 · BYOK · LLM 前端',
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -32,7 +32,7 @@ class AboutPage extends StatelessWidget {
                 Icon(Icons.nightlight_round, color: Colors.white, size: 36),
                 SizedBox(height: 18),
                 Text(
-                  '触梦 · Dreamtide',
+                  'SillyTavern APP',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -41,12 +41,12 @@ class AboutPage extends StatelessWidget {
                 ),
                 SizedBox(height: 6),
                 Text(
-                  '属于自己的私人梦境恋爱宇宙',
+                  'LLM Frontend for Power Users',
                   style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
                 SizedBox(height: 16),
                 Text(
-                  '本地优先、BYOK、纯本地 AI 社交的梦境恋爱 IM。用梦设、长期记忆、关系成长、导演模式和梦境空间，经营一段持续存在的虚构关系。',
+                  '本地优先、BYOK 的 LLM 前端。支持角色扮演、长期记忆、导演模式、多模型接入，让 AI 互动更可控、更持久。',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 13,
@@ -66,16 +66,13 @@ class AboutPage extends StatelessWidget {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 10),
-                _Line(text: '18+，仅面向自愿的成年用户', color: DtColors.coral),
+                _Line(text: '本地优先，数据保存在本机', color: DtColors.coral),
                 _Line(
-                  text: '真实用户社交、Lorebook、SillyTavern 卡库明确不做',
+                  text: '支持 OpenAI/Anthropic/DeepSeek 兼容接口',
                   color: DtColors.mint,
                 ),
-                _Line(text: '不提供官方角色、会员次数制或自有云端会话', color: DtColors.brand),
-                _Line(
-                  text: '群聊作为唯一重新开放的旧排除能力，计划于 V2.2 上线',
-                  color: DtColors.violet,
-                ),
+                _Line(text: '不托管密钥，不经过自有服务器转发', color: DtColors.brand),
+                _Line(text: '角色、记忆、导演、场景可独立管理', color: DtColors.violet),
               ],
             ),
           ),
@@ -89,7 +86,10 @@ class AboutPage extends StatelessWidget {
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 10),
-                _RoadmapRow(version: 'V2.0', text: '三栏 IM、梦设、关系、记忆、导演、边界、文字动态'),
+                _RoadmapRow(
+                  version: 'V2.0',
+                  text: '三栏 IM、梦设、关系、记忆、导演、角色卡、世界书、作者注记',
+                ),
                 _RoadmapRow(version: 'V2.1', text: '生活状态、关系日历、主动消息、本地通知'),
                 _RoadmapRow(version: 'V2.2', text: '多角色群聊、独立与共享记忆、发言调度'),
                 _RoadmapRow(version: 'V2.3', text: '动态图片视频、AI 图像、剧情相册与分支'),
@@ -108,7 +108,7 @@ class AboutPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 9),
                 Text(
-                  'Flutter 三端 UI + 原生平台模块。原生端使用系统安全存储保存 API Key，本地数据库使用 SQLite；Web 使用浏览器本地存储。Dreamtide 不收集遥测，不经过自有服务器转发请求。',
+                  'Flutter 三端 UI + 原生平台模块。原生端使用系统安全存储保存 API Key，本地数据库使用 SQLite；Web 使用浏览器本地存储。SillyTavern 不收集遥测，不经过自有服务器转发请求。',
                   style: TextStyle(
                     fontSize: 12.5,
                     height: 1.6,

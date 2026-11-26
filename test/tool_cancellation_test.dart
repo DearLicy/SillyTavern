@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dreamtide/ai/ai_client.dart';
-import 'package:dreamtide/ai/deepseek_tools.dart';
-import 'package:dreamtide/application/app_controller.dart';
-import 'package:dreamtide/platform/pcm_audio.dart';
+import 'package:sillytavern_app/ai/ai_client.dart';
+import 'package:sillytavern_app/ai/deepseek_tools.dart';
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/platform/pcm_audio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 
@@ -83,6 +83,7 @@ void main() {
       final c = AppController(
         store: FakeStore(data),
         keyStore: key,
+        toolKeyStore: FakeKeyStore(),
         attachmentStore: MemoryAttachments(),
         tools: DeepSeekTools(client: client),
       );
@@ -103,6 +104,7 @@ void main() {
     final c = AppController(
       store: FakeStore(buildSeedData()),
       keyStore: FakeKeyStore()..value = 'fake-key',
+      toolKeyStore: FakeKeyStore(),
       tools: DeepSeekTools(client: client),
     );
     addTearDown(c.dispose);
@@ -124,6 +126,7 @@ void main() {
       final c = AppController(
         store: FakeStore(buildSeedData()),
         keyStore: key,
+        toolKeyStore: FakeKeyStore(),
         tools: DeepSeekTools(client: client),
       );
       addTearDown(c.dispose);

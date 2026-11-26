@@ -1,4 +1,4 @@
-import 'package:dreamtide/domain/models.dart';
+import 'package:sillytavern_app/domain/models.dart';
 
 AppData buildSeedData() {
   final now = DateTime.now();
@@ -404,5 +404,6 @@ AppData buildSeedData() {
     messages: messages,
     memories: memories,
     moments: moments,
+    worldBooks: const [],
   );
 }

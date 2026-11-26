@@ -1,6 +1,6 @@
-import 'package:dreamtide/ai/context_assembler.dart';
-import 'package:dreamtide/ai/reply_planner.dart';
-import 'package:dreamtide/domain/models.dart';
+import 'package:sillytavern_app/ai/context_assembler.dart';
+import 'package:sillytavern_app/ai/reply_planner.dart';
+import 'package:sillytavern_app/domain/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fixtures/sample_data.dart';

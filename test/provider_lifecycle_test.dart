@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dreamtide/ai/ai_client.dart';
-import 'package:dreamtide/ai/context_assembler.dart';
-import 'package:dreamtide/ai/conversation_summary.dart';
-import 'package:dreamtide/application/app_controller.dart';
-import 'package:dreamtide/domain/models.dart';
+import 'package:sillytavern_app/ai/ai_client.dart';
+import 'package:sillytavern_app/ai/context_assembler.dart';
+import 'package:sillytavern_app/ai/conversation_summary.dart';
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/domain/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fixtures/fake_store.dart';
@@ -144,6 +144,7 @@ Future<AppController> _setup(
       ),
     ),
     keyStore: keys,
+    toolKeyStore: FakeKeyStore(),
     aiClient: ai,
     attachmentStore: attachments,
   );
@@ -262,7 +263,7 @@ void main() {
           );
           final backup = portable
               ? jsonEncode({
-                  'format': 'dreamtide.media.v1',
+                  'format': 'sillytavern.media.v1',
                   'data': restored.toJson(),
                   'attachments': <String, String>{},
                 })

@@ -1,0 +1,111 @@
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/data/character_card.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'fixtures/fake_store.dart';
+import 'fixtures/sample_data.dart';
+
+const _card = '''
+{
+  "spec": "chara_card_v2",
+  "spec_version": "2.0",
+  "data": {
+    "name": "知夏",
+    "description": "{{char}} 是旧城书店的店员。",
+    "personality": "说话简短，观察细致。",
+    "scenario": "雨夜书店即将打烊。",
+    "first_mes": "门外雨很大。你要进来避一会儿吗？",
+    "mes_example": "",
+    "creator_notes": "用少量动作描写。",
+    "system_prompt": "{{char}} 只叫用户 {{user}}。",
+    "post_history_instructions": "不要客服腔。",
+    "alternate_greetings": [],
+    "tags": ["书店", "慢热"],
+    "character_book": {
+      "name": "旧书店资料",
+      "entries": [
+        {
+          "id": 1,
+          "keys": ["旧书店"],
+          "comment": "地点",
+          "content": "旧书店在雨夜会留一盏橘色灯。",
+          "constant": false,
+          "insertion_order": 10,
+          "enabled": true,
+          "extensions": {"recursive": true}
+        }
+      ]
+    }
+  }
+}
+''';
+
+void main() {
+  const codec = CharacterCardCodec();
+
+  test('V2 character card decodes into character and world book', () {
+    final imported = codec.decode(_card, id: 'char_new');
+    expect(imported.character.name, '知夏');
+    expect(imported.character.tags, ['书店', '慢热']);
+    expect(imported.character.greeting, contains('雨很大'));
+    expect(imported.character.voiceProfile, contains('不要客服腔'));
+    expect(imported.worldBook, isNotNull);
+    expect(imported.worldBook!.entries.single.keys, ['旧书店']);
+    expect(imported.worldBook!.entries.single.recursive, isTrue);
+  });
+
+  test('exported V2 card round trips and excludes local paths or keys', () {
+    final seed = buildSeedData();
+    final character = seed.characters.first;
+    final json = codec.encode(character);
+    expect(json, contains('"spec": "chara_card_v2"'));
+    expect(json, isNot(contains('sk-')));
+    expect(json, isNot(contains('avatar_')));
+    final imported = codec.decode(json, id: 'char_roundtrip');
+    expect(imported.character.name, character.name);
+    expect(imported.character.greeting, character.greeting);
+  });
+
+  test('invalid and oversized cards fail closed', () {
+    expect(
+      () => codec.decode('{"data":{}}', id: 'x'),
+      throwsA(isA<FormatException>()),
+    );
+    expect(
+      () => codec.decode('x' * (9 * 1024 * 1024), id: 'x'),
+      throwsA(isA<FormatException>()),
+    );
+  });
+
+  test(
+    'controller import adds a relationship and embedded world book',
+    () async {
+      final seed = buildSeedData();
+      final store = FakeStore(
+        seed.copyWith(
+          settings: seed.settings.copyWith(currentPersonaId: 'persona_lin'),
+        ),
+      );
+      final controller = AppController(
+        store: store,
+        keyStore: FakeKeyStore(),
+        toolKeyStore: FakeKeyStore(),
+        attachmentStore: MemoryAttachments(),
+      );
+      addTearDown(controller.dispose);
+      for (var i = 0; i < 40 && controller.state.loading; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 5));
+      }
+      final beforeCharacters = controller.state.data.characters.length;
+      final beforeBooks = controller.state.data.worldBooks.length;
+      final thread = await controller.importCharacterCard(_card);
+      final data = controller.state.data;
+      expect(thread.relationshipId, isNotEmpty);
+      expect(data.characters, hasLength(beforeCharacters + 1));
+      expect(data.worldBooks, hasLength(beforeBooks + 1));
+      expect(data.characters.last.name, '知夏');
+      expect(data.worldBooks.last.name, '旧书店资料');
+      expect(await store.load(), isNotNull);
+    },
+  );
+}

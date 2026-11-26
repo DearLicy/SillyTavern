@@ -4,7 +4,7 @@ import '../domain/models.dart';
 import 'local_store_base.dart';
 
 class WebLocalDataStore implements LocalDataStore {
-  static const _key = 'dreamtide.v2.state';
+  static const _key = 'sillytavern.v2.state';
 
   @override
   Future<AppData?> load() async {

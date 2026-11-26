@@ -80,7 +80,7 @@ class DtTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
       canvasColor: background,
-      fontFamily: kIsWeb ? 'DreamtideWebCJK' : null,
+      fontFamily: kIsWeb ? 'SillyTavernWebCJK' : null,
       splashFactory: NoSplash.splashFactory,
       highlightColor: Colors.transparent,
       appBarTheme: AppBarTheme(

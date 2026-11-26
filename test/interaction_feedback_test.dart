@@ -1,6 +1,6 @@
-import 'package:dreamtide/ui/components/dt_controls.dart';
-import 'package:dreamtide/ui/components/dt_motion.dart';
-import 'package:dreamtide/ui/theme/dt_theme.dart';
+import 'package:sillytavern_app/ui/components/dt_controls.dart';
+import 'package:sillytavern_app/ui/components/dt_motion.dart';
+import 'package:sillytavern_app/ui/theme/dt_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

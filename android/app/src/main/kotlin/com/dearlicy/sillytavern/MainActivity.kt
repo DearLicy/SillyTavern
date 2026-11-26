@@ -1,4 +1,4 @@
-package com.dearlicy.dreamtide
+package com.dearlicy.sillytavern
 
 import android.os.Bundle
 import android.view.WindowManager
@@ -7,7 +7,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val channelName = "com.dearlicy.dreamtide/platform"
+    private val channelName = "com.dearlicy.sillytavern/platform"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

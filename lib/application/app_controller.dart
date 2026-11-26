@@ -18,10 +18,13 @@ import '../data/initial_data.dart';
 import '../data/attachment_store.dart';
 import '../domain/models.dart';
 import '../data/image_content.dart';
+import '../data/character_card.dart';
 
 part 'data_management.dart';
 part 'profile_management.dart';
 part 'media_tools.dart';
+part 'world_book_management.dart';
+part 'character_card_management.dart';
 part 'portable_backup.dart';
 
 class ApplicationState {
@@ -31,6 +34,7 @@ class ApplicationState {
     this.generatingThreadId,
     this.error,
     this.hasApiKey = false,
+    this.hasToolApiKey = false,
   });
 
   final AppData data;
@@ -38,6 +42,7 @@ class ApplicationState {
   final String? generatingThreadId;
   final String? error;
   final bool hasApiKey;
+  final bool hasToolApiKey;
 
   ApplicationState copyWith({
     AppData? data,
@@ -47,6 +52,7 @@ class ApplicationState {
     String? error,
     bool clearError = false,
     bool? hasApiKey,
+    bool? hasToolApiKey,
   }) => ApplicationState(
     data: data ?? this.data,
     loading: loading ?? this.loading,
@@ -55,6 +61,7 @@ class ApplicationState {
         : (generatingThreadId ?? this.generatingThreadId),
     error: clearError ? null : (error ?? this.error),
     hasApiKey: hasApiKey ?? this.hasApiKey,
+    hasToolApiKey: hasToolApiKey ?? this.hasToolApiKey,
   );
 }
 
@@ -76,11 +83,15 @@ class AppController extends StateNotifier<ApplicationState> {
   AppController({
     LocalDataStore? store,
     ApiKeyStore? keyStore,
+    ApiKeyStore? toolKeyStore,
     AiClient? aiClient,
     AttachmentStore? attachmentStore,
     DeepSeekTools? tools,
   }) : _store = store ?? createLocalDataStore(),
        _keyStore = keyStore ?? ProviderKeyStore(),
+       _toolKeyStore =
+           toolKeyStore ??
+           ProviderKeyStore(storageKey: 'sillytavern.tools.apiKey'),
        _aiClient = aiClient ?? AiClient(),
        _attachmentStore = attachmentStore,
        _tools = tools ?? DeepSeekTools(),
@@ -90,6 +101,7 @@ class AppController extends StateNotifier<ApplicationState> {
 
   final LocalDataStore _store;
   final ApiKeyStore _keyStore;
+  final ApiKeyStore _toolKeyStore;
   final AiClient _aiClient;
   final DeepSeekTools _tools;
   final AttachmentStore? _attachmentStore;
@@ -107,7 +119,10 @@ class AppController extends StateNotifier<ApplicationState> {
   int _lifecycleGeneration = 0;
   int _providerGeneration = 0;
   int _providerChanges = 0;
-  Future<void> _providerWrites = Future<void>.value();
+  int _toolGeneration = 0;
+  int _toolChanges = 0;
+  int? _activeSearchGeneration;
+  Future<void> _credentialWrites = Future<void>.value();
   final Set<String> _summaryInFlight = {};
   final Map<String, DateTime> _summaryRetryAfter = {};
   final Map<String, Completer<void>> _summaryAbortTriggers = {};
@@ -128,12 +143,16 @@ class AppController extends StateNotifier<ApplicationState> {
         persistent: data.settings.provider.rememberKey,
       );
       _hasApiKey = key?.trim().isNotEmpty ?? false;
+      final toolKey = await _toolKeyStore.read(
+        persistent: data.settings.tools.rememberKey,
+      );
       if (!mounted) return;
       state = state.copyWith(
         data: data,
         loading: false,
         clearError: true,
         hasApiKey: _hasApiKey,
+        hasToolApiKey: toolKey?.trim().isNotEmpty ?? false,
       );
     } catch (error) {
       if (!mounted) return;
@@ -360,24 +379,40 @@ class AppController extends StateNotifier<ApplicationState> {
     }
   }
 
-  Future<void> _changeProvider(Future<void> Function(int epoch) action) async {
+  Future<void> _serializeCredentials(Future<void> Function() action) async {
+    final previous = _credentialWrites;
+    final done = Completer<void>();
+    _credentialWrites = done.future;
+    try {
+      await previous;
+      if (mounted) await action();
+    } finally {
+      done.complete();
+    }
+  }
+
+  Future<void> _changeProvider(
+    Future<void> Function(int epoch) action, {
+    bool includeTools = false,
+  }) async {
     final epoch = ++_providerGeneration;
     _providerChanges++;
+    if (includeTools) {
+      ++_toolGeneration;
+      _toolChanges++;
+    }
     if (_activeGenerationAbort != null || state.generatingThreadId != null) {
       _stopActiveGeneration();
     }
     _cancelPendingSummaries();
-    _tools.cancelAll();
-    final previous = _providerWrites;
-    final done = Completer<void>();
-    _providerWrites = done.future;
+    if (includeTools || state.data.settings.tools.useChatKey) {
+      _tools.cancelAll();
+    }
     try {
-      await previous;
-      if (!mounted) return;
-      await action(epoch);
+      await _serializeCredentials(() => action(epoch));
     } finally {
       _providerChanges--;
-      done.complete();
+      if (includeTools) _toolChanges--;
     }
   }
 
@@ -661,12 +696,21 @@ class AppController extends StateNotifier<ApplicationState> {
     try {
       var requestMessages = await _materializeImages(prompt.messages);
       if (searchWeb) {
-        sources = await _tools.search(
-          baseUrl: data.settings.provider.baseUrl,
-          apiKey: apiKey,
-          abortTrigger: abort.future,
-          query: trimmed.runes.take(128).map(String.fromCharCode).join(),
-        );
+        _activeSearchGeneration = generation;
+        try {
+          final (toolUrl, toolKey) = await _toolCredentials();
+          if (!mounted || generation != _generation) return;
+          sources = await _tools.search(
+            baseUrl: toolUrl,
+            apiKey: toolKey,
+            abortTrigger: abort.future,
+            query: trimmed.runes.take(128).map(String.fromCharCode).join(),
+          );
+        } finally {
+          if (_activeSearchGeneration == generation) {
+            _activeSearchGeneration = null;
+          }
+        }
         if (!mounted || generation != _generation) return;
         final sourceBlock = PromptMessage(
           'system',
@@ -1466,7 +1510,7 @@ class AppController extends StateNotifier<ApplicationState> {
     AppData data,
     Future<void> Function() apply,
   ) async {
-    if (_providerChanges > 0) {
+    if (_providerChanges > 0 || _toolChanges > 0) {
       throw const AiClientException('供应商配置正在更新，请稍后恢复备份。');
     }
     await _changeProvider((epoch) async {
@@ -1480,11 +1524,18 @@ class AppController extends StateNotifier<ApplicationState> {
         _hasApiKey = false;
         if (mounted) state = state.copyWith(hasApiKey: false);
       }
+      final currentTools = state.data.settings.tools;
+      final restoredTools = data.settings.tools;
+      if (currentTools.useChatKey != restoredTools.useChatKey ||
+          currentTools.rememberKey != restoredTools.rememberKey) {
+        await _toolKeyStore.clear();
+        if (mounted) state = state.copyWith(hasToolApiKey: false);
+      }
       if (!mounted || epoch != _providerGeneration) {
         throw const AiClientException('配置已改变，请重试恢复。');
       }
       await apply();
-    });
+    }, includeTools: true);
   }
 
   Future<void> importBackup(String raw) async {
@@ -1493,13 +1544,13 @@ class AppController extends StateNotifier<ApplicationState> {
     if (decoded is! Map<String, dynamic>) {
       throw const FormatException('备份格式不正确');
     }
-    if (decoded['format'] == 'dreamtide.media.v1') {
+    if (decoded['format'] == 'sillytavern.media.v1') {
       await _importPortableBackup(decoded);
       return;
     }
     final data = AppData.fromJson(decoded);
     if (data.schemaVersion != 2) {
-      throw const FormatException('只支持 Dreamtide V2 备份');
+      throw const FormatException('只支持 SillyTavern V2 备份');
     }
     await _withBackupProvider(data, () async {
       state = state.copyWith(clearGenerating: true);
@@ -1524,19 +1575,21 @@ class AppController extends StateNotifier<ApplicationState> {
     _saveTimer?.cancel();
     await _changeProvider((_) async {
       await _keyStore.clear();
+      await _toolKeyStore.clear();
       _hasApiKey = false;
-      state = state.copyWith(hasApiKey: false);
+      state = state.copyWith(hasApiKey: false, hasToolApiKey: false);
       await _attachmentStore?.clear();
       await _saveQueue;
       await _store.clear();
       _commit(buildEmptyData());
       state = state.copyWith(
         hasApiKey: false,
+        hasToolApiKey: false,
         clearGenerating: true,
         clearError: true,
       );
       await flush();
-    });
+    }, includeTools: true);
   }
 
   @override

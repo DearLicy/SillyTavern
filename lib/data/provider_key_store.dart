@@ -11,8 +11,10 @@ abstract interface class ApiKeyStore {
 }
 
 class ProviderKeyStore implements ApiKeyStore {
-  static const _secureKey = 'dreamtide.provider.apiKey';
-  static const _webKey = 'dreamtide.provider.apiKey.web';
+  ProviderKeyStore({this.storageKey = 'sillytavern.provider.apiKey'});
+
+  final String storageKey;
+  String get _webKey => '$storageKey.web';
   static final FlutterSecureStorage _secure = const FlutterSecureStorage();
 
   String? _sessionKey;
@@ -25,7 +27,7 @@ class ProviderKeyStore implements ApiKeyStore {
       return prefs.getString(_webKey);
     }
     if (!persistent) return _sessionKey;
-    return _secure.read(key: _secureKey);
+    return _secure.read(key: storageKey);
   }
 
   @override
@@ -42,9 +44,9 @@ class ProviderKeyStore implements ApiKeyStore {
     }
     _sessionKey = value.isEmpty ? null : value;
     if (!persistent || value.isEmpty) {
-      await _secure.delete(key: _secureKey);
+      await _secure.delete(key: storageKey);
     } else {
-      await _secure.write(key: _secureKey, value: value);
+      await _secure.write(key: storageKey, value: value);
     }
   }
 
@@ -56,6 +58,6 @@ class ProviderKeyStore implements ApiKeyStore {
       await prefs.remove(_webKey);
       return;
     }
-    await _secure.delete(key: _secureKey);
+    await _secure.delete(key: storageKey);
   }
 }

@@ -10,8 +10,8 @@ import 'router/app_router.dart';
 import 'ui/screens/age_gate_page.dart';
 import 'ui/theme/dt_theme.dart';
 
-class DreamtideApp extends ConsumerWidget {
-  const DreamtideApp({super.key});
+class SillyTavernApp extends ConsumerWidget {
+  const SillyTavernApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -26,7 +26,7 @@ class DreamtideApp extends ConsumerWidget {
     };
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: '触梦 Dreamtide',
+      title: 'SillyTavern APP',
       routerConfig: router,
       theme: DtTheme.light(),
       darkTheme: DtTheme.dark(),

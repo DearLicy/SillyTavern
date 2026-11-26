@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:dreamtide/data/attachment_store_base.dart';
-import 'package:dreamtide/data/local_store_base.dart';
-import 'package:dreamtide/data/provider_key_store.dart';
-import 'package:dreamtide/domain/models.dart';
+import 'package:sillytavern_app/data/attachment_store_base.dart';
+import 'package:sillytavern_app/data/local_store_base.dart';
+import 'package:sillytavern_app/data/provider_key_store.dart';
+import 'package:sillytavern_app/domain/models.dart';
 
 class FakeStore implements LocalDataStore {
   FakeStore([this.data]);

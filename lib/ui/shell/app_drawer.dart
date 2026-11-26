@@ -147,7 +147,7 @@ class AppDrawer extends ConsumerWidget {
                           _DrawerRow(
                             icon: Icons.info_outline_rounded,
                             iconColor: const Color(0xFF8090A8),
-                            title: '关于 Dreamtide',
+                            title: '关于 SillyTavern',
                             subtitle: 'V2.0.0 · 本地 AI 梦境恋爱 IM',
                             onTap: () {
                               Navigator.of(context).pop();
@@ -165,7 +165,7 @@ class AppDrawer extends ConsumerWidget {
                 child: Row(
                   children: [
                     Text(
-                      '触梦 Dreamtide',
+                      'SillyTavern APP',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,

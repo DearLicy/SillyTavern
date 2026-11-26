@@ -14,5 +14,5 @@ Future<void> main() async {
       systemNavigationBarDividerColor: Colors.transparent,
     ),
   );
-  runApp(const ProviderScope(child: DreamtideApp()));
+  runApp(const ProviderScope(child: SillyTavernApp()));
 }

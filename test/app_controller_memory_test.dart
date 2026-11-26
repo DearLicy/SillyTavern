@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:dreamtide/ai/ai_client.dart';
-import 'package:dreamtide/ai/context_assembler.dart';
-import 'package:dreamtide/ai/deepseek_tools.dart';
-import 'package:dreamtide/application/app_controller.dart';
-import 'package:dreamtide/data/local_store_base.dart';
-import 'package:dreamtide/data/provider_key_store.dart';
-import 'package:dreamtide/domain/models.dart';
+import 'package:sillytavern_app/ai/ai_client.dart';
+import 'package:sillytavern_app/ai/context_assembler.dart';
+import 'package:sillytavern_app/ai/deepseek_tools.dart';
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/data/local_store_base.dart';
+import 'package:sillytavern_app/data/provider_key_store.dart';
+import 'package:sillytavern_app/domain/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -107,6 +107,7 @@ void main() {
       final controller = AppController(
         store: store,
         keyStore: _MemoryKeyStore(),
+        toolKeyStore: _MemoryKeyStore(),
         aiClient: client,
       );
       addTearDown(controller.dispose);
@@ -211,6 +212,7 @@ void main() {
       final controller = AppController(
         store: _MemoryStore(data),
         keyStore: _MemoryKeyStore(),
+        toolKeyStore: _MemoryKeyStore(),
         aiClient: ai,
         attachmentStore: MemoryAttachments()
           ..files['image-reference.jpg'] = MemoryAttachments.pixel,
@@ -267,6 +269,7 @@ void main() {
       final controller = AppController(
         store: _MemoryStore(data),
         keyStore: _MemoryKeyStore(),
+        toolKeyStore: _MemoryKeyStore(),
         aiClient: ai,
         attachmentStore: MemoryAttachments()
           ..files['image-reference.jpg'] = MemoryAttachments.pixel,
@@ -353,6 +356,7 @@ void main() {
       final controller = AppController(
         store: _MemoryStore(data),
         keyStore: _MemoryKeyStore(),
+        toolKeyStore: _MemoryKeyStore(),
         aiClient: ai,
         tools: tools,
       );
@@ -419,6 +423,7 @@ void main() {
           ),
         ),
         keyStore: _MemoryKeyStore(),
+        toolKeyStore: _MemoryKeyStore(),
         aiClient: ai,
       );
       addTearDown(controller.dispose);
@@ -474,6 +479,7 @@ void main() {
     final controller = AppController(
       store: _MemoryStore(data),
       keyStore: _MemoryKeyStore(),
+      toolKeyStore: _MemoryKeyStore(),
       aiClient: ai,
     );
     addTearDown(controller.dispose);
@@ -528,6 +534,7 @@ void main() {
       final controller = AppController(
         store: _MemoryStore(data),
         keyStore: _MemoryKeyStore(),
+        toolKeyStore: _MemoryKeyStore(),
         aiClient: ai,
         attachmentStore: MemoryAttachments()
           ..files['image-reference.jpg'] = MemoryAttachments.pixel,
@@ -583,6 +590,7 @@ void main() {
       final controller = AppController(
         store: _MemoryStore(data),
         keyStore: _MemoryKeyStore(),
+        toolKeyStore: _MemoryKeyStore(),
         aiClient: ai,
         attachmentStore: MemoryAttachments()
           ..files['image-reference.jpg'] = MemoryAttachments.pixel,
@@ -657,6 +665,7 @@ void main() {
       final controller = AppController(
         store: _MemoryStore(data),
         keyStore: _MemoryKeyStore(),
+        toolKeyStore: _MemoryKeyStore(),
         aiClient: ai,
         attachmentStore: MemoryAttachments()
           ..files['image-reference.jpg'] = MemoryAttachments.pixel,

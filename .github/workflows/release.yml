@@ -56,11 +56,11 @@ jobs:
           mkdir -p .tmp/ipa/Payload
           cp -R build/ios/iphoneos/Runner.app .tmp/ipa/Payload/
           cd .tmp/ipa
-          zip -qry ../../build/Dreamtide-unsigned.ipa Payload
+          zip -qry ../../build/SillyTavern-unsigned.ipa Payload
       - uses: actions/upload-artifact@v4
         with:
           name: ios-unsigned
-          path: build/Dreamtide-unsigned.ipa
+          path: build/SillyTavern-unsigned.ipa
 
   publish:
     runs-on: ubuntu-latest
@@ -77,14 +77,14 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ inputs.release_tag || github.ref_name }}
-          name: Dreamtide ${{ inputs.release_tag || github.ref_name }}
+          name: SillyTavern ${{ inputs.release_tag || github.ref_name }}
           files: |
             release-assets/flat/*.apk
             release-assets/flat/*.ipa
             release-assets/flat/SHA256SUMS.txt
           generate_release_notes: true
           body: |
-            Dreamtide V2 GitHub build.
+            SillyTavern V2 GitHub build.
 
             - Android APK can be installed directly.
             - iOS IPA is unsigned. Use iLoader + LiveContainer + SideStore or your own Xcode certificate.

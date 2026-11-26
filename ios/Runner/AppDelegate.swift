@@ -10,7 +10,7 @@ import UIKit
     GeneratedPluginRegistrant.register(with: self)
     if let controller = window?.rootViewController as? FlutterViewController {
       let channel = FlutterMethodChannel(
-        name: "com.dearlicy.dreamtide/platform",
+        name: "com.dearlicy.sillytavern/platform",
         binaryMessenger: controller.binaryMessenger
       )
       channel.setMethodCallHandler { call, result in

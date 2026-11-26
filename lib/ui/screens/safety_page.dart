@@ -44,7 +44,7 @@ class SafetyPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  'Dreamtide 只面向达到法定成年年龄的用户。所有性相关内容只允许发生在明确成年、自愿的虚构角色之间；禁止未成年人性内容、现实伤害、胁迫和非自愿互动。',
+                  'SillyTavern 只面向达到法定成年年龄的用户。所有性相关内容只允许发生在明确成年、自愿的虚构角色之间；禁止未成年人性内容、现实伤害、胁迫和非自愿互动。',
                   style: TextStyle(fontSize: 12.5, height: 1.65),
                 ),
               ],
@@ -159,7 +159,7 @@ class SafetyPage extends ConsumerWidget {
                   icon: Icons.cloud_off_outlined,
                   iconColor: DtColors.mint,
                   title: '无自有云同步',
-                  subtitle: 'Dreamtide 不运营账号或内容服务器',
+                  subtitle: 'SillyTavern 不运营账号或内容服务器',
                 ),
               ],
             ),

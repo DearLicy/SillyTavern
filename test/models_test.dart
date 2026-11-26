@@ -1,5 +1,5 @@
 import 'fixtures/sample_data.dart';
-import 'package:dreamtide/domain/models.dart';
+import 'package:sillytavern_app/domain/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

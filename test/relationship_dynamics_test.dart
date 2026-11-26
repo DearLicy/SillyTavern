@@ -1,4 +1,4 @@
-import 'package:dreamtide/ai/relationship_dynamics.dart';
+import 'package:sillytavern_app/ai/relationship_dynamics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fixtures/sample_data.dart';

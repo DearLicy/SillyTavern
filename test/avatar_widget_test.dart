@@ -1,9 +1,9 @@
-import 'package:dreamtide/application/app_controller.dart';
-import 'package:dreamtide/data/image_content.dart';
-import 'package:dreamtide/domain/models.dart';
-import 'package:dreamtide/router/app_router.dart';
-import 'package:dreamtide/ui/components/dt_avatar.dart';
-import 'package:dreamtide/ui/components/dt_avatar_editor.dart';
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/data/image_content.dart';
+import 'package:sillytavern_app/domain/models.dart';
+import 'package:sillytavern_app/router/app_router.dart';
+import 'package:sillytavern_app/ui/components/dt_avatar.dart';
+import 'package:sillytavern_app/ui/components/dt_avatar_editor.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';

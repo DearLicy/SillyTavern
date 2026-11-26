@@ -2,13 +2,13 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dreamtide/ai/ai_client.dart';
-import 'package:dreamtide/ai/context_assembler.dart';
-import 'package:dreamtide/ai/deepseek_tools.dart';
-import 'package:dreamtide/application/app_controller.dart';
-import 'package:dreamtide/data/image_content.dart';
-import 'package:dreamtide/domain/models.dart';
-import 'package:dreamtide/platform/pcm_audio.dart';
+import 'package:sillytavern_app/ai/ai_client.dart';
+import 'package:sillytavern_app/ai/context_assembler.dart';
+import 'package:sillytavern_app/ai/deepseek_tools.dart';
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/data/image_content.dart';
+import 'package:sillytavern_app/domain/models.dart';
+import 'package:sillytavern_app/platform/pcm_audio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -28,6 +28,7 @@ Future<AppController> start(
   final controller = AppController(
     store: store,
     keyStore: FakeKeyStore()..value = 'fake-test-key',
+    toolKeyStore: FakeKeyStore(),
     attachmentStore: files,
     aiClient: ai,
     tools: tools,
@@ -552,7 +553,7 @@ void main() {
       await expectLater(
         controller.importBackup(
           jsonEncode({
-            'format': 'dreamtide.media.v1',
+            'format': 'sillytavern.media.v1',
             'data': json,
             'attachments': {},
           }),

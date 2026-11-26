@@ -43,11 +43,32 @@ class SettingsPage extends ConsumerWidget {
                 ),
                 const Divider(indent: 62),
                 DtSettingRow(
+                  icon: Icons.record_voice_over_outlined,
+                  title: '搜索与语音',
+                  subtitle: settings.tools.useChatKey
+                      ? (settings.provider.isOfficialDeepSeek && state.hasApiKey
+                            ? '复用官方聊天密钥'
+                            : '可单独配置 DeepSeek 官方工具')
+                      : (state.hasToolApiKey ? '独立工具密钥已配置' : '工具密钥未配置'),
+                  onTap: () => context.push('/tools'),
+                ),
+                const Divider(indent: 62),
+                DtSettingRow(
                   icon: Icons.auto_awesome_rounded,
                   iconColor: DtColors.violet,
                   title: '梦设管理',
                   subtitle: '${state.data.personas.length} 套梦设',
                   onTap: () => context.push('/personas'),
+                ),
+                const Divider(indent: 62),
+                DtSettingRow(
+                  icon: Icons.menu_book_outlined,
+                  iconColor: DtColors.mint,
+                  title: '世界书',
+                  subtitle: state.data.worldBooks.isEmpty
+                      ? '关键词资料与作者注记'
+                      : '${state.data.worldBooks.length} 本 · 作者注记',
+                  onTap: () => context.push('/world-books'),
                 ),
               ],
             ),
@@ -106,8 +127,8 @@ class SettingsPage extends ConsumerWidget {
               children: [
                 DtSettingRow(
                   icon: Icons.info_outline_rounded,
-                  title: '关于 Dreamtide',
-                  subtitle: 'V2.0.0 · 本地优先 AI 梦境恋爱 IM',
+                  title: '关于 SillyTavern',
+                  subtitle: '本地优先 · BYOK · LLM 前端',
                   onTap: () => context.push('/about'),
                 ),
                 const Divider(indent: 62),

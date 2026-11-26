@@ -15,8 +15,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
       fixture.threads=fixture.threads.map(t=>({...t,contextMemo:'',summarizedThroughMessageId:null}));
       await context.addInitScript(data=>{
         if (!localStorage.getItem('compat-seeded')) {
-          localStorage.setItem('flutter.dreamtide.v2.state',JSON.stringify(JSON.stringify(data)));
-          localStorage.setItem('flutter.dreamtide.provider.apiKey.web',JSON.stringify('fake-browser-test-key'));
+          localStorage.setItem('flutter.sillytavern.v2.state',JSON.stringify(JSON.stringify(data)));
+          localStorage.setItem('flutter.sillytavern.provider.apiKey.web',JSON.stringify('fake-browser-test-key'));
           localStorage.setItem('compat-seeded','1');
         }
       },fixture);
@@ -33,13 +33,13 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         if(mode==='error')return route.fulfill({status:200,contentType:'text/event-stream',body:'event: error\ndata: {"error":{"message":"测试供应商上游暂时不可用"}}\n\n'});
         return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({choices:[{message:{content:mode==='retry'?'重试成功并保留原消息':'兼容回退回复成功'},finish_reason:'stop'}]})});
       });
-      await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/Dreamtide/') + '#/chat/thread_gu',{waitUntil:'networkidle'});
+      await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/SillyTavern/') + '#/chat/thread_gu',{waitUntil:'networkidle'});
       await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});
       await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());
       await page.getByRole('textbox').last().waitFor({state:'attached'});
-      assert.match(await page.title(),/Dreamtide|触梦/);
+      assert.match(await page.title(),/SillyTavern|SillyTavern/);
       const send=async text=>{await fillFlutterText(page,page.getByRole('textbox').last(),text);await page.getByRole('button',{name:'发送',exact:true,disabled:false}).evaluate(e=>e.click())};
-      const read=()=>page.evaluate(()=>JSON.parse(JSON.parse(localStorage.getItem('flutter.dreamtide.v2.state'))));
+      const read=()=>page.evaluate(()=>JSON.parse(JSON.parse(localStorage.getItem('flutter.sillytavern.v2.state'))));
       await send('请自然接话');
       await page.getByRole('button',{name:'长按消息操作 兼容回退回复成功',exact:true}).waitFor();
       assert.deepEqual(bodies.map(b=>b.stream),[true,false]);

@@ -4,7 +4,7 @@
 
 1. `export TMPDIR="$PWD/.tmp" TMP="$PWD/.tmp" TEMP="$PWD/.tmp"`，先 `mkdir -p .tmp`。
 2. `dart run tool/qa/export_fixture.dart`。
-3. `flutter build web --release --base-href '/Dreamtide/'`。
+3. `flutter build web --release --base-href '/SillyTavern/'`。
 4. 指定已安装的 Playwright 模块与 Chromium，运行全部验收。包装脚本在本机 8089 端口托管构建，结束后关闭自身启动的服务：
 
 ```bash

@@ -18,8 +18,8 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
    await context.addInitScript(data=>{
     if(localStorage.getItem('provider-seeded')) return;
     localStorage.setItem('provider-seeded','1');
-    localStorage.setItem('flutter.dreamtide.v2.state',JSON.stringify(JSON.stringify(data)));
-    localStorage.setItem('flutter.dreamtide.provider.apiKey.web',JSON.stringify('fake-old-key'));
+    localStorage.setItem('flutter.sillytavern.v2.state',JSON.stringify(JSON.stringify(data)));
+    localStorage.setItem('flutter.sillytavern.provider.apiKey.web',JSON.stringify('fake-old-key'));
    },fixture);
    const page=await context.newPage();page.setDefaultTimeout(30000);
    const errors=[],calls=[];page.on('pageerror',e=>errors.push(e.stack||e.message));
@@ -36,12 +36,12 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
    });
    const click=async(name)=>{await page.getByRole('button',{name,exact:true,disabled:false}).last().evaluate(e=>e.click());await page.waitForTimeout(300)};
    const type=(box,text)=>fillFlutterText(page,box,text);
-   const read=()=>page.evaluate(()=>JSON.parse(JSON.parse(localStorage.getItem('flutter.dreamtide.v2.state'))));
+   const read=()=>page.evaluate(()=>JSON.parse(JSON.parse(localStorage.getItem('flutter.sillytavern.v2.state'))));
    try {
-   await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/Dreamtide/')+'#/provider',{waitUntil:'domcontentloaded',timeout:startupTimeout});
+   await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/SillyTavern/')+'#/provider',{waitUntil:'domcontentloaded',timeout:startupTimeout});
    await page.locator('flt-canvas-container canvas').first().waitFor({state:'visible',timeout:startupTimeout});
    await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());
-   await page.getByRole('textbox').first().waitFor();assert.match(await page.title(),/Dreamtide|触梦/);
+   await page.getByRole('textbox').first().waitFor();assert.match(await page.title(),/SillyTavern|SillyTavern/);
    await type(page.getByRole('textbox').first(),'https://catalog.example');await click('拉取模型');
    await page.getByText('更换供应商地址后，请填写该供应商的 API Key。',{exact:true}).waitFor();assert.equal(calls.length,0);
    await type(page.getByRole('textbox').nth(1),'fake-new-key');await click('拉取模型');
@@ -51,7 +51,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
    await page.screenshot({path:`.tmp/provider-picker-${width===390?'phone':'desktop'}-${theme}.png`});await page.getByRole('button',{name:/^目标视觉模型/}).evaluate(e=>e.click());
    await click('保存');
    await page.waitForFunction(()=>{
-    const raw=localStorage.getItem('flutter.dreamtide.v2.state');
+    const raw=localStorage.getItem('flutter.sillytavern.v2.state');
     return raw && JSON.parse(JSON.parse(raw)).settings.provider.model==='model-1499';
    });
    await page.waitForURL(url=>url.hash==='#/messages');

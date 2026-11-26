@@ -963,6 +963,17 @@ class ProviderConfig {
   final bool rememberKey;
   final List<String> models;
 
+  bool get isOfficialDeepSeek {
+    final uri = Uri.tryParse(baseUrl.trim());
+    return uri != null &&
+        uri.scheme == 'https' &&
+        uri.host.toLowerCase() == 'api.deepseek.com' &&
+        uri.userInfo.isEmpty &&
+        !uri.hasPort &&
+        !uri.hasQuery &&
+        !uri.hasFragment;
+  }
+
   /// Root, /v1 and completion/catalog URLs may name the same API. A different
   /// origin or tenant path must never inherit another supplier's saved key.
   bool sharesCredentialScopeWith(ProviderConfig other) {
@@ -1027,6 +1038,25 @@ class ProviderConfig {
   );
 }
 
+/// Configuration only. Credentials live in a separate secure/session store.
+class DeepSeekToolConfig {
+  const DeepSeekToolConfig({this.useChatKey = true, this.rememberKey = false});
+
+  final bool useChatKey;
+  final bool rememberKey;
+
+  Map<String, dynamic> toJson() => {
+    'useChatKey': useChatKey,
+    'rememberKey': rememberKey,
+  };
+
+  factory DeepSeekToolConfig.fromJson(Map<String, dynamic> json) =>
+      DeepSeekToolConfig(
+        useChatKey: json['useChatKey'] as bool? ?? true,
+        rememberKey: json['rememberKey'] as bool? ?? false,
+      );
+}
+
 class AppSettings {
   const AppSettings({
     this.themeMode = AppThemeMode.system,
@@ -1034,6 +1064,7 @@ class AppSettings {
     this.onboardingComplete = false,
     this.currentPersonaId = '',
     this.provider = const ProviderConfig(),
+    this.tools = const DeepSeekToolConfig(),
     this.contentCeiling = ContentLevel.mature,
   });
 
@@ -1042,6 +1073,7 @@ class AppSettings {
   final bool onboardingComplete;
   final String currentPersonaId;
   final ProviderConfig provider;
+  final DeepSeekToolConfig tools;
   final ContentLevel contentCeiling;
 
   AppSettings copyWith({
@@ -1050,6 +1082,7 @@ class AppSettings {
     bool? onboardingComplete,
     String? currentPersonaId,
     ProviderConfig? provider,
+    DeepSeekToolConfig? tools,
     ContentLevel? contentCeiling,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
@@ -1057,6 +1090,7 @@ class AppSettings {
     onboardingComplete: onboardingComplete ?? this.onboardingComplete,
     currentPersonaId: currentPersonaId ?? this.currentPersonaId,
     provider: provider ?? this.provider,
+    tools: tools ?? this.tools,
     contentCeiling: contentCeiling ?? this.contentCeiling,
   );
 
@@ -1066,6 +1100,7 @@ class AppSettings {
     'onboardingComplete': onboardingComplete,
     'currentPersonaId': currentPersonaId,
     'provider': provider.toJson(),
+    'tools': tools.toJson(),
     'contentCeiling': contentCeiling.name,
   };
 
@@ -1080,7 +1115,151 @@ class AppSettings {
     provider: ProviderConfig.fromJson(
       Map<String, dynamic>.from(json['provider'] as Map? ?? const {}),
     ),
+    tools: DeepSeekToolConfig.fromJson(
+      Map<String, dynamic>.from(json['tools'] as Map? ?? const {}),
+    ),
     contentCeiling: ContentLevel.fromName(json['contentCeiling'] as String?),
+  );
+}
+
+enum WorldInfoMode {
+  keyword('关键词'),
+  constant('常驻');
+
+  const WorldInfoMode(this.label);
+  final String label;
+
+  static WorldInfoMode fromName(String? value) => values.firstWhere(
+    (e) => e.name == value,
+    orElse: () => WorldInfoMode.keyword,
+  );
+}
+
+/// World Info / World Book entry, compatible with the core SillyTavern idea:
+/// keyword-triggered lore injected into the system prompt before the chat.
+class WorldInfoEntry {
+  const WorldInfoEntry({
+    required this.id,
+    required this.keys,
+    required this.content,
+    this.comment = '',
+    this.mode = WorldInfoMode.keyword,
+    this.order = 100,
+    this.probability = 100,
+    this.recursive = false,
+    this.enabled = true,
+  });
+
+  final String id;
+  final List<String> keys;
+  final String content;
+  final String comment;
+  final WorldInfoMode mode;
+  final int order;
+  final int probability;
+  final bool recursive;
+  final bool enabled;
+
+  WorldInfoEntry copyWith({
+    List<String>? keys,
+    String? content,
+    String? comment,
+    WorldInfoMode? mode,
+    int? order,
+    int? probability,
+    bool? recursive,
+    bool? enabled,
+  }) => WorldInfoEntry(
+    id: id,
+    keys: keys ?? this.keys,
+    content: content ?? this.content,
+    comment: comment ?? this.comment,
+    mode: mode ?? this.mode,
+    order: order ?? this.order,
+    probability: probability ?? this.probability,
+    recursive: recursive ?? this.recursive,
+    enabled: enabled ?? this.enabled,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'keys': keys,
+    'content': content,
+    'comment': comment,
+    'mode': mode.name,
+    'order': order,
+    'probability': probability,
+    'recursive': recursive,
+    'enabled': enabled,
+  };
+
+  factory WorldInfoEntry.fromJson(Map<String, dynamic> json) => WorldInfoEntry(
+    id: json['id'] as String? ?? '',
+    keys:
+        (json['keys'] as List?)?.map((e) => e.toString()).toList() ?? const [],
+    content: json['content'] as String? ?? '',
+    comment: json['comment'] as String? ?? '',
+    mode: WorldInfoMode.fromName(json['mode'] as String?),
+    order: (json['order'] as num?)?.toInt() ?? 100,
+    probability: (json['probability'] as num?)?.toInt() ?? 100,
+    recursive: json['recursive'] as bool? ?? false,
+    enabled: json['enabled'] as bool? ?? true,
+  );
+}
+
+class WorldBook {
+  const WorldBook({
+    required this.id,
+    required this.name,
+    required this.entries,
+    this.authorNote = '',
+    this.authorNoteDepth = 2,
+    this.enabled = true,
+  });
+
+  final String id;
+  final String name;
+  final List<WorldInfoEntry> entries;
+  final String authorNote;
+  final int authorNoteDepth;
+  final bool enabled;
+
+  WorldBook copyWith({
+    String? name,
+    List<WorldInfoEntry>? entries,
+    String? authorNote,
+    int? authorNoteDepth,
+    bool? enabled,
+  }) => WorldBook(
+    id: id,
+    name: name ?? this.name,
+    entries: entries ?? this.entries,
+    authorNote: authorNote ?? this.authorNote,
+    authorNoteDepth: authorNoteDepth ?? this.authorNoteDepth,
+    enabled: enabled ?? this.enabled,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'entries': entries.map((e) => e.toJson()).toList(),
+    'authorNote': authorNote,
+    'authorNoteDepth': authorNoteDepth,
+    'enabled': enabled,
+  };
+
+  factory WorldBook.fromJson(Map<String, dynamic> json) => WorldBook(
+    id: json['id'] as String? ?? '',
+    name: json['name'] as String? ?? '默认世界书',
+    entries:
+        (json['entries'] as List?)
+            ?.whereType<Map>()
+            .map((e) => WorldInfoEntry.fromJson(Map<String, dynamic>.from(e)))
+            .toList() ??
+        const [],
+    authorNote: json['authorNote'] as String? ?? '',
+    authorNoteDepth: (json['authorNoteDepth'] as num?)?.toInt() ?? 2,
+    enabled: json['enabled'] as bool? ?? true,
   );
 }
 
@@ -1096,6 +1275,7 @@ class AppData {
     required this.messages,
     required this.memories,
     required this.moments,
+    required this.worldBooks,
   });
 
   final int schemaVersion;
@@ -1108,6 +1288,7 @@ class AppData {
   final List<Message> messages;
   final List<MemoryItem> memories;
   final List<Moment> moments;
+  final List<WorldBook> worldBooks;
 
   AppData copyWith({
     OwnerProfile? owner,
@@ -1119,6 +1300,7 @@ class AppData {
     List<Message>? messages,
     List<MemoryItem>? memories,
     List<Moment>? moments,
+    List<WorldBook>? worldBooks,
   }) => AppData(
     schemaVersion: schemaVersion,
     owner: owner ?? this.owner,
@@ -1130,6 +1312,7 @@ class AppData {
     messages: messages ?? this.messages,
     memories: memories ?? this.memories,
     moments: moments ?? this.moments,
+    worldBooks: worldBooks ?? this.worldBooks,
   );
 
   Map<String, dynamic> toJson() => {
@@ -1143,6 +1326,7 @@ class AppData {
     'messages': messages.map((e) => e.toJson()).toList(),
     'memories': memories.map((e) => e.toJson()).toList(),
     'moments': moments.map((e) => e.toJson()).toList(),
+    'worldBooks': worldBooks.map((e) => e.toJson()).toList(),
   };
 
   factory AppData.fromJson(Map<String, dynamic> json) => AppData(
@@ -1193,6 +1377,12 @@ class AppData {
         (json['moments'] as List?)
             ?.whereType<Map>()
             .map((e) => Moment.fromJson(Map<String, dynamic>.from(e)))
+            .toList() ??
+        const [],
+    worldBooks:
+        (json['worldBooks'] as List?)
+            ?.whereType<Map>()
+            .map((e) => WorldBook.fromJson(Map<String, dynamic>.from(e)))
             .toList() ??
         const [],
   );

@@ -8,7 +8,7 @@ const wav=Buffer.alloc(32044);wav.write('RIFF');wav.writeUInt32LE(32036,4);wav.w
 const report={mode:'release build + fake authenticated provider + real browser microphone/image storage/playback',cases:[]};try{for(const theme of ['light','dark']){
  const context=await browser.newContext({viewport:{width:390,height:844},permissions:['microphone','clipboard-read','clipboard-write'],colorScheme:theme});
  const fixture=JSON.parse(fs.readFileSync('.tmp/management-fixture.json'));fixture.settings.themeMode=theme;fixture.settings.provider={kind:'openaiCompatible',baseUrl:'https://api.deepseek.com',model:'fake-multimodal',models:['fake-multimodal'],rememberKey:true};fixture.messages=fixture.messages.filter(m=>m.threadId==='thread_gu');fixture.threads=fixture.threads.map(t=>({...t,contextMemo:'',summarizedThroughMessageId:null}));
- await context.addInitScript(data=>{if(!localStorage.getItem('media-seeded')){localStorage.setItem('flutter.dreamtide.v2.state',JSON.stringify(JSON.stringify(data)));localStorage.setItem('flutter.dreamtide.provider.apiKey.web',JSON.stringify('fake-browser-key'));localStorage.setItem('media-seeded','1');}},fixture);
+ await context.addInitScript(data=>{if(!localStorage.getItem('media-seeded')){localStorage.setItem('flutter.sillytavern.v2.state',JSON.stringify(JSON.stringify(data)));localStorage.setItem('flutter.sillytavern.provider.apiKey.web',JSON.stringify('fake-browser-key'));localStorage.setItem('media-seeded','1');}},fixture);
  const page=await context.newPage();page.setDefaultTimeout(20000);const errors=[],calls=[];page.on('pageerror',e=>errors.push(e.stack || e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
  const step=name=>console.log(JSON.stringify({theme,step:name}));
  let visionCount=0;let searchCount=0,asrCount=0,ttsCount=0,ocrCount=0;
@@ -27,7 +27,7 @@ const report={mode:'release build + fake authenticated provider + real browser m
  } catch(error) { errors.push('Mock contract: '+error.message);await route.fulfill({status:500,body:'test contract mismatch'}); }
  });
  const snap=async()=>page.locator('body').ariaSnapshot();
- const read=async()=>page.evaluate(()=>JSON.parse(JSON.parse(localStorage.getItem('flutter.dreamtide.v2.state'))));
+ const read=async()=>page.evaluate(()=>JSON.parse(JSON.parse(localStorage.getItem('flutter.sillytavern.v2.state'))));
  const click=async(name)=>{const escaped=name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');const exact=page.getByRole('button',{name,exact:true});await (await exact.count() ? exact.last() : page.getByRole('button',{name:new RegExp('^'+escaped)}).last()).evaluate(e=>e.click());await page.waitForTimeout(450)};
  const goto=async(path)=>{await page.evaluate(p=>location.hash=p,path);await page.waitForTimeout(550)};
  const file=async(action)=>{
@@ -37,7 +37,7 @@ const report={mode:'release build + fake authenticated provider + real browser m
   await page.waitForTimeout(1500);
  };
  const type=(text)=>fillFlutterText(page,page.getByRole('textbox').last(),text);
- await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/Dreamtide/'),{waitUntil:'networkidle'});await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());await page.waitForTimeout(500);
+ await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/SillyTavern/'),{waitUntil:'networkidle'});await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());await page.waitForTimeout(500);
  step('avatar');await goto('/profile');await page.waitForTimeout(800);await click('更换头像');await file('从相册选择');
  assert.equal((await read()).owner.avatarReference ?? null,null);
  await page.screenshot({path:`.tmp/avatar-preview-${theme}.png`});
@@ -61,7 +61,7 @@ const report={mode:'release build + fake authenticated provider + real browser m
  step('TTS');await click('朗读消息');await click('生成语音');await page.waitForTimeout(700);assert.equal(ttsCount,1);await click('播放语音');await page.waitForTimeout(1300);await click('关闭');
  step('backup restore');await goto('/backup');await click('复制完整备份');await page.waitForTimeout(550);
  const backup=await page.evaluate(()=>navigator.clipboard.readText());const envelope=JSON.parse(backup);
- assert.equal(envelope.format,'dreamtide.media.v1');assert(Object.keys(envelope.attachments).length>=2);assert(!backup.includes('fake-browser-key'));
+ assert.equal(envelope.format,'sillytavern.media.v1');assert(Object.keys(envelope.attachments).length>=2);assert(!backup.includes('fake-browser-key'));
  await click('从 JSON 恢复');await type(backup);await click('覆盖恢复');await page.waitForTimeout(600);
  const restored=await read();assert(restored.owner.avatarReference!==data.owner.avatarReference);assert(restored.messages.some(m=>m.kind==='image'));assert(!JSON.stringify(restored).includes('base64'));
  await page.reload({waitUntil:'networkidle'});await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());await page.waitForTimeout(500);

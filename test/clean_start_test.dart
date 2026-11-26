@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'package:dreamtide/ai/ai_client.dart';
-import 'package:dreamtide/ai/context_assembler.dart';
-import 'package:dreamtide/domain/models.dart';
-import 'package:dreamtide/application/app_controller.dart';
-import 'package:dreamtide/data/initial_data.dart';
+import 'package:sillytavern_app/ai/ai_client.dart';
+import 'package:sillytavern_app/ai/context_assembler.dart';
+import 'package:sillytavern_app/domain/models.dart';
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/data/initial_data.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'fixtures/fake_store.dart';
 import 'fixtures/sample_data.dart';
@@ -41,6 +41,7 @@ void main() {
       final controller = AppController(
         store: FakeStore(source),
         keyStore: FakeKeyStore(),
+        toolKeyStore: FakeKeyStore(),
       );
       await Future<void>.delayed(Duration.zero);
       var accepted = false;
@@ -63,6 +64,7 @@ void main() {
       final controller = AppController(
         store: FakeStore(source),
         keyStore: FakeKeyStore(),
+        toolKeyStore: FakeKeyStore(),
       );
       await Future<void>.delayed(Duration.zero);
       await controller.sendMessage(
@@ -89,6 +91,7 @@ void main() {
       final controller = AppController(
         store: FakeStore(),
         keyStore: FakeKeyStore(),
+        toolKeyStore: FakeKeyStore(),
       );
       await Future<void>.delayed(Duration.zero);
       controller.publishMoment('自己的记录');
@@ -106,6 +109,7 @@ void main() {
       final controller = AppController(
         store: FakeStore(buildSeedData()),
         keyStore: keyStore,
+        toolKeyStore: FakeKeyStore(),
       );
       await Future<void>.delayed(Duration.zero);
       await controller.resetData();
@@ -128,6 +132,7 @@ void main() {
         ),
       ),
       keyStore: FakeKeyStore()..value = 'fake',
+      toolKeyStore: FakeKeyStore(),
       aiClient: ai,
     );
     await Future<void>.delayed(Duration.zero);

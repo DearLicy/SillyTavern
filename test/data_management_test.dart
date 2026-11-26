@@ -1,12 +1,12 @@
 import 'dart:async';
 import 'dart:typed_data';
 
-import 'package:dreamtide/ai/ai_client.dart';
-import 'package:dreamtide/ai/context_assembler.dart';
-import 'package:dreamtide/ai/conversation_summary.dart';
-import 'package:dreamtide/application/app_controller.dart';
-import 'package:dreamtide/data/attachment_store_base.dart';
-import 'package:dreamtide/domain/models.dart';
+import 'package:sillytavern_app/ai/ai_client.dart';
+import 'package:sillytavern_app/ai/context_assembler.dart';
+import 'package:sillytavern_app/ai/conversation_summary.dart';
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/data/attachment_store_base.dart';
+import 'package:sillytavern_app/domain/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fixtures/fake_store.dart';
@@ -201,6 +201,7 @@ Future<AppController> _start(
   final controller = AppController(
     store: store,
     keyStore: keys,
+    toolKeyStore: FakeKeyStore(),
     attachmentStore: attachments ?? _Attachments(),
     aiClient: ai,
   );

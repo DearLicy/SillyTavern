@@ -1,21 +1,20 @@
 <div align="center">
 
-# 触梦 · Dreamtide
+# SillyTavern APP
 
-**属于自己的私人梦境恋爱宇宙**
+**LLM Frontend for Power Users**
 
-本地优先 · BYOK · 纯本地 AI 社交 · 18+
+本地优先 · BYOK · 角色扮演与 AI 互动
 
-[![CI](https://github.com/DearLicy/Dreamtide/actions/workflows/ci.yml/badge.svg)](https://github.com/DearLicy/Dreamtide/actions/workflows/ci.yml)
-[![Web Demo](https://img.shields.io/badge/Web-Dreamtide-5478f6)](https://dearlicy.github.io/Dreamtide/)
+[![CI](https://github.com/DearLicy/SillyTavern/actions/workflows/ci.yml/badge.svg)](https://github.com/DearLicy/SillyTavern/actions/workflows/ci.yml)
+[![Web Demo](https://img.shields.io/badge/Web-SillyTavern-5478f6)](https://dearlicy.github.io/SillyTavern/)
 [![License](https://img.shields.io/badge/license-MIT-32a99a.svg)](LICENSE)
-[![18+](https://img.shields.io/badge/audience-18%2B-e07168.svg)](#成年人与内容边界)
 
-[在线体验](https://dearlicy.github.io/Dreamtide/) · [下载与安装](docs/RELEASE.md) · [产品设计](docs/PRODUCT.md) · [架构](docs/ARCHITECTURE.md)
+[在线体验](https://dearlicy.github.io/SillyTavern/) · [下载与安装](docs/RELEASE.md) · [产品设计](docs/PRODUCT.md) · [架构](docs/ARCHITECTURE.md)
 
 </div>
 
-> Dreamtide 不提供模型账号，也不运营聊天服务器。你自带 API Key，并直接连接自己选择的 OpenAI 兼容或 Anthropic 服务商。
+> SillyTavern APP 是面向角色扮演与 AI 互动的本地优先 LLM 前端。你自带 API Key，直接连接 OpenAI 兼容、Anthropic 或 DeepSeek 等服务商，数据留在本地。
 
 <div align="center">
   <img src="assets/screenshots/02-messages.png" width="220" alt="消息列表" />
@@ -25,17 +24,17 @@
 
 ## 这不是另一个 AI Chat
 
-Dreamtide 是一个 **QQ 式 AI 梦境恋爱 IM**：用户在消息、联系人、动态三个根页面中，与多个成年虚构角色经营彼此独立的关系。
+SillyTavern APP 是一个面向角色扮演的 LLM 前端：用户通过角色卡、人设、世界观、记忆与导演模式，与多个 AI 角色进行持续互动。
 
 每一次聊天都绑定：
 
-- 一套独立的**梦设**；
+- 一个可切换的**用户人设**；
 - 一位具有稳定人设的 **AI 角色**；
-- 一段拥有数值、场景、导演设置的**关系**；
+- 一段拥有状态、场景、导演设置的**互动关系**；
 - 一组可查看、编辑、固定和删除的**长期记忆**；
-- 一组独立于角色提示词的**用户边界与安全词**。
+- 一组可配置的**边界与安全设置**。
 
-产品围绕共同经历、称呼、关系状态和用户可管理的记忆展开。角色的梦境空间自动互动仍在后续开发中。
+产品聚焦于可控的角色扮演体验：角色人设、长期记忆、剧情导演、多模型 BYOK 与本地数据。
 
 ## 页面结构
 
@@ -49,7 +48,7 @@ Dreamtide 是一个 **QQ 式 AI 梦境恋爱 IM**：用户在消息、联系人�
 
 根页面头像打开侧滑资料抽屉，包含个人资料、切换梦设、收藏与记忆、隐私与安全、数据与备份、设置、夜间模式和关于。
 
-## V2.0.7 当前能力
+## V2.1.0 当前能力
 
 | 能力 | 状态 | 说明 |
 | --- | --- | --- |
@@ -62,6 +61,10 @@ Dreamtide 是一个 **QQ 式 AI 梦境恋爱 IM**：用户在消息、联系人�
 | 长期记忆 | ✅ | 七类可管理记忆；对话积累后由独立非流式请求安静更新本地剧情备忘，并注入后续对话 |
 | 图片聊天与识图 | ✅ | 发送真实 OpenAI / Anthropic 图片内容块，最近图片随上下文送入模型；需选择支持视觉的模型 |
 | 头像管理 | ✅ | 本地用户 / 梦设 / 角色图片头像，支持相册、拍照、预览、移除与关联清理 |
+| SillyTavern 角色卡 | ✅ | Character Card V2 JSON 导入/导出；PNG `ccv3` / `chara` 元数据导入；读取标签与内嵌 `character_book` |
+| 世界书 / World Info | ✅ | 关键词命中、常驻词条、排序、递归匹配、启用开关；命中资料在系统提示词前部注入 |
+| 作者注记 | ✅ | 每本世界书可设作者注记与注入深度，用于长期语气和叙事风格约束 |
+| 角色宏 | ✅ | 支持 `{{char}}` 与 `{{user}}`，在提示词组装时展开为当前角色和用户梦设 |
 | DeepSeek 工具 | ✅ | 官方联网搜索、来源引用、OCR、录音转文字草稿及双声线消息朗读 |
 | 消息重试 | ✅ | 失败后可重试上一条；最新角色回复可重新生成，不重复用户消息；异常关闭的流若已产生有效文字会保留为已中断回复 |
 | 单人物数据管理 | ✅ | 消息列表长按可直接清空指定会话；聊天记录支持搜索、单条编辑/删除、多选批量删除；关系可重新开始 |
@@ -153,7 +156,7 @@ flutter run -d chrome
 GitHub Pages 构建：
 
 ```bash
-flutter build web --release --base-href "/Dreamtide/"
+flutter build web --release --base-href "/SillyTavern/"
 ```
 
 Web 端会使用浏览器本地存储。清理站点数据、无痕模式结束或切换浏览器都可能导致数据丢失，请定期复制备份。密钥默认只在当前标签页使用；选择“记住密钥”时会写入浏览器本地存储，安全性弱于原生系统安全存储。
@@ -169,7 +172,7 @@ flutter build apk --release --split-per-abi
 
 ### iOS
 
-Dreamtide 不上架 App Store。GitHub Release 提供 unsigned IPA，用户通过 iLoader、LiveContainer、SideStore 或自己的 Xcode 证书自签：
+SillyTavern 不上架 App Store。GitHub Release 提供 unsigned IPA，用户通过 iLoader、LiveContainer、SideStore 或自己的 Xcode 证书自签：
 
 ```bash
 flutter build ios --release --no-codesign
@@ -182,7 +185,7 @@ flutter build ios --release --no-codesign
 - 原生端：SQLite 保存应用状态；API Key 写入系统安全存储。
 - 原生聊天图片：保存到应用私有目录，消息只记录附件引用。
 - Web：应用状态写入浏览器本地存储；聊天图片写入 IndexedDB；API Key 默认仅保留在当前标签页。
-- Dreamtide 不运营账号、云同步、遥测或内容服务器。
+- SillyTavern 不运营账号、云同步、遥测或内容服务器。
 - 对话请求会发送到你配置的模型供应商，请自行阅读其隐私政策。
 - 长对话整理会额外向同一供应商发送尚未归纳的旧对话片段；剧情备忘和完整聊天记录保存在本机，不会自动删除原消息。
 - OpenAI 兼容聊天请求默认不主动传 `max_tokens`，避免推理模型先耗尽内部推理额度而返回空正文；回复长短由本轮 `ReplyPlan` 引导，不做正文硬截断。
@@ -218,7 +221,7 @@ flutter build ios --release --no-codesign
 
 | 版本 | 重点 |
 | --- | --- |
-| **V2.0** | 三栏 IM、梦设、关系、记忆、导演、边界、文字梦境空间 |
+| **V2.0** | 三栏 IM、梦设、关系、记忆、导演、边界、文字梦境空间、角色卡与世界书 |
 | **V2.1** | 角色生活状态、关系日历、主动消息、本地通知、语音消息 |
 | **V2.2** | 多角色群聊、独立角色记忆、群共享记忆、发言调度 |
 | **V2.3** | 动态图片/视频、AI 图像、剧情相册、剧情分支 |
@@ -226,12 +229,11 @@ flutter build ios --release --no-codesign
 
 ## 明确不做
 
-- SillyTavern / PNG 角色卡生态；
-- Lorebook 世界书；
+- PNG 角色卡元数据回写（JSON 导出与 PNG 导入已支持）；
 - 真实用户社交、关注、私信、举报和云端社区；
 - 会员聊天次数制；
 - 未经授权的官方角色复刻；
-- Dreamtide 自有账号与聊天内容云托管。
+- SillyTavern 账号与聊天内容云托管。
 
 群聊是唯一重新开放的旧排除能力，计划于 V2.2 交付。
 
@@ -240,7 +242,7 @@ flutter build ios --release --no-codesign
 ```bash
 flutter analyze
 flutter test
-flutter build web --release --base-href "/Dreamtide/"
+flutter build web --release --base-href "/SillyTavern/"
 flutter build apk --release --split-per-abi
 flutter build ios --release --no-codesign
 ```
@@ -251,4 +253,4 @@ flutter build ios --release --no-codesign
 
 源代码使用 MIT License。Noto Sans SC 使用 SIL Open Font License 1.1，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-> Dreamtide 是独立的虚构角色陪伴产品，不隶属于 DeepSeek、OpenAI、Anthropic 或任何模型供应商。
+> SillyTavern APP 是独立的移动端 LLM 前端实现，不隶属于 SillyTavern 官方组织、DeepSeek、OpenAI、Anthropic 或任何模型供应商。

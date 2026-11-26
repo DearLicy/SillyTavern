@@ -32,7 +32,7 @@ jobs:
       - run: mkdir -p .tmp && flutter pub get
       - run: flutter analyze --no-fatal-infos
       - run: flutter test
-      - run: flutter build web --release --base-href "/Dreamtide/"
+      - run: flutter build web --release --base-href "/SillyTavern/"
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:dreamtide/app.dart';
-import 'package:dreamtide/application/app_controller.dart';
-import 'package:dreamtide/data/attachment_store.dart';
-import 'package:dreamtide/data/initial_data.dart';
-import 'package:dreamtide/domain/models.dart';
-import 'package:dreamtide/router/app_router.dart';
+import 'package:sillytavern_app/app.dart';
+import 'package:sillytavern_app/application/app_controller.dart';
+import 'package:sillytavern_app/data/attachment_store.dart';
+import 'package:sillytavern_app/data/initial_data.dart';
+import 'package:sillytavern_app/domain/models.dart';
+import 'package:sillytavern_app/router/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -29,6 +29,7 @@ Future<ProviderContainer> start(
         (ref) => AppController(
           store: FakeStore(data),
           keyStore: FakeKeyStore(),
+          toolKeyStore: FakeKeyStore(),
           attachmentStore: ref.watch(attachmentStoreProvider),
         ),
       ),
@@ -38,7 +39,7 @@ Future<ProviderContainer> start(
   await tester.pumpWidget(
     UncontrolledProviderScope(
       container: container,
-      child: const DreamtideApp(),
+      child: const SillyTavernApp(),
     ),
   );
   await tester.pumpAndSettle();
@@ -216,6 +217,34 @@ void main() {
       expect(find.text('拉取模型'), findsOneWidget);
       expect(find.text('拉取后点击选择，无需手填'), findsOneWidget);
       expect(find.byType(EditableText), findsNWidgets(2));
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      container.dispose();
+    },
+  );
+
+  testWidgets(
+    'world books and character cards are reachable full-screen pages',
+    (tester) async {
+      final fixture = buildSeedData();
+      final container = await start(
+        tester,
+        fixture.copyWith(
+          settings: fixture.settings.copyWith(ageConfirmed: true),
+        ),
+      );
+      container.read(appRouterProvider).go('/world-books');
+      await tester.pumpAndSettle();
+      expect(find.text('世界书'), findsWidgets);
+      expect(find.text('还没有世界书'), findsOneWidget);
+      expect(find.byKey(const ValueKey('root-bottom-bar')), findsNothing);
+
+      container.read(appRouterProvider).go('/character-cards');
+      await tester.pumpAndSettle();
+      expect(find.text('角色卡'), findsWidgets);
+      expect(find.text('从剪贴板导入 JSON'), findsOneWidget);
+      expect(find.text('选择 PNG 角色卡'), findsOneWidget);
+      expect(find.byKey(const ValueKey('root-bottom-bar')), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       container.dispose();

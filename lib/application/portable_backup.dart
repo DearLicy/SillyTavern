@@ -16,7 +16,7 @@ extension PortableBackup on AppController {
       files[reference] = base64Encode(bytes);
     }
     return jsonEncode({
-      'format': 'dreamtide.media.v1',
+      'format': 'sillytavern.media.v1',
       'data': snapshot.toJson(),
       'attachments': files,
     });

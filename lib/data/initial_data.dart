@@ -25,5 +25,6 @@ AppData buildEmptyData() {
     messages: const [],
     memories: const [],
     moments: const [],
+    worldBooks: const [],
   );
 }

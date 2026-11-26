@@ -1,4 +1,4 @@
-# Dreamtide V2 架构
+# SillyTavern V2 架构
 
 ## 技术路线
 
@@ -129,7 +129,7 @@ Streaming Message updates
 
 ## 原生桥
 
-当前 `com.dearlicy.dreamtide/platform` 提供：
+当前 `com.dearlicy.sillytavern/platform` 提供：
 
 - `platformName`；
 - `setSecureScreen`。
@@ -160,4 +160,4 @@ Android 已启用 `FLAG_SECURE`。iOS 快照隐私遮罩、通知、生物识别
 
 `record` 的 PCM 流在内存封装 WAV，`audioplayers` 播放合成 WAV。两者在 Android/iOS 采用原生平台实现，Web 使用浏览器权限与音频能力；不把录音写到系统临时目录。前后台切换取消正在录制的输入。
 
-`dreamtide.media.v1` 完整备份包装原有 V2 数据与有大小限制的本地图片，恢复时先校验再写新引用，只重映射已知媒体字段。它是明文可携带备份；备份加密和大型文件打包未实现。
+`sillytavern.media.v1` 完整备份包装原有 V2 数据与有大小限制的本地图片，恢复时先校验再写新引用，只重映射已知媒体字段。它是明文可携带备份；备份加密和大型文件打包未实现。

@@ -1,7 +1,7 @@
-import 'package:dreamtide/router/app_router.dart';
-import 'package:dreamtide/domain/models.dart';
-import 'package:dreamtide/ui/components/dt_model_picker.dart';
-import 'package:dreamtide/ui/screens/about_page.dart';
+import 'package:sillytavern_app/router/app_router.dart';
+import 'package:sillytavern_app/domain/models.dart';
+import 'package:sillytavern_app/ui/components/dt_model_picker.dart';
+import 'package:sillytavern_app/ui/screens/about_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 

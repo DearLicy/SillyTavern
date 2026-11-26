@@ -1,5 +1,5 @@
-import 'package:dreamtide/ai/repetition_guard.dart';
-import 'package:dreamtide/domain/models.dart';
+import 'package:sillytavern_app/ai/repetition_guard.dart';
+import 'package:sillytavern_app/domain/models.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Message reply(String id, String text) => Message(

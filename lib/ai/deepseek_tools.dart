@@ -88,7 +88,7 @@ class DeepSeekTools {
         base.userInfo.isNotEmpty ||
         base.hasPort) {
       throw const AiClientException(
-        '搜索、OCR 和语音工具目前使用 DeepSeek 官方 API，请先在模型与供应商中配置官方地址和密钥。',
+        '搜索、OCR 和语音工具使用 DeepSeek 官方 API，请在设置的「搜索与语音」中配置官方密钥。',
       );
     }
     return Uri.https('api.deepseek.com', '/v1/tools/$tool');

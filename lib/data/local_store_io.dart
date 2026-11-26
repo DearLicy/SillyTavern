@@ -12,7 +12,7 @@ class IoLocalDataStore implements LocalDataStore {
     if (existing != null) return existing;
     final root = await getDatabasesPath();
     final db = await openDatabase(
-      p.join(root, 'dreamtide_v2.db'),
+      p.join(root, 'sillytavern_v2.db'),
       version: 1,
       onCreate: (db, version) async {
         await db.execute('''

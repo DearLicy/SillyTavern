@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>触梦</string>
+	<string>SillyTavern</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>触梦</string>
+	<string>SillyTavern</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -50,6 +50,6 @@
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>用于选择用户主动发送的图片。</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>用于 Dreamtide 应用锁，保护本地私密内容。</string>
+	<string>用于 SillyTavern 应用锁，保护本地私密内容。</string>
 </dict>
 </plist>

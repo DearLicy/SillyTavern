@@ -1,6 +1,6 @@
 # Contributing
 
-Dreamtide V2 uses a clean product contract. Before changing user-visible behavior, update the matching product, safety or architecture document in the same change.
+SillyTavern V2 uses a clean product contract. Before changing user-visible behavior, update the matching product, safety or architecture document in the same change.
 
 ## Rules
 
@@ -16,7 +16,7 @@ Dreamtide V2 uses a clean product contract. Before changing user-visible behavio
 ```bash
 flutter analyze
 flutter test
-flutter build web --release --base-href "/Dreamtide/"
+flutter build web --release --base-href "/SillyTavern/"
 flutter build apk --release --split-per-abi
 flutter build ios --release --no-codesign
 ```
