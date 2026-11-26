@@ -36,7 +36,7 @@ const report={mode:'release build + fake authenticated provider + real browser m
   await (await chooser).setFiles({name:'photo.png',mimeType:'image/png',buffer:pixel});
   await page.waitForTimeout(1500);
  };
- const type=(text)=>fillFlutterText(page,page.getByRole('textbox').last(),text);
+ const type=async(text)=>{let last;for(let attempt=0;attempt<6;attempt++){const box=page.getByRole('textbox').last();await box.waitFor({state:'visible',timeout:10000});try{await fillFlutterText(page,box,text);return;}catch(error){last=error;const message=String(error?.message||error);if(!/not attached|detached|stable|Timeout/i.test(message))throw error;await page.waitForTimeout(400);}}throw last;};
  await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/SillyTavern/'),{waitUntil:'networkidle'});await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());await page.waitForTimeout(500);
  step('avatar');await goto('/profile');await page.waitForTimeout(800);await click('更换头像');await file('从相册选择');
  assert.equal((await read()).owner.avatarReference ?? null,null);
@@ -50,7 +50,7 @@ const report={mode:'release build + fake authenticated provider + real browser m
  await click('更多');await click('重新生成上一条');assert(visionCount>=2);
  step('OCR');await click('更多功能');await file('识别图片文字');await page.getByRole('textbox').last().waitFor({state:'attached'});assert.match(await snap(),/图片识别出的文字/);await click('填入输入框');
  assert.equal(await page.getByRole('textbox').last().inputValue(),'图片识别出的文字');assert.equal(ocrCount,1);
- step('search');await type('搜索今天的消息');await click('更多功能');await click('开启联网搜索');await click('发送');await page.waitForTimeout(500);assert.equal(searchCount,1);data=await read();assert(data.messages.at(-1).sources.length===1);
+ step('search');await type('搜索今天的消息');await click('更多功能');await click('开启联网搜索');await click('发送');await page.getByRole('button',{name:/^联网来源/}).last().waitFor({state:'visible',timeout:15000});assert.equal(searchCount,1);await page.waitForFunction(()=>{try{const data=JSON.parse(JSON.parse(localStorage.getItem('flutter.sillytavern.v2.state')));return data.messages.at(-1)?.sources?.length===1;}catch{return false;}},{timeout:15000});data=await read();assert(data.messages.at(-1).sources.length===1);
  await page.getByRole('button',{name:/^联网来源/}).last().evaluate(e=>e.click());await page.waitForTimeout(500);assert.match(await snap(),/官方测试来源/);await page.screenshot({path:`.tmp/search-sources-${theme}.png`});await page.keyboard.press('Escape');await page.waitForTimeout(500);
  step('recording + ASR');await click('语音输入');await click('开始录音');await page.waitForTimeout(1800);assert.match(await snap(),/正在录音/);await page.screenshot({path:`.tmp/voice-recording-${theme}.png`});await click('结束并转文字');await page.waitForTimeout(800);assert.equal(asrCount,1);assert.match(await page.getByRole('textbox').last().inputValue(),/这是语音转成的草稿/);
  assert(!(await read()).messages.some(m=>m.text==='这是语音转成的草稿'));
