@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -139,6 +138,10 @@ class CharacterCardsPage extends ConsumerWidget {
     String characterName,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
+    final box = context.findRenderObject() as RenderBox?;
+    final origin = box == null
+        ? null
+        : box.localToGlobal(Offset.zero) & box.size;
     try {
       final pngBytes = await controller.exportPngCharacterCard(characterId);
       final safeName = characterName
@@ -146,10 +149,6 @@ class CharacterCardsPage extends ConsumerWidget {
           .trim();
       final fileName =
           '${safeName.isEmpty ? 'character' : safeName}_SillyTavernCard.png';
-      final box = context.findRenderObject() as RenderBox?;
-      final origin = box == null
-          ? null
-          : box.localToGlobal(Offset.zero) & box.size;
       final result = await SharePlus.instance.share(
         ShareParams(
           files: [XFile.fromData(pngBytes, mimeType: 'image/png')],

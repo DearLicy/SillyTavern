@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sillytavern_app/application/app_controller.dart';
-import 'package:sillytavern_app/domain/models.dart';
 
 import 'fixtures/fake_store.dart';
 import 'fixtures/sample_data.dart';
