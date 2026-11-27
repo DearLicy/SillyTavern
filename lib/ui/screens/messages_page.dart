@@ -220,7 +220,7 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                   CheckboxListTile(
                     value: selected.contains(character.id),
                     title: Text(character.name),
-                    subtitle: character.handle,
+                    subtitle: Text(character.handle),
                     onChanged: (value) => setDialogState(() {
                       if (value == true) {
                         selected.add(character.id);
