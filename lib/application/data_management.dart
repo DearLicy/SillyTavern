@@ -348,4 +348,21 @@ extension DataManagement on AppController {
       ),
     );
   }
+
+  /// Clears chat-scoped macro variables without touching messages or memory.
+  Future<void> clearThreadVariables(String threadId) async {
+    final before = _snapshot.data;
+    if (!before.threads.any((t) => t.id == threadId)) return;
+    await _saveManagementChange(
+      before,
+      before.copyWith(
+        threads: [
+          for (final thread in before.threads)
+            thread.id == threadId
+                ? thread.copyWith(variables: const {})
+                : thread,
+        ],
+      ),
+    );
+  }
 }

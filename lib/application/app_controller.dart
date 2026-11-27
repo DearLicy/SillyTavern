@@ -635,11 +635,18 @@ class AppController extends StateNotifier<ApplicationState> {
       replyEnergy: prompt.replyPlan.energy,
       lastInteractionAt: acceptedAt,
     );
+    final macroChanged = prompt.variables.length != activeThread.variables.length ||
+        prompt.variables.entries.any(
+          (entry) => activeThread.variables[entry.key] != entry.value,
+        );
     _appendMessages(
       [userMessage],
       threadId,
       baseMessages: historyBeforeUser.messages,
       relationshipUpdate: relationshipAfterInput,
+      threadUpdate: macroChanged
+          ? activeThread.copyWith(variables: prompt.variables)
+          : null,
     );
     onAccepted?.call();
 
@@ -1333,6 +1340,7 @@ class AppController extends StateNotifier<ApplicationState> {
     String threadId, {
     List<Message>? baseMessages,
     Relationship? relationshipUpdate,
+    ChatThread? threadUpdate,
   }) {
     final current = state.data;
     final now = DateTime.now();
@@ -1342,7 +1350,8 @@ class AppController extends StateNotifier<ApplicationState> {
     ].where((e) => e.isRenderable).toList();
     final threads = current.threads.map((thread) {
       if (thread.id != threadId) return thread;
-      return thread.copyWith(updatedAt: now, unread: 0);
+      final base = threadUpdate ?? thread;
+      return base.copyWith(updatedAt: now, unread: 0);
     }).toList();
     final relationships = relationshipUpdate == null
         ? current.relationships

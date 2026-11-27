@@ -1,4 +1,5 @@
 import '../domain/models.dart';
+import 'macro_engine.dart';
 import 'relationship_dynamics.dart';
 import 'reply_planner.dart';
 
@@ -48,11 +49,16 @@ class PromptBundle {
     this.messages, {
     required this.usedMemoryIds,
     required this.replyPlan,
+    required this.variables,
   });
 
   final List<PromptMessage> messages;
   final List<String> usedMemoryIds;
   final ReplyPlan replyPlan;
+
+  /// Chat-scoped macro variables after this turn's setvar/incvar/etc. are
+  /// applied. Persist only when [variables] differ from the thread's prior map.
+  final Map<String, String> variables;
 }
 
 class ContextAssembler {
@@ -112,7 +118,7 @@ class ContextAssembler {
       );
     }
 
-    final system = _buildSystemPrompt(
+    final rawSystem = _buildSystemPrompt(
       data: data,
       relationship: relationship,
       character: character,
@@ -123,6 +129,11 @@ class ContextAssembler {
       now: now ?? DateTime.now(),
       authorNote: authorNote,
     );
+
+    // SillyTavern-compatible chat-scoped macros. Expansion is deterministic and
+    // bounded; setvar-style macros in the prompt mutate only this thread's map.
+    final inputMacro = MacroEngine.expand(userInput.trim(), thread.variables);
+    final systemMacro = MacroEngine.expand(rawSystem, inputMacro.variables);
 
     final history =
         data.messages
@@ -140,7 +151,7 @@ class ContextAssembler {
 
     return PromptBundle(
       [
-        PromptMessage('system', system),
+        PromptMessage('system', systemMacro.text),
         for (final message in recent)
           PromptMessage(
             message.fromAi ? 'assistant' : 'user',
@@ -149,10 +160,15 @@ class ContextAssembler {
                 ? message.localPath
                 : null,
           ),
-        PromptMessage('user', userInput.trim(), imageReference: imageReference),
+        PromptMessage(
+          'user',
+          inputMacro.text.trim(),
+          imageReference: imageReference,
+        ),
       ],
       usedMemoryIds: memories.map((e) => e.id).toList(),
       replyPlan: replyPlan,
+      variables: systemMacro.variables,
     );
   }
 

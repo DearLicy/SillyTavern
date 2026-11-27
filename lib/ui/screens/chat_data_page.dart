@@ -60,6 +60,42 @@ class ChatDataPage extends ConsumerWidget {
               ],
             ),
           ),
+          if (thread.variables.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            DtSurface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '宏变量',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  for (final entry in thread.variables.entries)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4),
+                      child: Text(
+                        '{{${entry.key}}} = ${entry.value}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12, height: 1.5),
+                      ),
+                    ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    '由 {{setvar}}/{{addvar}}/{{incvar}} 等宏写入，仅影响这段对话。',
+                    style: TextStyle(fontSize: 11.5, height: 1.5),
+                  ),
+                  const SizedBox(height: 8),
+                  DtButton(
+                    label: '清空宏变量',
+                    variant: DtButtonVariant.secondary,
+                    onPressed: () => controller.clearThreadVariables(threadId),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 12),
           DtSettingRow(
             icon: Icons.search_rounded,

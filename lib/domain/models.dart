@@ -663,6 +663,7 @@ class ChatThread {
     this.contextMemoUpdatedAt,
     this.summarizedThroughMessageId,
     this.suppressedMemoryKeys = const [],
+    this.variables = const {},
   });
 
   final String id;
@@ -683,6 +684,9 @@ class ChatThread {
   final String? summarizedThroughMessageId;
   final List<String> suppressedMemoryKeys;
 
+  /// Chat-scoped macro variables (SillyTavern-compatible getvar/setvar/etc.).
+  final Map<String, String> variables;
+
   ChatThread copyWith({
     String? title,
     DateTime? updatedAt,
@@ -696,6 +700,7 @@ class ChatThread {
     String? summarizedThroughMessageId,
     bool clearSummarizedThroughMessageId = false,
     List<String>? suppressedMemoryKeys,
+    Map<String, String>? variables,
   }) => ChatThread(
     id: id,
     relationshipId: relationshipId,
@@ -714,6 +719,7 @@ class ChatThread {
         ? null
         : summarizedThroughMessageId ?? this.summarizedThroughMessageId,
     suppressedMemoryKeys: suppressedMemoryKeys ?? this.suppressedMemoryKeys,
+    variables: variables ?? this.variables,
   );
 
   Map<String, dynamic> toJson() => {
@@ -730,6 +736,7 @@ class ChatThread {
     'contextMemoUpdatedAt': contextMemoUpdatedAt?.toIso8601String(),
     'summarizedThroughMessageId': summarizedThroughMessageId,
     'suppressedMemoryKeys': suppressedMemoryKeys,
+    'variables': variables,
   };
 
   factory ChatThread.fromJson(Map<String, dynamic> json) => ChatThread(
@@ -756,6 +763,11 @@ class ChatThread {
     suppressedMemoryKeys:
         (json['suppressedMemoryKeys'] as List?)?.whereType<String>().toList() ??
         const [],
+    variables: json['variables'] is Map
+        ? Map<String, dynamic>.from(json['variables'] as Map).map(
+            (key, value) => MapEntry(key, value?.toString() ?? ''),
+          )
+        : const {},
   );
 }
 
