@@ -20,7 +20,7 @@ class CharacterCardsPage extends ConsumerWidget {
     final characters = state.data.characters;
     return DtDetailPage(
       title: '角色卡',
-      subtitle: 'SillyTavern V2 JSON 导入与导出',
+      subtitle: 'SillyTavern V2 JSON / PNG 导入与导出',
       actions: [
         DtIconButton(
           icon: Icons.file_download_outlined,
@@ -41,7 +41,7 @@ class CharacterCardsPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '支持 SillyTavern Character Card V2 JSON。导入时会读取角色资料、首个问候、标签和 character_book 世界书；不会执行卡片里的脚本或远程资源。',
+                  '支持 SillyTavern Character Card V2 JSON 和 PNG 元数据。导入时读取角色资料、首个问候、标签和 character_book 世界书；不会执行卡片里的脚本或远程资源。',
                   style: TextStyle(fontSize: 13, height: 1.6),
                 ),
                 const SizedBox(height: 12),
@@ -82,25 +82,20 @@ class CharacterCardsPage extends ConsumerWidget {
                     subtitle: character.tags.isEmpty
                         ? '无标签 · ${character.handle}'
                         : '${character.tags.join('、')} · ${character.handle}',
-                    trailing: DtIconButton(
-                      icon: Icons.copy_all_outlined,
-                      tooltip: '复制角色卡 JSON',
-                      onTap: () async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        try {
-                          final json = controller.exportCharacterCard(
-                            character.id,
-                          );
-                          await Clipboard.setData(ClipboardData(text: json));
-                          messenger.showSnackBar(
-                            const SnackBar(content: Text('角色卡 JSON 已复制')),
-                          );
-                        } catch (_) {
-                          messenger.showSnackBar(
-                            const SnackBar(content: Text('导出失败，请重试')),
-                          );
-                        }
-                      },
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        DtIconButton(
+                          icon: Icons.image_outlined,
+                          tooltip: '导出 PNG 角色卡',
+                          onTap: () => _exportPng(context, controller, character.id),
+                        ),
+                        DtIconButton(
+                          icon: Icons.copy_all_outlined,
+                          tooltip: '复制角色卡 JSON',
+                          onTap: () => _copyJson(context, controller, character.id),
+                        ),
+                      ],
                     ),
                     onTap: () => context.push('/character/${character.id}'),
                   ),
@@ -109,6 +104,53 @@ class CharacterCardsPage extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _copyJson(
+    BuildContext context,
+    AppController controller,
+    String characterId,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final json = controller.exportCharacterCard(characterId);
+      await Clipboard.setData(ClipboardData(text: json));
+      messenger.showSnackBar(
+        const SnackBar(content: Text('角色卡 JSON 已复制')),
+      );
+    } catch (_) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('导出失败，请重试')),
+      );
+    }
+  }
+
+  Future<void> _exportPng(
+    BuildContext context,
+    AppController controller,
+    String characterId,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final pngBytes = await controller.exportPngCharacterCard(characterId);
+      final kb = (pngBytes.length / 1024).toStringAsFixed(1);
+      await Clipboard.setData(
+        ClipboardData(text: 'PNG 角色卡已生成 ($kb KB) — 可通过分享功能保存'),
+      );
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text('PNG 角色卡已生成 ($kb KB)'),
+          action: SnackBarAction(
+            label: '复制 JSON',
+            onPressed: () => _copyJson(context, controller, characterId),
+          ),
+        ),
+      );
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('PNG 导出失败：$error')),
+      );
+    }
   }
 
   Future<void> _showImport(

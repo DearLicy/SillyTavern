@@ -92,3 +92,71 @@ class PngCharacterCard {
     }
   }
 }
+
+
+  /// Encodes a character card JSON into a PNG file with a [ccv3] tEXt chunk.
+  /// Returns a minimal valid PNG (1x1 grayscale) with the card embedded.
+  static Uint8List encodePng(String json) {
+    final payload = base64Encode(utf8.encode(json));
+    final textData = Uint8List.fromList([...utf8.encode('ccv3'), 0, ...utf8.encode(payload)]);
+    final textChunk = _pngChunk('tEXt', textData);
+
+    // IHDR: 1x1, 8-bit grayscale
+    final ihdrData = ByteData(13);
+    ihdrData.setUint32(0, 1);
+    ihdrData.setUint32(4, 1);
+    ihdrData.setUint8(8, 8); // bit depth
+    ihdrData.setUint8(9, 0); // grayscale
+    ihdrData.setUint8(10, 0); // compression
+    ihdrData.setUint8(11, 0); // filter
+    ihdrData.setUint8(12, 0); // interlace
+    final ihdr = _pngChunk('IHDR', ihdrData.buffer.asUint8List());
+
+    // IDAT: compressed scanline for 1x1 grayscale pixel (filter 0, value 0)
+    // zlib header 0x78 0x01, deflate block, adler32
+    final idatData = Uint8List.fromList([
+      0x78, 0x01, // zlib header
+      0x01, 0x01, 0x00, 0xfe, 0xff, 0x00, // deflate stored block: len=1, nlen=~1, data=0x00
+      0x00, 0x01, 0x00, 0x00, // adler32 for single 0x00 byte
+    ]);
+    final idat = _pngChunk('IDAT', idatData);
+    final iend = _pngChunk('IEND', Uint8List(0));
+
+    const sig = [137, 80, 78, 71, 13, 10, 26, 10];
+    final out = Uint8List(sig.length + ihdr.length + textChunk.length + idat.length + iend.length);
+    var offset = 0;
+    for (final b in sig) { out[offset++] = b; }
+    out.setRange(offset, offset + ihdr.length, ihdr); offset += ihdr.length;
+    out.setRange(offset, offset + textChunk.length, textChunk); offset += textChunk.length;
+    out.setRange(offset, offset + idat.length, idat); offset += idat.length;
+    out.setRange(offset, offset + iend.length, iend);
+    return out;
+  }
+
+  static Uint8List _pngChunk(String type, Uint8List data) {
+    final typeBytes = ascii.encode(type);
+    final length = data.length;
+    final chunk = Uint8List(4 + 4 + length + 4);
+    final bd = ByteData.sublistView(chunk);
+    bd.setUint32(0, length);
+    chunk.setRange(4, 8, typeBytes);
+    chunk.setRange(8, 8 + length, data);
+    // CRC over type + data
+    final crcInput = Uint8List(4 + length);
+    crcInput.setRange(0, 4, typeBytes);
+    crcInput.setRange(4, 4 + length, data);
+    bd.setUint32(8 + length, _crc32(crcInput));
+    return chunk;
+  }
+
+  static int _crc32(Uint8List bytes) {
+    var crc = 0xFFFFFFFF;
+    for (final b in bytes) {
+      crc ^= b;
+      for (var i = 0; i < 8; i++) {
+        final mask = -(crc & 1);
+        crc = (crc >> 1) ^ (0xEDB88320 & mask);
+      }
+    }
+    return crc ^ 0xFFFFFFFF;
+  }
