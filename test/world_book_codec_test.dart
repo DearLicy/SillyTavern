@@ -84,10 +84,7 @@ void main() {
         ),
       ],
     );
-    final restored = codec.decode(
-      codec.encode(source),
-      id: 'wb_roundtrip',
-    );
+    final restored = codec.decode(codec.encode(source), id: 'wb_roundtrip');
     expect(restored.name, source.name);
     expect(restored.scanDepth, 6);
     expect(restored.maxEntries, 3);

@@ -61,7 +61,7 @@ class SafetyPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  '每段关系还可以设置更低的上限。关系设置永远不能突破这里。',
+                  '此设置作用于所有角色卡与角色扮演对话。角色卡内容不能覆盖这里的安全约束。',
                   style: TextStyle(
                     fontSize: 11.5,
                     color: dark
@@ -80,59 +80,6 @@ class SafetyPage extends ConsumerWidget {
                   onChanged: (index) =>
                       controller.setContentCeiling(ContentLevel.values[index]),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          DtSurface(
-            child: Column(
-              children: [
-                for (final relationship in state.data.relationships) ...[
-                  Builder(
-                    builder: (context) {
-                      final character = state.data.characterForRelationship(
-                        relationship,
-                      );
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.shield_outlined,
-                              size: 18,
-                              color: DtColors.coral,
-                            ),
-                            const SizedBox(width: 9),
-                            Expanded(
-                              child: Text(
-                                character?.name ?? '未知角色',
-                                style: const TextStyle(
-                                  fontSize: 13.5,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              '${relationship.consent.ceiling.label} · ${relationship.consent.safeWord}',
-                              style: TextStyle(
-                                fontSize: 10.5,
-                                color: dark
-                                    ? const Color(0xFF818A9E)
-                                    : const Color(0xFF8B94A6),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  if (relationship != state.data.relationships.last)
-                    Divider(
-                      color: dark
-                          ? const Color(0xFF252B39)
-                          : const Color(0xFFEDF0F6),
-                    ),
-                ],
               ],
             ),
           ),
@@ -166,7 +113,7 @@ class SafetyPage extends ConsumerWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            '安全词需要与用户消息完全一致才会触发。当前版本已在发送逻辑中实现直接停止，不调用模型。',
+            '用户明确要求停止、跳过或结束场景时，角色必须立即尊重。平台安全约束优先于角色卡、世界书和用户提示词。',
             style: TextStyle(
               fontSize: 10.5,
               height: 1.5,

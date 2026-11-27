@@ -394,7 +394,7 @@ void main() {
         expect(partial.text, '说到一半');
         expect(partial.interrupted, isTrue);
         expect(partial.editedAt, isNull);
-        expect(c.state.data.relationships.first.interactionCount, 0);
+        expect(c.state.data.relationships.first.lastInteractionAt, isNull);
       },
     );
   }

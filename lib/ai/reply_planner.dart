@@ -182,10 +182,7 @@ class ReplyPlanner {
     final runes = compact.runes.length;
     final distress = _distressWords.any(input.contains);
     final explicitDetail = _detailWords.any(input.contains);
-    final sceneLike =
-        RegExp(r'[（(].{1,80}[）)]').hasMatch(input) ||
-        relationship.scene.director.narration >= 0.55;
-    final familiarity = _relationshipFamiliarity(relationship);
+    final sceneLike = RegExp(r'[（(].{1,80}[）)]').hasMatch(input);
     var energy = relationship.replyEnergy.clamp(15, 90);
 
     if (clock.difference(relationship.lastInteractionAt ?? clock) >=
@@ -236,16 +233,12 @@ class ReplyPlanner {
           ? ReplyLength.short
           : runes > 90
           ? ReplyLength.medium
-          : (familiarity >= 65 && energy >= 65
-                ? ReplyLength.medium
-                : ReplyLength.short);
-      reason = '按关系熟悉度和消息长度自然接话';
+          : (energy >= 65 ? ReplyLength.medium : ReplyLength.short);
+      reason = '按本轮消息长度和互动能量自然接话';
     }
 
     // 终结“不想聊了”、“没事了”等极短无意义回复的长篇大论生成
-    if (act == ReplyAct.chat &&
-        length == ReplyLength.medium &&
-        runes < 24) {
+    if (act == ReplyAct.chat && length == ReplyLength.medium && runes < 24) {
       // 降短，改用短回复或沉默
       return ReplyPlan(
         act: ReplyAct.chat,
@@ -255,8 +248,6 @@ class ReplyPlanner {
         reason: '$reason；输入过短已降为单句/留白处理',
       );
     }
-
-
 
     if (character.voiceProfile.contains(RegExp(r'寡言|少说话|短句|冷淡')) &&
         length == ReplyLength.medium) {
@@ -296,11 +287,5 @@ class ReplyPlanner {
       energy += 2;
     }
     return energy.clamp(15, 90);
-  }
-
-  static double _relationshipFamiliarity(Relationship relationship) {
-    final affection = relationship.metrics['好感'] ?? 50;
-    final trust = relationship.metrics['信任'] ?? 50;
-    return (affection + trust) / 2;
   }
 }

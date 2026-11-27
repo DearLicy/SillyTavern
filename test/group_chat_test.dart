@@ -132,11 +132,6 @@ void main() {
         id: 'rel_gu_other',
         characterId: 'char_gu',
         personaId: 'persona_other',
-        stage: '刚刚相遇',
-        nickname: '你',
-        metrics: const {'好感': 1, '信任': 1, '心动': 1, '张力': 1},
-        consent: seed.relationships.first.consent,
-        scene: seed.relationships.first.scene,
         updatedAt: DateTime(2026, 1, 1),
       ),
     ];

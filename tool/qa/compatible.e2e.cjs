@@ -33,7 +33,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
         if(mode==='error')return route.fulfill({status:200,contentType:'text/event-stream',body:'event: error\ndata: {"error":{"message":"测试供应商上游暂时不可用"}}\n\n'});
         return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({choices:[{message:{content:mode==='retry'?'重试成功并保留原消息':'兼容回退回复成功'},finish_reason:'stop'}]})});
       });
-      await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/SillyTavern/') + '#/chat/thread_gu',{waitUntil:'networkidle'});
+      await page.goto((process.env.SILLYTAVERN_QA_BASE_URL || 'http://127.0.0.1:8089/SillyTavern/') + '#/chat/thread_gu',{waitUntil:'networkidle'});
       await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});
       await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());
       await page.getByRole('textbox').last().waitFor({state:'attached'});

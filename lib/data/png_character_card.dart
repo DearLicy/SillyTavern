@@ -96,7 +96,11 @@ class PngCharacterCard {
   /// Returns a minimal valid PNG (1x1 grayscale) with the card embedded.
   static Uint8List encodePng(String json) {
     final payload = base64Encode(utf8.encode(json));
-    final textData = Uint8List.fromList([...utf8.encode('ccv3'), 0, ...utf8.encode(payload)]);
+    final textData = Uint8List.fromList([
+      ...utf8.encode('ccv3'),
+      0,
+      ...utf8.encode(payload),
+    ]);
     final textChunk = _pngChunk('tEXt', textData);
 
     // IHDR: 1x1, 8-bit grayscale
@@ -114,18 +118,34 @@ class PngCharacterCard {
     // zlib header 0x78 0x01, deflate block, adler32
     // zlib.compress(b'\x00\x00', 1): filter byte + one grayscale pixel
     final idatData = Uint8List.fromList([
-      0x78, 0x01, 0x63, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01,
+      0x78,
+      0x01,
+      0x63,
+      0x60,
+      0x00,
+      0x00,
+      0x00,
+      0x02,
+      0x00,
+      0x01,
     ]);
     final idat = _pngChunk('IDAT', idatData);
     final iend = _pngChunk('IEND', Uint8List(0));
 
     const sig = [137, 80, 78, 71, 13, 10, 26, 10];
-    final out = Uint8List(sig.length + ihdr.length + textChunk.length + idat.length + iend.length);
+    final out = Uint8List(
+      sig.length + ihdr.length + textChunk.length + idat.length + iend.length,
+    );
     var offset = 0;
-    for (final b in sig) { out[offset++] = b; }
-    out.setRange(offset, offset + ihdr.length, ihdr); offset += ihdr.length;
-    out.setRange(offset, offset + textChunk.length, textChunk); offset += textChunk.length;
-    out.setRange(offset, offset + idat.length, idat); offset += idat.length;
+    for (final b in sig) {
+      out[offset++] = b;
+    }
+    out.setRange(offset, offset + ihdr.length, ihdr);
+    offset += ihdr.length;
+    out.setRange(offset, offset + textChunk.length, textChunk);
+    offset += textChunk.length;
+    out.setRange(offset, offset + idat.length, idat);
+    offset += idat.length;
     out.setRange(offset, offset + iend.length, iend);
     return out;
   }
@@ -192,9 +212,12 @@ class PngCharacterCard {
         out.add(imageBytes.sublist(offset));
         return out.takeBytes();
       }
-      final isCardText = (type == 'tEXt' || type == 'iTXt') &&
+      final isCardText =
+          (type == 'tEXt' || type == 'iTXt') &&
           _isCardKeyword(imageBytes.sublist(offset + 8, offset + 8 + length));
-      if (!isCardText) out.add(imageBytes.sublist(offset, offset + 12 + length));
+      if (!isCardText) {
+        out.add(imageBytes.sublist(offset, offset + 12 + length));
+      }
       offset += 12 + length;
     }
     return null;
@@ -204,11 +227,13 @@ class PngCharacterCard {
     final separator = chunk.indexOf(0);
     if (separator <= 0) return false;
     try {
-      final keyword = ascii.decode(chunk.sublist(0, separator), allowInvalid: false);
+      final keyword = ascii.decode(
+        chunk.sublist(0, separator),
+        allowInvalid: false,
+      );
       return keyword == 'ccv3' || keyword == 'chara';
     } on FormatException {
       return false;
     }
   }
-
 }

@@ -193,7 +193,7 @@ void main() {
         now: DateTime(2026, 11, 26),
       );
       final system = bundle.messages.first.content;
-      expect(system, contains('【全局系统提示词 · 高优先级风格约束】'));
+      expect(system, contains('【全局系统提示词】'));
       expect(system, contains('顾言 和 林澈 都用短句。'));
       expect(system, contains('【后置指令 · 仅限表达与格式】绝不写客服收尾。'));
     },
@@ -328,11 +328,7 @@ void main() {
       name: '扫描',
       scanDepth: scanDepth,
       entries: const [
-        WorldInfoEntry(
-          id: 'dock',
-          keys: ['码头'],
-          content: '码头夜间有雾。',
-        ),
+        WorldInfoEntry(id: 'dock', keys: ['码头'], content: '码头夜间有雾。'),
       ],
     );
     final shallow = assembler.assemble(
@@ -381,11 +377,7 @@ void main() {
           name: '扫描两条',
           scanDepth: 2,
           entries: [
-            WorldInfoEntry(
-              id: 'deep',
-              keys: ['码头'],
-              content: '深扫描命中。',
-            ),
+            WorldInfoEntry(id: 'deep', keys: ['码头'], content: '深扫描命中。'),
           ],
         ),
         WorldBook(
@@ -393,11 +385,7 @@ void main() {
           name: '不扫描历史',
           scanDepth: 0,
           entries: [
-            WorldInfoEntry(
-              id: 'shallow',
-              keys: ['码头'],
-              content: '浅扫描不应命中。',
-            ),
+            WorldInfoEntry(id: 'shallow', keys: ['码头'], content: '浅扫描不应命中。'),
           ],
         ),
       ],

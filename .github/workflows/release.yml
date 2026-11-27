@@ -17,6 +17,8 @@ permissions:
 env:
   FLUTTER_VERSION: 3.35.1
   TMPDIR: ${{ github.workspace }}/.tmp
+  TMP: ${{ github.workspace }}/.tmp
+  TEMP: ${{ github.workspace }}/.tmp
 
 jobs:
   android:

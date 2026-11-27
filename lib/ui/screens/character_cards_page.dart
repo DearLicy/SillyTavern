@@ -99,7 +99,8 @@ class CharacterCardsPage extends ConsumerWidget {
                         DtIconButton(
                           icon: Icons.copy_all_outlined,
                           tooltip: '复制角色卡 JSON',
-                          onTap: () => _copyJson(context, controller, character.id),
+                          onTap: () =>
+                              _copyJson(context, controller, character.id),
                         ),
                       ],
                     ),
@@ -121,13 +122,9 @@ class CharacterCardsPage extends ConsumerWidget {
     try {
       final json = controller.exportCharacterCard(characterId);
       await Clipboard.setData(ClipboardData(text: json));
-      messenger.showSnackBar(
-        const SnackBar(content: Text('角色卡 JSON 已复制')),
-      );
+      messenger.showSnackBar(const SnackBar(content: Text('角色卡 JSON 已复制')));
     } catch (_) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('导出失败，请重试')),
-      );
+      messenger.showSnackBar(const SnackBar(content: Text('导出失败，请重试')));
     }
   }
 
@@ -172,9 +169,7 @@ class CharacterCardsPage extends ConsumerWidget {
         );
       }
     } catch (error) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('PNG 导出失败：$error')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text('PNG 导出失败：$error')));
     }
   }
 

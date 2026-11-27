@@ -20,7 +20,7 @@ class PersonasPage extends ConsumerWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return DtDetailPage(
       title: '用户人设',
-      subtitle: '同一个角色，可以拥有不同的故事版本',
+      subtitle: '可选 · 用于替换角色卡中的 {{user}}',
       actions: [
         DtIconButton(
           onTap: () => context.push('/persona/new'),
@@ -100,7 +100,7 @@ class _InfoBanner extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              '每段关系绑定一个用户人设。角色知道的姓名、背景、称呼、边界与共同记忆彼此独立。',
+              '用户人设是可选的。未选择时，角色卡中的 {{user}} 会回退为本地用户资料。不同人设拥有独立的姓名、背景与偏好。',
               style: TextStyle(fontSize: 12.5, height: 1.55),
             ),
           ),

@@ -91,88 +91,24 @@ AppData buildSeedData() {
       id: 'rel_gu',
       characterId: 'char_gu',
       personaId: 'persona_lin',
-      stage: '高度默契',
-      nickname: '阿澈',
-      metrics: const {'好感': 82, '信任': 68, '心动': 76, '张力': 41},
-      consent: const ConsentProfile(
-        ceiling: ContentLevel.mature,
-        allowedThemes: ['慢热互动', '私密对话', '情感张力'],
-        blockedThemes: ['强迫', '羞辱', '永久伤害'],
-      ),
-      scene: const SceneState(
-        location: '顾言公寓的落地窗边',
-        timeHint: '深夜 23:40',
-        outfit: '宽松家居服',
-        mood: '安静、暧昧、彼此靠近',
-        notes: '窗外在下小雨。两个人刚结束一场没有说完的对话。',
-        director: DirectorConfig(
-          pacing: Pacing.tender,
-          narration: 0.35,
-          autonomy: 0.5,
-          intimacy: 0.55,
-          instructions: '让关心落在动作和细节里，不要连续追问。',
-        ),
-      ),
       updatedAt: now.subtract(const Duration(minutes: 3)),
     ),
     Relationship(
       id: 'rel_shen',
       characterId: 'char_shen',
       personaId: 'persona_lin',
-      stage: '逐渐熟悉',
-      nickname: '小朋友',
-      metrics: const {'好感': 61, '信任': 55, '心动': 48, '张力': 66},
-      consent: const ConsentProfile(
-        ceiling: ContentLevel.sfw,
-        allowedThemes: ['日常关心', '轻度暧昧'],
-        blockedThemes: ['强迫', '羞辱', '医疗控制'],
-      ),
-      scene: const SceneState(
-        location: '沈砚的诊室',
-        timeHint: '傍晚',
-        mood: '克制、略带试探',
-        notes: '检查已经结束，沈砚却没有立刻让你离开。',
-      ),
       updatedAt: now.subtract(const Duration(hours: 2)),
     ),
     Relationship(
       id: 'rel_jiang',
       characterId: 'char_jiang',
       personaId: 'persona_wen',
-      stage: '秘密约会',
-      nickname: '温医生',
-      metrics: const {'好感': 73, '信任': 51, '心动': 80, '张力': 62},
-      consent: const ConsentProfile(
-        ceiling: ContentLevel.mature,
-        allowedThemes: ['暧昧拉扯', '户外约会'],
-        blockedThemes: ['强迫', '公开羞辱'],
-      ),
-      scene: const SceneState(
-        location: '旧城区天台',
-        timeHint: '日落',
-        mood: '松弛、暧昧',
-        notes: '江临带了一台胶片相机，说要拍下你今天不看镜头的瞬间。',
-      ),
       updatedAt: now.subtract(const Duration(hours: 5)),
     ),
     Relationship(
       id: 'rel_bai',
       characterId: 'char_bai',
       personaId: 'persona_lin',
-      stage: '故事尚未命名',
-      nickname: '店长',
-      metrics: const {'好感': 44, '信任': 39, '心动': 52, '张力': 35},
-      consent: const ConsentProfile(
-        ceiling: ContentLevel.sfw,
-        allowedThemes: ['奇幻日常', '共同解谜'],
-        blockedThemes: ['现实伤害', '强迫'],
-      ),
-      scene: const SceneState(
-        location: '潮汐书店',
-        timeHint: '雨后的下午',
-        mood: '神秘、安静',
-        notes: '书架上出现了一本从未进货的旧书，扉页写着你的名字。',
-      ),
       updatedAt: now.subtract(const Duration(days: 1, hours: 2)),
     ),
   ];
@@ -330,69 +266,6 @@ AppData buildSeedData() {
     ),
   ];
 
-  final moments = [
-    Moment(
-      id: 'moment_1',
-      authorId: 'char_gu',
-      authorName: '顾言',
-      content: '旧城区那家咖啡店要关门了。老板把最后一袋豆子留给我，说适合下雨的时候喝。',
-      createdAt: now.subtract(const Duration(minutes: 42)),
-      fromAi: true,
-      avatarColor: 0xFF4F7DF3,
-      likedBy: const ['林澈', '江临'],
-      comments: [
-        MomentComment(
-          id: 'comment_1',
-          authorName: '林澈',
-          content: '那下次下雨，我们去把它喝完。',
-          createdAt: now.subtract(const Duration(minutes: 32)),
-        ),
-        MomentComment(
-          id: 'comment_2',
-          authorName: '顾言',
-          content: '好。杯子我留着。',
-          createdAt: now.subtract(const Duration(minutes: 29)),
-          fromAi: true,
-        ),
-      ],
-    ),
-    Moment(
-      id: 'moment_2',
-      authorId: 'owner',
-      authorName: '林澈',
-      content: '今天终于把拖了很久的一段剧情写完了。奖励自己一杯热可可。',
-      createdAt: now.subtract(const Duration(hours: 2)),
-      avatarColor: 0xFF6D83F2,
-      likedBy: const ['顾言', '沈砚', '江临', '白榆'],
-      comments: [
-        MomentComment(
-          id: 'comment_3',
-          authorName: '江临',
-          content: '写完的人应该被拍一张不看镜头的照片。',
-          createdAt: now.subtract(const Duration(hours: 1, minutes: 50)),
-          fromAi: true,
-        ),
-        MomentComment(
-          id: 'comment_4',
-          authorName: '沈砚',
-          content: '热可可可以。今晚别再靠咖啡撑着了。',
-          createdAt: now.subtract(const Duration(hours: 1, minutes: 43)),
-          fromAi: true,
-        ),
-      ],
-    ),
-    Moment(
-      id: 'moment_3',
-      authorId: 'char_bai',
-      authorName: '白榆',
-      content: '书店今天多了一本没有书号的书。翻到第七页，写的是一段还没有发生的对话。',
-      createdAt: now.subtract(const Duration(hours: 5)),
-      fromAi: true,
-      avatarColor: 0xFF9B7CF6,
-      likedBy: const ['林澈'],
-    ),
-  ];
-
   return AppData(
     schemaVersion: 2,
     owner: owner,
@@ -403,7 +276,6 @@ AppData buildSeedData() {
     threads: threads,
     messages: messages,
     memories: memories,
-    moments: moments,
     worldBooks: const [],
   );
 }

@@ -125,9 +125,7 @@ class _WorldBooksPageState extends ConsumerState<WorldBooksPage> {
       await Clipboard.setData(
         ClipboardData(text: const WorldBookCodec().encode(book)),
       );
-      messenger.showSnackBar(
-        const SnackBar(content: Text('世界书 JSON 已复制')),
-      );
+      messenger.showSnackBar(const SnackBar(content: Text('世界书 JSON 已复制')));
     } catch (_) {
       messenger.showSnackBar(const SnackBar(content: Text('世界书导出失败，请重试')));
     }
@@ -223,11 +221,8 @@ class _WorldBookEditorPageState extends ConsumerState<WorldBookEditorPage> {
                   1,
                   20,
                 ),
-                recursionDepth:
-                    (int.tryParse(_recursionDepth.text.trim()) ?? 2).clamp(
-                      0,
-                      6,
-                    ),
+                recursionDepth: (int.tryParse(_recursionDepth.text.trim()) ?? 2)
+                    .clamp(0, 6),
               );
               Navigator.of(context).pop(book);
             },
@@ -300,9 +295,7 @@ class _WorldBookEditorPageState extends ConsumerState<WorldBookEditorPage> {
                       child: DtTextField(
                         controller: _scanDepth,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: '扫描消息数',
-                        ),
+                        decoration: const InputDecoration(labelText: '扫描消息数'),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -387,11 +380,7 @@ class _WorldBookEditorPageState extends ConsumerState<WorldBookEditorPage> {
 }
 
 class WorldInfoEditorPage extends ConsumerStatefulWidget {
-  const WorldInfoEditorPage({
-    super.key,
-    required this.entryId,
-    this.initial,
-  });
+  const WorldInfoEditorPage({super.key, required this.entryId, this.initial});
 
   final String entryId;
   final WorldInfoEntry? initial;
@@ -536,9 +525,7 @@ class _WorldInfoEditorPageState extends ConsumerState<WorldInfoEditorPage> {
                       child: DtTextField(
                         controller: _probability,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: '触发概率 %',
-                        ),
+                        decoration: const InputDecoration(labelText: '触发概率 %'),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -546,9 +533,7 @@ class _WorldInfoEditorPageState extends ConsumerState<WorldInfoEditorPage> {
                       child: DtTextField(
                         controller: _depth,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
-                          labelText: '插入深度',
-                        ),
+                        decoration: const InputDecoration(labelText: '插入深度'),
                       ),
                     ),
                   ],

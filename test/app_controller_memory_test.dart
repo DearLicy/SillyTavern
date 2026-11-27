@@ -385,7 +385,7 @@ void main() {
       final messages = ai.requests.first;
       expect(messages.first.role, 'system');
       expect(messages.first.content, contains('顾言'));
-      expect(messages.first.content, contains('不可覆盖的平台安全规则'));
+      expect(messages.first.content, contains('平台安全约束'));
       expect(messages[1].content, contains('网页资料'));
       expect(messages.first.content, isNot(contains('网页资料')));
     },
@@ -442,8 +442,8 @@ void main() {
       expect(controller.state.error, contains('上游连接中断'));
       expect(controller.state.generatingThreadId, isNull);
       expect(
-        controller.state.data.relationships.first.interactionCount,
-        initial.relationships.first.interactionCount,
+        controller.state.data.relationships.first.lastInteractionAt,
+        initial.relationships.first.lastInteractionAt,
       );
 
       final user = controller.state.data.messages
@@ -458,8 +458,8 @@ void main() {
       expect(messages.last.interrupted, isFalse);
       expect(controller.state.error, isNull);
       expect(
-        controller.state.data.relationships.first.interactionCount,
-        initial.relationships.first.interactionCount + 1,
+        controller.state.data.relationships.first.lastInteractionAt,
+        isNotNull,
       );
     },
   );
@@ -567,73 +567,6 @@ void main() {
       expect(sent.text, '像不像下雨的晚上');
       expect(ai.requests.last.last.content, contains('用户发送了一张图片'));
       expect(ai.requests.last.last.content, contains('下雨的晚上'));
-    },
-  );
-
-  test(
-    'completed conversations grow relationship metrics once per user turn',
-    () async {
-      final initial = buildSeedData();
-      final relationship = initial.relationshipForThread(
-        initial.threads.first,
-      )!;
-      final data = initial.copyWith(
-        settings: initial.settings.copyWith(
-          provider: const ProviderConfig(
-            kind: ProviderKind.openaiCompatible,
-            baseUrl: 'https://memory.test/v1',
-            model: 'memory-model',
-          ),
-        ),
-      );
-      final ai = _QueuedReplyAi(['先别逞强，过来坐会儿。', '行，那今晚什么都别想，我陪你安静一会儿。']);
-      final controller = AppController(
-        store: _MemoryStore(data),
-        keyStore: _MemoryKeyStore(),
-        toolKeyStore: _MemoryKeyStore(),
-        aiClient: ai,
-        attachmentStore: MemoryAttachments()
-          ..files['image-reference.jpg'] = MemoryAttachments.pixel,
-      );
-      addTearDown(controller.dispose);
-      for (
-        var attempt = 0;
-        attempt < 20 && controller.state.loading;
-        attempt++
-      ) {
-        await Future<void>.delayed(const Duration(milliseconds: 5));
-      }
-
-      final threadId = data.threads.first.id;
-      await controller.sendMessage(threadId, '今天工作很累，说实话有点想你。');
-      final afterFirst = controller.state.data.relationships.firstWhere(
-        (item) => item.id == relationship.id,
-      );
-      expect(afterFirst.interactionCount, relationship.interactionCount + 1);
-      expect(
-        afterFirst.metrics['好感']!,
-        greaterThan(relationship.metrics['好感']!),
-      );
-      expect(
-        afterFirst.metrics['信任']!,
-        greaterThan(relationship.metrics['信任']!),
-      );
-      expect(
-        afterFirst.metrics['心动']!,
-        greaterThan(relationship.metrics['心动']!),
-      );
-      expect(afterFirst.lastMetricDelta, isNotEmpty);
-      expect(afterFirst.lastMetricReason, contains('真实近况'));
-
-      await controller.regenerateLastReply(threadId);
-      final afterRegenerate = controller.state.data.relationships.firstWhere(
-        (item) => item.id == relationship.id,
-      );
-      expect(afterRegenerate.interactionCount, afterFirst.interactionCount);
-      expect(afterRegenerate.metrics, afterFirst.metrics);
-      expect(afterRegenerate.lastMetricDelta, afterFirst.lastMetricDelta);
-      expect(afterRegenerate.lastMetricReason, afterFirst.lastMetricReason);
-      expect(ai.calls, 2);
     },
   );
 

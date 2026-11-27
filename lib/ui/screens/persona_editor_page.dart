@@ -167,7 +167,9 @@ class _PersonaEditorPageState extends ConsumerState<PersonaEditorPage> {
                 final persona = UserPersona(
                   id: _id ?? _draftId,
                   avatarReference: _avatarReference,
-                  name: _name.text.trim().isEmpty ? '未命名用户人设' : _name.text.trim(),
+                  name: _name.text.trim().isEmpty
+                      ? '未命名用户人设'
+                      : _name.text.trim(),
                   age: _age.text.trim().isEmpty ? '成年' : _age.text.trim(),
                   pronouns: _pronouns.text.trim().isEmpty
                       ? '她'

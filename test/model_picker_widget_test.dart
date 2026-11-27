@@ -63,7 +63,7 @@ void main() {
           selected: 'model-0',
         ).then((v) => selected = v);
         await tester.pumpAndSettle();
-        expect(find.byKey(const ValueKey('root-bottom-bar')), findsOneWidget);
+        expect(find.byKey(const ValueKey('root-bottom-bar')), findsNothing);
         expect(find.text('显示 1500 / 1500 个模型'), findsOneWidget);
         expect(
           find.byKey(const ValueKey('model-option-model-1499')),

@@ -111,9 +111,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     final participants = thread.type == ThreadType.group
         ? thread.participantIds
               .map(
-                (id) => data.characters
-                    .where((item) => item.id == id)
-                    .firstOrNull,
+                (id) =>
+                    data.characters.where((item) => item.id == id).firstOrNull,
               )
               .whereType<Character>()
               .toList()
@@ -148,11 +147,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       backgroundColor: dark ? DtColors.darkBg : DtColors.canvas,
       appBar: _ChatAppBar(
         character: character,
-        relationship: relationship,
         displayTitle: thread.type == ThreadType.group ? thread.title : null,
         displaySubtitle:
             thread.type == ThreadType.group && participants.isNotEmpty
-            ? '${participants.length} 位角色 · ${relationship.stage}'
+            ? '${participants.length} 位角色 · 群聊'
             : null,
         onBack: context.pop,
         onMenu: () => _showChatMenu(context, data, relationship, character),
@@ -274,17 +272,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     );
                   },
                 ),
-                if (messages.isEmpty &&
-                    state.generatingThreadId != thread.id)
+                if (messages.isEmpty && state.generatingThreadId != thread.id)
                   Positioned.fill(
                     child: _EmptyChatStart(
                       character: character,
                       greetings: greetings,
                       dark: dark,
-                      onStart: (text) => controller.startWithGreeting(
-                        thread.id,
-                        text,
-                      ),
+                      onStart: (text) =>
+                          controller.startWithGreeting(thread.id, text),
                     ),
                   ),
                 if (!_nearBottom && messages.isNotEmpty)
@@ -433,29 +428,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               DtSettingRow(
                 icon: Icons.psychology_alt_outlined,
                 title: '记忆管理',
-                subtitle: '角色真正记住的事',
+                subtitle: '摘要、事实与可编辑长期记忆',
                 onTap: () {
                   Navigator.pop(context);
                   context.push('/memory/${relationship.id}');
-                },
-              ),
-              DtSettingRow(
-                icon: Icons.movie_filter_outlined,
-                title: '导演模式',
-                subtitle: '节奏、旁白与剧情推进',
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/director/${relationship.id}');
-                },
-              ),
-              DtSettingRow(
-                icon: Icons.shield_outlined,
-                title: '内容与边界',
-                subtitle:
-                    '${relationship.consent.ceiling.label} · 安全词 ${relationship.consent.safeWord}',
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/consent/${relationship.id}');
                 },
               ),
             ],
@@ -521,16 +497,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 onTap: () {
                   Navigator.pop(context);
                   _pickImage(ImageSource.camera);
-                },
-              ),
-              DtSettingRow(
-                icon: Icons.movie_filter_outlined,
-                iconColor: DtColors.brand,
-                title: '当前场景',
-                subtitle: relationship.scene.location,
-                onTap: () {
-                  Navigator.pop(context);
-                  context.push('/scene/${relationship.id}');
                 },
               ),
               DtSettingRow(
@@ -843,7 +809,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   showDtEditSheet(
                     context: this.context,
                     title: '编辑消息',
-                    description: '将重新整理自动摘要和自动记忆；手动记忆与关系数值保留，不会自动重发。',
+                    description: '将重新整理自动摘要和自动记忆；手动记忆保留，不会自动重发。',
                     initialText: message.text,
                     allowEmpty: message.kind == MessageKind.image,
                     actionLabel: '保存修改',
@@ -870,9 +836,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     ScaffoldMessenger.of(this.context).showSnackBar(
                       SnackBar(
                         content: Text(
-                          error is StateError
-                              ? error.message
-                              : '创建分支失败，请重试。',
+                          error is StateError ? error.message : '创建分支失败，请重试。',
                         ),
                       ),
                     );
@@ -887,8 +851,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   showDtEditSheet(
                     context: this.context,
                     title: '删除这条消息？',
-                    description:
-                        '删除消息及不再使用的图片，并重新整理自动摘要和自动记忆。手动记忆与关系数值保留。此操作无法撤销。',
+                    description: '删除消息及不再使用的图片，并重新整理自动摘要和自动记忆。手动记忆保留。此操作无法撤销。',
                     actionLabel: '删除消息',
                     danger: true,
                     onSubmit: (_) => ref
@@ -1002,7 +965,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   const _ChatAppBar({
     required this.character,
-    required this.relationship,
     required this.onBack,
     required this.onMenu,
     this.displayTitle,
@@ -1010,7 +972,6 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
   });
 
   final Character character;
-  final Relationship relationship;
   final VoidCallback onBack;
   final VoidCallback onMenu;
   final String? displayTitle;
@@ -1061,8 +1022,7 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 const SizedBox(height: 1),
                 Text(
-                  displaySubtitle ??
-                      '${relationship.stage} · ${relationship.consent.ceiling.label}',
+                  displaySubtitle ?? '角色对话',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

@@ -56,9 +56,15 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
               child: DtPageHeader(
                 padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
                 leading: _OwnerAvatarButton(owner: data.owner),
-                title: '消息',
-
+                title: 'SillyTavern',
+                subtitle: '${threads.length} 个会话 · 本地优先',
                 actions: [
+                  DtIconButton(
+                    icon: Icons.people_outline_rounded,
+                    tooltip: '角色库',
+                    onTap: () => context.push('/characters'),
+                  ),
+                  const SizedBox(width: 4),
                   DtIconButton(
                     icon: Icons.add_rounded,
                     tooltip: '新建对话',
@@ -78,7 +84,7 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                   onChanged: (value) => setState(() => _query = value),
                   textInputAction: TextInputAction.search,
                   decoration: const InputDecoration(
-                    hintText: '搜索消息与角色',
+                    hintText: '搜索会话或角色',
                     prefixIcon: Icon(Icons.search_rounded, size: 21),
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(vertical: 13),
@@ -123,7 +129,6 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                     index: index,
                     child: _ConversationTile(
                       thread: thread,
-                      relationship: relationship,
                       character: character,
                       lastMessage: lastMessage,
                       unread: unread,
@@ -165,10 +170,10 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
               DtSettingRow(
                 icon: Icons.chat_bubble_outline_rounded,
                 title: '发起新对话',
-                subtitle: '选择一个已有角色',
+                subtitle: '从角色库选择一张角色卡',
                 onTap: () {
                   Navigator.pop(context);
-                  context.go('/contacts');
+                  context.push('/characters');
                 },
               ),
               DtSettingRow(
@@ -200,9 +205,9 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
     final data = ref.read(appControllerProvider).data;
     final characters = data.characters;
     if (characters.length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('至少需要两个角色才能发起群聊')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('至少需要两个角色才能发起群聊')));
       return;
     }
     final selected = <String>{};
@@ -258,9 +263,9 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
       if (context.mounted) context.push('/chat/${thread.id}');
     } catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('群聊创建失败：$error')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('群聊创建失败：$error')));
       }
     }
   }
@@ -311,14 +316,14 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                 icon: Icons.delete_sweep_outlined,
                 iconColor: DtColors.coral,
                 title: '清空单人物聊天记录',
-                subtitle: '只清掉这段对话，保留角色、用户人设和关系数值',
+                subtitle: '只清掉这段对话，保留角色、用户人设和长期记忆',
                 onTap: () {
                   Navigator.pop(context);
                   showDtEditSheet(
                     context: this.context,
                     title: '清空与${thread.title}的聊天？',
                     description:
-                        '将删除这条会话的全部消息、图片附件与对话摘要。角色、用户人设、长期记忆和关系数值都会保留，不会自动发送开场白。此操作无法撤销。',
+                        '将删除这条会话的全部消息、图片附件与对话摘要。角色、用户人设和长期记忆都会保留，不会自动发送开场白。此操作无法撤销。',
                     actionLabel: '清空聊天记录',
                     danger: true,
                     onSubmit: (_) => controller.clearChatHistory(thread.id),
@@ -357,7 +362,6 @@ class _OwnerAvatarButton extends StatelessWidget {
 class _ConversationTile extends StatelessWidget {
   const _ConversationTile({
     required this.thread,
-    required this.relationship,
     required this.character,
     required this.lastMessage,
     required this.unread,
@@ -367,7 +371,6 @@ class _ConversationTile extends StatelessWidget {
   });
 
   final ChatThread thread;
-  final Relationship relationship;
   final Character character;
   final Message? lastMessage;
   final int unread;

@@ -75,7 +75,7 @@ extension DataManagement on AppController {
   }
 
   /// Start this persona's relationship again. Keep the authored character,
-  /// persona, director preferences and explicit safety boundaries.
+  /// persona and explicit user-authored boundary memories.
   Future<void> restartRelationship(String relationshipId) async {
     final relationship = _snapshot.data.relationships
         .where((r) => r.id == relationshipId)
@@ -117,22 +117,8 @@ extension DataManagement on AppController {
           for (final r in before.relationships)
             r.id == relationshipId
                 ? r.copyWith(
-                    stage: '刚刚相遇',
-                    nickname: '你',
-                    metrics: const {'好感': 12, '信任': 8, '心动': 10, '张力': 5},
                     replyEnergy: 55,
-                    interactionCount: 0,
                     clearLastInteractionAt: true,
-                    lastMetricDelta: const {},
-                    lastMetricReason: '',
-                    clearLastMetricMessageId: true,
-                    scene: SceneState(
-                      location: '初次相遇的地方',
-                      timeHint: '刚刚开始',
-                      mood: '好奇、克制',
-                      notes: '这是这段关系的第一次对话。',
-                      director: r.scene.director,
-                    ),
                     updatedAt: now,
                   )
                 : r,
@@ -143,7 +129,7 @@ extension DataManagement on AppController {
 
   /// Create an independent SillyTavern-style chat branch ending at [messageId].
   /// The source chat remains untouched; messages, recap state and relationship
-  /// metadata are copied so the branch can continue without sharing mutations.
+  /// binding is copied so the branch can continue without sharing mutations.
   Future<ChatThread> branchFromMessage(
     String threadId,
     String messageId,
@@ -161,10 +147,11 @@ extension DataManagement on AppController {
         .firstOrNull;
     if (sourceRelationship == null) throw StateError('原关系不存在');
 
-    final ordered = before.messages
-        .where((message) => message.threadId == threadId)
-        .toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final ordered =
+        before.messages
+            .where((message) => message.threadId == threadId)
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     final pivotIndex = ordered.indexWhere((message) => message.id == messageId);
     if (pivotIndex < 0) throw StateError('分支消息不存在');
     final sourceMessages = ordered.take(pivotIndex + 1).toList();
@@ -199,17 +186,9 @@ extension DataManagement on AppController {
       id: relationshipId,
       characterId: sourceRelationship.characterId,
       personaId: sourceRelationship.personaId,
-      stage: sourceRelationship.stage,
-      nickname: sourceRelationship.nickname,
-      metrics: Map<String, int>.of(sourceRelationship.metrics),
-      consent: sourceRelationship.consent,
-      scene: sourceRelationship.scene,
       updatedAt: pivot.createdAt,
       replyEnergy: sourceRelationship.replyEnergy,
       lastInteractionAt: pivot.createdAt,
-      interactionCount: sourceMessages.where((message) => !message.fromAi).length,
-      lastMetricDelta: Map<String, int>.of(sourceRelationship.lastMetricDelta),
-      lastMetricReason: sourceRelationship.lastMetricReason,
     );
     final thread = ChatThread(
       id: branchThreadId,
@@ -291,16 +270,13 @@ extension DataManagement on AppController {
         memories: current.memories
             .where((m) => !relationshipIds.contains(m.relationshipId))
             .toList(),
-        moments: current.moments
-            .where((m) => m.authorId != characterId)
-            .toList(),
       ),
     );
   }
 
   Future<void> deletePersona(String personaId) async {
     if (_snapshot.data.relationships.any((r) => r.personaId == personaId)) {
-      throw StateError('这个用户人设仍绑定着关系，请先在角色资料中删除相关角色。');
+      throw StateError('这个用户人设仍被会话使用，请先切换或删除相关角色。');
     }
     final before = _snapshot.data;
     final remaining = before.personas.where((p) => p.id != personaId).toList();
@@ -382,86 +358,6 @@ extension DataManagement on AppController {
                       !preserveMessageIds.contains(m.sourceMessageId)
                   ? m.copyWith(clearSource: true)
                   : m,
-        ],
-      ),
-    );
-  }
-
-  Future<void> editMoment(String momentId, String content) async {
-    if (content.trim().isEmpty) throw ArgumentError('动态内容不能为空');
-    final before = _snapshot.data;
-    if (!before.moments.any(
-      (m) => m.id == momentId && !m.fromAi && m.authorId == before.owner.id,
-    )) {
-      throw StateError('只能编辑自己发布的动态');
-    }
-    await _saveManagementChange(
-      before,
-      before.copyWith(
-        moments: [
-          for (final m in before.moments)
-            m.id == momentId ? m.copyWith(content: content.trim()) : m,
-        ],
-      ),
-    );
-  }
-
-  Future<void> deleteMoment(String momentId) async {
-    final before = _snapshot.data;
-    await _saveManagementChange(
-      before,
-      before.copyWith(
-        moments: before.moments.where((m) => m.id != momentId).toList(),
-      ),
-    );
-  }
-
-  Future<void> editMomentComment(
-    String momentId,
-    String commentId,
-    String content,
-  ) async {
-    if (content.trim().isEmpty) throw ArgumentError('评论不能为空');
-    final before = _snapshot.data;
-    final moment = before.moments.where((m) => m.id == momentId).firstOrNull;
-    final comment = moment?.comments
-        .where((c) => c.id == commentId)
-        .firstOrNull;
-    if (comment == null || comment.fromAi) throw StateError('只能编辑自己的评论');
-    await _saveManagementChange(
-      before,
-      before.copyWith(
-        moments: [
-          for (final m in before.moments)
-            m.id == momentId
-                ? m.copyWith(
-                    comments: [
-                      for (final c in m.comments)
-                        c.id == commentId
-                            ? c.copyWith(content: content.trim())
-                            : c,
-                    ],
-                  )
-                : m,
-        ],
-      ),
-    );
-  }
-
-  Future<void> deleteMomentComment(String momentId, String commentId) async {
-    final before = _snapshot.data;
-    await _saveManagementChange(
-      before,
-      before.copyWith(
-        moments: [
-          for (final m in before.moments)
-            m.id == momentId
-                ? m.copyWith(
-                    comments: m.comments
-                        .where((c) => c.id != commentId)
-                        .toList(),
-                  )
-                : m,
         ],
       ),
     );
@@ -575,4 +471,3 @@ extension DataManagement on AppController {
     return thread;
   }
 }
-

@@ -75,7 +75,9 @@ class ChatCompletionPresetCodec {
               .toList()
         : const <String>[];
     return ImportedChatCompletionPreset(
-      name: _text(json['name']).isEmpty ? '导入的 Chat Completion 预设' : _text(json['name']),
+      name: _text(json['name']).isEmpty
+          ? '导入的 Chat Completion 预设'
+          : _text(json['name']),
       prompts: PromptConfig(
         systemPrefix: systemParts.join('\n\n'),
         postHistoryInstructions: postHistory,
@@ -86,8 +88,10 @@ class ChatCompletionPresetCodec {
       frequencyPenalty: _double(json['frequency_penalty'], -2, 2),
       presencePenalty: _double(json['presence_penalty'], -2, 2),
       maxOutputTokens: switch (json['openai_max_tokens']) {
-        final num value when value.toInt() > 0 =>
-          value.toInt().clamp(1, 131072),
+        final num value when value.toInt() > 0 => value.toInt().clamp(
+          1,
+          131072,
+        ),
         _ => null,
       },
       stopSequences: stops,

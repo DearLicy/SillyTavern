@@ -20,18 +20,19 @@ class CharacterCardCodec {
     WorldBook? worldBook,
     String creator = 'SillyTavern APP',
   }) {
-    final resolvedCreator =
-        character.creator.trim().isEmpty ? creator : character.creator.trim();
+    final resolvedCreator = character.creator.trim().isEmpty
+        ? creator
+        : character.creator.trim();
     final data = <String, dynamic>{
       'name': character.name,
       'description': character.intro,
       'personality': character.persona,
-      'scenario': character.personalPreferences,
+      'scenario': character.scenario,
       'first_mes': character.greeting,
-      'mes_example': '',
-      'creator_notes': character.intro,
-      'system_prompt': character.persona,
-      'post_history_instructions': character.voiceProfile,
+      'mes_example': character.exampleDialogue,
+      'creator_notes': character.creatorNotes,
+      'system_prompt': character.systemPrompt,
+      'post_history_instructions': character.postHistoryInstructions,
       'alternate_greetings': character.alternateGreetings,
       'character_book': worldBook == null
           ? null
@@ -53,7 +54,7 @@ class CharacterCardCodec {
       'name': character.name,
       'description': character.intro,
       'personality': character.persona,
-      'scenario': character.personalPreferences,
+      'scenario': character.scenario,
       'first_mes': character.greeting,
       'avatar': 'none',
       'talkativeness': '0.5',
@@ -90,21 +91,21 @@ class CharacterCardCodec {
       return value is String ? value.trim() : '';
     }
 
-    final creator =
-        text('creator').isNotEmpty
-            ? text('creator')
-            : (root['creator'] is String ? (root['creator'] as String).trim() : '');
-    final alternateGreetings = [
-      for (final value
-          in (data['alternate_greetings'] as List? ??
-              root['alternate_greetings'] as List? ??
-              const []))
-        value.toString().trim(),
-    ]
-        .where((e) => e.isNotEmpty)
-        .take(20)
-        .map((e) => e.length <= 4000 ? e : e.substring(0, 4000))
-        .toList();
+    final creator = text('creator').isNotEmpty
+        ? text('creator')
+        : (root['creator'] is String ? (root['creator'] as String).trim() : '');
+    final alternateGreetings =
+        [
+              for (final value
+                  in (data['alternate_greetings'] as List? ??
+                      root['alternate_greetings'] as List? ??
+                      const []))
+                value.toString().trim(),
+            ]
+            .where((e) => e.isNotEmpty)
+            .take(20)
+            .map((e) => e.length <= 4000 ? e : e.substring(0, 4000))
+            .toList();
 
     final description = text('description');
     final personality = text('personality');
@@ -129,20 +130,16 @@ class CharacterCardCodec {
           ? '成年'
           : extension('sillytavern_app_age'),
       intro: description,
-      persona: [
-        if (personality.isNotEmpty) personality,
-        if (scenario.isNotEmpty) '场景：$scenario',
-        if (systemPrompt.isNotEmpty) systemPrompt,
-      ].join('\n\n'),
+      persona: personality,
+      scenario: scenario,
+      exampleDialogue: text('mes_example'),
+      systemPrompt: systemPrompt,
+      postHistoryInstructions: postHistory,
+      creatorNotes: creatorNotes,
       greeting: text('first_mes'),
       avatarColor: _colorFromName(name),
       tags: tags,
-      voiceProfile: [
-        if (creatorNotes.isNotEmpty) creatorNotes,
-        if (postHistory.isNotEmpty) postHistory,
-        if (extension('sillytavern_app_voice_profile').isNotEmpty)
-          extension('sillytavern_app_voice_profile'),
-      ].join('\n\n'),
+      voiceProfile: extension('sillytavern_app_voice_profile'),
       personalPreferences: extension('sillytavern_app_personal_preferences'),
       alternateGreetings: alternateGreetings,
       creator: creator,
@@ -191,8 +188,10 @@ class CharacterCardCodec {
                 (item['insertion_order'] as num?)?.toInt() ??
                 (item['order'] as num?)?.toInt() ??
                 100,
-            probability: ((item['probability'] as num?)?.toInt() ?? 100)
-                .clamp(0, 100),
+            probability: ((item['probability'] as num?)?.toInt() ?? 100).clamp(
+              0,
+              100,
+            ),
             recursive:
                 item['extensions'] is Map &&
                 (item['extensions'] as Map)['recursive'] == true,
@@ -201,8 +200,9 @@ class CharacterCardCodec {
                 (item['extensions'] as Map)['case_sensitive'] == true,
             depth:
                 (item['extensions'] is Map
-                    ? (item['extensions'] as Map)['depth'] as num?
-                    : null)?.toInt() ??
+                        ? (item['extensions'] as Map)['depth'] as num?
+                        : null)
+                    ?.toInt() ??
                 4,
             enabled: item['enabled'] as bool? ?? true,
           ),
@@ -211,13 +211,15 @@ class CharacterCardCodec {
       scanDepth: (raw['scan_depth'] as num?)?.toInt() ?? 4,
       maxEntries:
           (raw['extensions'] is Map
-              ? (raw['extensions'] as Map)['max_entries'] as num?
-              : null)?.toInt() ??
+                  ? (raw['extensions'] as Map)['max_entries'] as num?
+                  : null)
+              ?.toInt() ??
           4,
       recursionDepth:
           (raw['extensions'] is Map
-              ? (raw['extensions'] as Map)['recursion_depth'] as num?
-              : null)?.toInt() ??
+                  ? (raw['extensions'] as Map)['recursion_depth'] as num?
+                  : null)
+              ?.toInt() ??
           2,
     );
   }

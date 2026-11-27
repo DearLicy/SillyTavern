@@ -16,10 +16,7 @@ void main() {
   });
 
   test('embedJson keeps avatar pixels and replaces card metadata', () {
-    final embedded = PngCharacterCard.embedJson(
-      MemoryAttachments.pixel,
-      json,
-    );
+    final embedded = PngCharacterCard.embedJson(MemoryAttachments.pixel, json);
     expect(embedded, isNotNull);
     expect(reader.extractJson(embedded!), json);
     expect(embedded.length, greaterThan(MemoryAttachments.pixel.length));

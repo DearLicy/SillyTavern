@@ -95,39 +95,42 @@ void main() {
     );
   }
 
-  test('configured generation parameters reach OpenAI-compatible requests', () async {
-    Map<String, dynamic>? body;
-    final ai = AiClient(
-      client: MockClient((request) async {
-        body = jsonDecode(request.body) as Map<String, dynamic>;
-        return jsonResponse(completion('参数已生效'));
-      }),
-    );
-    addTearDown(ai.close);
-    final tuned = config.copyWith(
-      temperature: 0.4,
-      topP: 0.75,
-      frequencyPenalty: 0.3,
-      presencePenalty: -0.2,
-      maxOutputTokens: 321,
-      stopSequences: const ['END', '---'],
-    );
-    expect(
-      await ai.streamReply(
-        config: tuned,
-        apiKey: 'test-key',
-        messages: messages,
-        onUpdate: (_) {},
-      ),
-      '参数已生效',
-    );
-    expect(body?['temperature'], 0.4);
-    expect(body?['top_p'], 0.75);
-    expect(body?['frequency_penalty'], 0.3);
-    expect(body?['presence_penalty'], -0.2);
-    expect(body?['max_tokens'], 321);
-    expect(body?['stop'], ['END', '---']);
-  });
+  test(
+    'configured generation parameters reach OpenAI-compatible requests',
+    () async {
+      Map<String, dynamic>? body;
+      final ai = AiClient(
+        client: MockClient((request) async {
+          body = jsonDecode(request.body) as Map<String, dynamic>;
+          return jsonResponse(completion('参数已生效'));
+        }),
+      );
+      addTearDown(ai.close);
+      final tuned = config.copyWith(
+        temperature: 0.4,
+        topP: 0.75,
+        frequencyPenalty: 0.3,
+        presencePenalty: -0.2,
+        maxOutputTokens: 321,
+        stopSequences: const ['END', '---'],
+      );
+      expect(
+        await ai.streamReply(
+          config: tuned,
+          apiKey: 'test-key',
+          messages: messages,
+          onUpdate: (_) {},
+        ),
+        '参数已生效',
+      );
+      expect(body?['temperature'], 0.4);
+      expect(body?['top_p'], 0.75);
+      expect(body?['frequency_penalty'], 0.3);
+      expect(body?['presence_penalty'], -0.2);
+      expect(body?['max_tokens'], 321);
+      expect(body?['stop'], ['END', '---']);
+    },
+  );
 
   test(
     'empty stream retries once as non-streaming on the same provider',

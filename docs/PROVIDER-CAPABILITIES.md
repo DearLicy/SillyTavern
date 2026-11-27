@@ -1,6 +1,6 @@
 # 模型与多模态能力
 
-核对日期：2026-11-21。实现依据 DeepSeek 官方 API 文档与官方 `deepseek-ai/chat-demo`，没有复用网页账号、Cookie 或未公开接口。
+核对日期：2026-11-27。实现依据 DeepSeek 官方 API 文档与官方 `deepseek-ai/chat-demo`，没有复用网页账号、Cookie 或未公开接口。
 
 ## 官方依据
 

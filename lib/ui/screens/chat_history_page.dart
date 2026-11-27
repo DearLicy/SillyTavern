@@ -85,7 +85,7 @@ class _ChatHistoryPageState extends ConsumerState<ChatHistoryPage> {
                                   context: context,
                                   title: '删除 ${ids.length} 条消息？',
                                   description:
-                                      '将删除选中的消息和不再使用的图片，清除这段对话的自动摘要与自动记忆，之后按剩余记录重新整理。手动记忆和关系数值保留。此操作无法撤销。',
+                                      '将删除选中的消息和不再使用的图片，清除这段对话的自动摘要与自动记忆，之后按剩余记录重新整理。手动记忆保留。此操作无法撤销。',
                                   actionLabel: '删除选中消息',
                                   danger: true,
                                   onSubmit: (_) => ref
@@ -195,7 +195,7 @@ class _ChatHistoryPageState extends ConsumerState<ChatHistoryPage> {
                   showDtEditSheet(
                     context: context,
                     title: '编辑消息',
-                    description: '修改会保存到本机并用于后续对话。自动摘要和自动记忆会重新整理，关系数值不会重复结算。',
+                    description: '修改会保存到本机并用于后续对话。自动摘要和自动记忆会重新整理。',
                     initialText: message.text,
                     allowEmpty: message.kind == MessageKind.image,
                     actionLabel: '保存修改',
@@ -213,7 +213,7 @@ class _ChatHistoryPageState extends ConsumerState<ChatHistoryPage> {
                   showDtEditSheet(
                     context: context,
                     title: '删除这条消息？',
-                    description: '删除后会清除过期的自动摘要和自动记忆。手动记忆与关系数值保留，此操作无法撤销。',
+                    description: '删除后会清除过期的自动摘要和自动记忆。手动记忆保留，此操作无法撤销。',
                     actionLabel: '删除消息',
                     danger: true,
                     onSubmit: (_) => ref

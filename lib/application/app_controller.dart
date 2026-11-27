@@ -10,7 +10,6 @@ import 'dart:convert';
 import '../ai/conversation_summary.dart';
 import '../ai/context_assembler.dart';
 import '../ai/group_speaker.dart';
-import '../ai/relationship_dynamics.dart';
 import '../ai/repetition_guard.dart';
 import '../ai/regex_transformer.dart';
 import '../data/local_store.dart';
@@ -285,24 +284,11 @@ class AppController extends StateNotifier<ApplicationState> {
 
   ChatThread addCharacterWithRelationship(Character character) {
     final data = state.data;
-    if (data.personaById(data.settings.currentPersonaId) == null) {
-      throw StateError('请先创建并选择用户人设');
-    }
     final now = DateTime.now();
     final relationship = Relationship(
       id: 'rel_${character.id}',
       characterId: character.id,
       personaId: data.settings.currentPersonaId,
-      stage: '刚刚相遇',
-      nickname: '你',
-      metrics: const {'好感': 12, '信任': 8, '心动': 10, '张力': 5},
-      consent: const ConsentProfile(),
-      scene: const SceneState(
-        location: '初次相遇的地方',
-        timeHint: '刚刚开始',
-        mood: '好奇、克制',
-        notes: '这是这段关系的第一次对话。',
-      ),
       updatedAt: now,
     );
     final thread = ChatThread(
@@ -325,6 +311,61 @@ class AppController extends StateNotifier<ApplicationState> {
     _commit(
       data.copyWith(
         characters: [...data.characters, character],
+        relationships: [...data.relationships, relationship],
+        threads: [...data.threads, thread],
+        messages: [...data.messages, if (greeting.isRenderable) greeting],
+      ),
+    );
+    return thread;
+  }
+
+  /// Opens an additional chat for an existing character without duplicating
+  /// the card. The current persona is optional; an empty persona means the
+  /// local owner profile is used as the user side of the story.
+  ChatThread startChatForCharacter(String characterId) {
+    final data = state.data;
+    final character = data.characters
+        .where((item) => item.id == characterId)
+        .firstOrNull;
+    if (character == null) throw StateError('角色不存在');
+    final personaId = data.settings.currentPersonaId;
+    final existing = data.relationships
+        .where(
+          (item) =>
+              item.characterId == characterId && item.personaId == personaId,
+        )
+        .firstOrNull;
+    final existingThread = existing == null
+        ? null
+        : data.threadForRelationship(existing.id);
+    if (existingThread != null) return existingThread;
+
+    final now = DateTime.now();
+    final relationship = Relationship(
+      id: 'rel_${_uuid.v4()}',
+      characterId: character.id,
+      personaId: personaId,
+      updatedAt: now,
+    );
+    final thread = ChatThread(
+      id: 'thread_${_uuid.v4()}',
+      relationshipId: relationship.id,
+      type: ThreadType.direct,
+      title: character.name,
+      updatedAt: now,
+      participantIds: [character.id],
+    );
+    final greeting = Message(
+      id: _uuid.v4(),
+      threadId: thread.id,
+      senderId: character.id,
+      senderName: character.name,
+      text: character.greeting,
+      createdAt: now,
+      fromAi: true,
+    );
+    _commit(
+      data.copyWith(
         relationships: [...data.relationships, relationship],
         threads: [...data.threads, thread],
         messages: [...data.messages, if (greeting.isRenderable) greeting],
@@ -518,41 +559,6 @@ class AppController extends StateNotifier<ApplicationState> {
       return;
     }
 
-    if (!isImage &&
-        trimmed.toLowerCase() == relationship.consent.safeWord.toLowerCase()) {
-      final stoppedRelationship = relationship.copyWith(
-        consent: relationship.consent.copyWith(paused: true),
-      );
-      final userMessage = Message(
-        id: _uuid.v4(),
-        threadId: threadId,
-        senderId: data.owner.id,
-        senderName: data.owner.displayName,
-        text: trimmed,
-        createdAt: DateTime.now(),
-      );
-      final safetyMessage = Message(
-        id: _uuid.v4(),
-        threadId: threadId,
-        senderId: character.id,
-        senderName: character.name,
-        text: '我在。已经停下来了。先不继续剧情，告诉我你现在需要安静、陪伴，还是结束这次场景。',
-        createdAt: DateTime.now(),
-        fromAi: true,
-      );
-      _appendMessages(
-        [userMessage, safetyMessage],
-        threadId,
-        relationshipUpdate: stoppedRelationship,
-      );
-      if (identical(_activeGenerationAbort, abort)) {
-        _activeGenerationAbort = null;
-      }
-      state = state.copyWith(clearGenerating: true);
-      onAccepted?.call();
-      return;
-    }
-
     final apiKey = await _keyStore.read(
       persistent: data.settings.provider.rememberKey,
     );
@@ -636,9 +642,9 @@ class AppController extends StateNotifier<ApplicationState> {
         );
     final relationshipAfterInput = activeRelationship.copyWith(
       replyEnergy: prompt.replyPlan.energy,
-      lastInteractionAt: acceptedAt,
     );
-    final macroChanged = prompt.variables.length != activeThread.variables.length ||
+    final macroChanged =
+        prompt.variables.length != activeThread.variables.length ||
         prompt.variables.entries.any(
           (entry) => activeThread.variables[entry.key] != entry.value,
         );
@@ -831,9 +837,8 @@ class AppController extends StateNotifier<ApplicationState> {
       if (activeThread.type == ThreadType.group) {
         final participants = activeThread.participantIds
             .map(
-              (id) => current.characters
-                  .where((item) => item.id == id)
-                  .firstOrNull,
+              (id) =>
+                  current.characters.where((item) => item.id == id).firstOrNull,
             )
             .whereType<Character>()
             .toList();
@@ -889,35 +894,10 @@ class AppController extends StateNotifier<ApplicationState> {
             personaId: current.settings.currentPersonaId,
           ) ??
           currentRelationship;
-      final adjustment = speakerRelationship == null
-          ? null
-          : RelationshipDynamics.evaluate(
-              relationship: speakerRelationship,
-              userText: promptInput,
-              assistantReply: naturalReply,
-              userMessageId: userMessage.id,
-              isImage: isImage,
-            );
-      final updatedRelationship =
-          speakerRelationship == null || adjustment == null
-          ? null
-          : speakerRelationship.copyWith(
-              metrics: adjustment.metrics,
-              stage: adjustment.stage,
-              interactionCount:
-                  speakerRelationship.interactionCount +
-                  (speakerRelationship.lastMetricMessageId != userMessage.id
-                      ? 1
-                      : 0),
-              lastMetricDelta: adjustment.changed
-                  ? adjustment.delta
-                  : speakerRelationship.lastMetricDelta,
-              lastMetricReason: adjustment.changed
-                  ? adjustment.reason
-                  : speakerRelationship.lastMetricReason,
-              lastMetricMessageId: userMessage.id,
-              updatedAt: now,
-            );
+      final updatedRelationship = speakerRelationship?.copyWith(
+        lastInteractionAt: now,
+        updatedAt: now,
+      );
       _appendMessages(
         [],
         threadId,
@@ -1490,77 +1470,11 @@ class AppController extends StateNotifier<ApplicationState> {
   }
 
   void updateRelationship(Relationship relationship) {
-    final previous = state.data.relationships
-        .where((item) => item.id == relationship.id)
-        .firstOrNull;
-    if (relationship.consent.paused &&
-        previous?.consent.paused != true &&
-        state.generatingThreadId != null) {
-      _stopActiveGeneration();
-    }
     _commit(
       state.data.copyWith(
         relationships: [
           for (final item in state.data.relationships)
             item.id == relationship.id ? relationship : item,
-        ],
-      ),
-    );
-  }
-
-  void publishMoment(String content) {
-    final trimmed = content.trim();
-    if (trimmed.isEmpty) return;
-    final data = state.data;
-    final moment = Moment(
-      id: _uuid.v4(),
-      authorId: data.owner.id,
-      authorName: data.owner.displayName,
-      content: trimmed,
-      createdAt: DateTime.now(),
-      avatarColor: data.owner.avatarColor,
-    );
-    _commit(data.copyWith(moments: [moment, ...data.moments]));
-  }
-
-  void toggleMomentLike(String momentId, String ownerName) {
-    _commit(
-      state.data.copyWith(
-        moments: [
-          for (final moment in state.data.moments)
-            moment.id == momentId
-                ? moment.copyWith(
-                    likedBy: moment.likedBy.contains(ownerName)
-                        ? moment.likedBy.where((e) => e != ownerName).toList()
-                        : [...moment.likedBy, ownerName],
-                  )
-                : moment,
-        ],
-      ),
-    );
-  }
-
-  void addMomentComment(String momentId, String content) {
-    final trimmed = content.trim();
-    if (trimmed.isEmpty) return;
-    final data = state.data;
-    _commit(
-      data.copyWith(
-        moments: [
-          for (final moment in data.moments)
-            moment.id == momentId
-                ? moment.copyWith(
-                    comments: [
-                      ...moment.comments,
-                      MomentComment(
-                        id: _uuid.v4(),
-                        authorName: data.owner.displayName,
-                        content: trimmed,
-                        createdAt: DateTime.now(),
-                      ),
-                    ],
-                  )
-                : moment,
         ],
       ),
     );

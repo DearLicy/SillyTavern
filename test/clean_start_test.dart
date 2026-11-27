@@ -10,7 +10,7 @@ import 'fixtures/sample_data.dart';
 
 void main() {
   test(
-    'fresh state contains no contacts, personas, conversations, memories or moments',
+    'fresh state contains no characters, personas, conversations or memories',
     () {
       final data = buildEmptyData();
       expect(
@@ -21,7 +21,6 @@ void main() {
           data.threads,
           data.messages,
           data.memories,
-          data.moments,
         ].every((e) => e.isEmpty),
         isTrue,
       );
@@ -56,52 +55,29 @@ void main() {
       controller.dispose();
     },
   );
-  test(
-    'safety word is recorded locally and pauses the relationship without a key',
-    () async {
-      final source = buildSeedData();
-      final relationship = source.relationships.first;
-      final controller = AppController(
-        store: FakeStore(source),
-        keyStore: FakeKeyStore(),
-        toolKeyStore: FakeKeyStore(),
-      );
-      await Future<void>.delayed(Duration.zero);
-      await controller.sendMessage(
-        source.threadForRelationship(relationship.id)!.id,
-        relationship.consent.safeWord,
-      );
-      final updated = controller.state.data.relationships.firstWhere(
-        (item) => item.id == relationship.id,
-      );
-      expect(updated.consent.paused, isTrue);
-      expect(
-        controller.state.data.messages.any(
-          (message) => message.text == relationship.consent.safeWord,
+  test('a character chat can be started without a user persona', () async {
+    final source = buildSeedData();
+    final controller = AppController(
+      store: FakeStore(
+        source.copyWith(
+          personas: const [],
+          settings: source.settings.copyWith(currentPersonaId: ''),
         ),
-        isTrue,
-      );
-      expect(controller.state.generatingThreadId, isNull);
-      controller.dispose();
-    },
-  );
-  test(
-    'publishing creates only user supplied content and no simulated reactions',
-    () async {
-      final controller = AppController(
-        store: FakeStore(),
-        keyStore: FakeKeyStore(),
-        toolKeyStore: FakeKeyStore(),
-      );
-      await Future<void>.delayed(Duration.zero);
-      controller.publishMoment('自己的记录');
-      final moment = controller.state.data.moments.single;
-      expect(moment.content, '自己的记录');
-      expect(moment.comments, isEmpty);
-      expect(moment.likedBy, isEmpty);
-      controller.dispose();
-    },
-  );
+      ),
+      keyStore: FakeKeyStore(),
+      toolKeyStore: FakeKeyStore(),
+    );
+    await Future<void>.delayed(Duration.zero);
+    final thread = controller.startChatForCharacter('char_gu');
+    expect(thread.relationshipId, isNotEmpty);
+    expect(
+      controller.state.data.relationships.any(
+        (item) => item.id == thread.relationshipId && item.personaId.isEmpty,
+      ),
+      isTrue,
+    );
+    controller.dispose();
+  });
   test(
     'reset clears local content and keys rather than restoring a sample',
     () async {
@@ -115,7 +91,6 @@ void main() {
       await controller.resetData();
       expect(controller.state.data.characters, isEmpty);
       expect(controller.state.data.messages, isEmpty);
-      expect(controller.state.data.moments, isEmpty);
       expect(keyStore.value, isNull);
       controller.dispose();
     },

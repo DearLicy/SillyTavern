@@ -115,7 +115,8 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
               child: const Text('取消'),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, textController.text),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, textController.text),
               child: const Text('导入'),
             ),
           ],
@@ -179,7 +180,8 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
               child: const Text('取消'),
             ),
             FilledButton(
-              onPressed: () => Navigator.pop(dialogContext, textController.text),
+              onPressed: () =>
+                  Navigator.pop(dialogContext, textController.text),
               child: const Text('导入'),
             ),
           ],
@@ -198,7 +200,11 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
       messenger.showSnackBar(const SnackBar(content: Text('正则脚本已导入')));
     } catch (error) {
       messenger.showSnackBar(
-        SnackBar(content: Text(error is FormatException ? error.message : '导入失败：$error')),
+        SnackBar(
+          content: Text(
+            error is FormatException ? error.message : '导入失败：$error',
+          ),
+        ),
       );
     }
   }

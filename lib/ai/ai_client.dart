@@ -426,9 +426,7 @@ $safeConversationExcerpt
         '供应商只返回了内部推理，没有正文；已尝试非流式兼容请求。请检查该模型的推理配置或换用支持直接对话的模型。',
       );
     }
-    throw const AiClientException(
-      '供应商的流式及非流式请求均未返回聊天正文。请检查所选模型与接口配置，或稍后重试。',
-    );
+    throw const AiClientException('供应商的流式及非流式请求均未返回聊天正文。请检查所选模型与接口配置，或稍后重试。');
   }
 
   Future<_OpenAiAttempt> _streamOpenAiAttempt({

@@ -27,6 +27,11 @@ class _CharacterEditorPageState extends ConsumerState<CharacterEditorPage> {
   late final TextEditingController _age;
   late final TextEditingController _intro;
   late final TextEditingController _persona;
+  late final TextEditingController _scenario;
+  late final TextEditingController _exampleDialogue;
+  late final TextEditingController _systemPrompt;
+  late final TextEditingController _postHistoryInstructions;
+  late final TextEditingController _creatorNotes;
   late final TextEditingController _voiceProfile;
   late final TextEditingController _personalPreferences;
   late final TextEditingController _greeting;
@@ -53,6 +58,15 @@ class _CharacterEditorPageState extends ConsumerState<CharacterEditorPage> {
     _age = TextEditingController(text: existing?.age ?? '成年');
     _intro = TextEditingController(text: existing?.intro ?? '');
     _persona = TextEditingController(text: existing?.persona ?? '');
+    _scenario = TextEditingController(text: existing?.scenario ?? '');
+    _exampleDialogue = TextEditingController(
+      text: existing?.exampleDialogue ?? '',
+    );
+    _systemPrompt = TextEditingController(text: existing?.systemPrompt ?? '');
+    _postHistoryInstructions = TextEditingController(
+      text: existing?.postHistoryInstructions ?? '',
+    );
+    _creatorNotes = TextEditingController(text: existing?.creatorNotes ?? '');
     _voiceProfile = TextEditingController(text: existing?.voiceProfile ?? '');
     _personalPreferences = TextEditingController(
       text: existing?.personalPreferences ?? '',
@@ -71,6 +85,11 @@ class _CharacterEditorPageState extends ConsumerState<CharacterEditorPage> {
       _age,
       _intro,
       _persona,
+      _scenario,
+      _exampleDialogue,
+      _systemPrompt,
+      _postHistoryInstructions,
+      _creatorNotes,
       _voiceProfile,
       _personalPreferences,
       _greeting,
@@ -83,21 +102,6 @@ class _CharacterEditorPageState extends ConsumerState<CharacterEditorPage> {
 
   @override
   Widget build(BuildContext context) {
-    final data = ref.watch(appControllerProvider).data;
-    if (_existingId == null && data.personas.isEmpty) {
-      return DtDetailPage(
-        title: '创建角色',
-        child: DtEmptyState(
-          icon: Icons.person_outline,
-          title: '先创建你的用户人设',
-          body: '用户人设代表这段关系中的你。创建后即可继续设计角色。',
-          action: DtButton(
-            label: '创建用户人设',
-            onPressed: () => context.push('/persona/new'),
-          ),
-        ),
-      );
-    }
     return DtDetailPage(
       title: _existingId == null ? '创建角色' : '编辑角色',
       subtitle: '角色必须是明确成年人，并保持稳定人设与边界',
@@ -166,12 +170,62 @@ class _CharacterEditorPageState extends ConsumerState<CharacterEditorPage> {
                 ),
                 const SizedBox(height: 12),
                 DtTextField(
+                  controller: _scenario,
+                  minLines: 2,
+                  maxLines: 5,
+                  decoration: const InputDecoration(
+                    labelText: '场景',
+                    hintText: '这段角色扮演发生的地点、时间和初始情境',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DtTextField(
+                  controller: _exampleDialogue,
+                  minLines: 3,
+                  maxLines: 8,
+                  decoration: const InputDecoration(
+                    labelText: '对话示例',
+                    hintText: '{{user}}: ...\n{{char}}: ...',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DtTextField(
+                  controller: _systemPrompt,
+                  minLines: 2,
+                  maxLines: 6,
+                  decoration: const InputDecoration(
+                    labelText: '角色系统提示词',
+                    hintText: '角色卡的 system_prompt；不能覆盖平台安全约束',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DtTextField(
+                  controller: _postHistoryInstructions,
+                  minLines: 2,
+                  maxLines: 5,
+                  decoration: const InputDecoration(
+                    labelText: '角色后置指令',
+                    hintText: 'post_history_instructions，用于格式和收尾约束',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DtTextField(
                   controller: _voiceProfile,
                   minLines: 2,
                   maxLines: 4,
                   decoration: const InputDecoration(
                     labelText: '说话习惯与禁区',
                     hintText: '例如：多用短句、爱用“行吧”；绝不写“希望这能帮到你”、不在结尾硬加问号',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DtTextField(
+                  controller: _creatorNotes,
+                  minLines: 2,
+                  maxLines: 5,
+                  decoration: const InputDecoration(
+                    labelText: '作者注记',
+                    hintText: '只对人类读者有用，不应当成角色指令执行',
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -228,11 +282,16 @@ class _CharacterEditorPageState extends ConsumerState<CharacterEditorPage> {
                 avatarReference: _avatarReference,
                 name: _name.text.trim().isEmpty ? '未命名角色' : _name.text.trim(),
                 handle: _handle.text.trim().isEmpty
-                    ? '@dream'
+                    ? '@character'
                     : _handle.text.trim(),
                 age: _age.text.trim().isEmpty ? '成年' : _age.text.trim(),
                 intro: _intro.text.trim(),
                 persona: _persona.text.trim(),
+                scenario: _scenario.text.trim(),
+                exampleDialogue: _exampleDialogue.text.trim(),
+                systemPrompt: _systemPrompt.text.trim(),
+                postHistoryInstructions: _postHistoryInstructions.text.trim(),
+                creatorNotes: _creatorNotes.text.trim(),
                 greeting: _greeting.text.trim(),
                 avatarColor: _color,
                 voiceProfile: _voiceProfile.text.trim(),

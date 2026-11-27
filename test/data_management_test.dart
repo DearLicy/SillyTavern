@@ -241,7 +241,7 @@ void main() {
   );
 
   test(
-    'restart resets only selected relationship and retains boundary, persona and director',
+    'restart resets only selected chat and retains boundary and persona',
     () async {
       final data = _fixture();
       final store = FakeStore(data);
@@ -250,13 +250,7 @@ void main() {
       await controller.restartRelationship('rel_gu');
       final after = store.data!;
       final relation = after.relationships.firstWhere((r) => r.id == 'rel_gu');
-      expect(relation.metrics, {'好感': 12, '信任': 8, '心动': 10, '张力': 5});
-      expect(relation.stage, '刚刚相遇');
-      expect(relation.interactionCount, 0);
-      expect(relation.lastMetricMessageId, isNull);
       expect(relation.lastInteractionAt, isNull);
-      expect(relation.consent, before.consent);
-      expect(relation.scene.director, before.scene.director);
       expect(relation.personaId, before.personaId);
       expect(after.characters, data.characters);
       expect(after.personas, data.personas);
@@ -282,18 +276,16 @@ void main() {
     final data = buildSeedData();
     final store = FakeStore(data);
     final controller = await _start(store);
-    final branch = await controller.branchFromMessage(
-      'thread_gu',
-      'msg_gu_3',
-    );
+    final branch = await controller.branchFromMessage('thread_gu', 'msg_gu_3');
     final result = store.data!;
     expect(branch.parentThreadId, 'thread_gu');
     expect(branch.branchedFromMessageId, 'msg_gu_3');
     expect(branch.title, contains('分支'));
-    final branchMessages = result.messages
-        .where((message) => message.threadId == branch.id)
-        .toList()
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final branchMessages =
+        result.messages
+            .where((message) => message.threadId == branch.id)
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
     expect(branchMessages, hasLength(3));
     expect(branchMessages.map((message) => message.text), [
       '还没睡？窗边的灯一直亮着，我猜你又在赶东西。',
@@ -311,8 +303,8 @@ void main() {
     final sourceRelationship = data.relationships.firstWhere(
       (relationship) => relationship.id == 'rel_gu',
     );
-    expect(branchRelationship.metrics, sourceRelationship.metrics);
-    expect(branchRelationship.interactionCount, 1);
+    expect(branchRelationship.personaId, sourceRelationship.personaId);
+    expect(branchRelationship.characterId, sourceRelationship.characterId);
     final copiedMemory = result.memories.firstWhere(
       (memory) =>
           memory.relationshipId == branch.relationshipId && memory.id != '',
@@ -345,7 +337,6 @@ void main() {
       expect(result.threads.any((t) => t.id == 'thread_gu'), isFalse);
       expect(result.messages.any((m) => m.threadId == 'thread_gu'), isFalse);
       expect(result.memories.any((m) => m.relationshipId == 'rel_gu'), isFalse);
-      expect(result.moments.any((m) => m.authorId == 'char_gu'), isFalse);
       expect(result.personas, isNotEmpty);
       expect(result.memories.any((m) => m.id == 'unrelated'), isTrue);
     },
@@ -359,7 +350,6 @@ void main() {
       final original = controller.state.data.messages.firstWhere(
         (m) => m.id == 'msg_gu_1',
       );
-      final metrics = controller.state.data.relationships.first.metrics;
       await controller.editMessage(original.id, '我最近在学画画。');
       final edited = AppData.decode(
         store.data!.encode(),
@@ -373,7 +363,6 @@ void main() {
         store.data!.memories.firstWhere((m) => m.id == 'mem_1').sourceMessageId,
         isNull,
       );
-      expect(store.data!.relationships.first.metrics, metrics);
       expect(
         store.data!.threadForRelationship('rel_gu')!.suppressedMemoryKeys,
         ['deleted-fact'],
@@ -447,50 +436,6 @@ void main() {
       await controller.deletePersona(extra.id);
       expect(store.data!.settings.currentPersonaId, isNot(extra.id));
       expect(store.data!.relationships.first.personaId, bound);
-    },
-  );
-
-  test(
-    'moments edit preserves reactions, denies AI edits and deletes comments independently',
-    () async {
-      final store = FakeStore(_fixture());
-      final controller = await _start(store);
-      final own = controller.state.data.moments.firstWhere((m) => !m.fromAi);
-      await controller.editMoment(own.id, '换一种心情。');
-      expect(
-        store.data!.moments.firstWhere((m) => m.id == own.id).comments,
-        own.comments,
-      );
-      expect(
-        store.data!.moments.firstWhere((m) => m.id == own.id).likedBy,
-        own.likedBy,
-      );
-      await expectLater(
-        controller.editMoment('moment_1', '冒充角色'),
-        throwsStateError,
-      );
-      controller.addMomentComment(own.id, '新评论');
-      final ownComment = controller.state.data.moments
-          .firstWhere((m) => m.id == own.id)
-          .comments
-          .last;
-      await controller.editMomentComment(own.id, ownComment.id, '更正评论');
-      expect(
-        store.data!.moments
-            .firstWhere((m) => m.id == own.id)
-            .comments
-            .last
-            .content,
-        '更正评论',
-      );
-      await controller.deleteMomentComment(own.id, ownComment.id);
-      await controller.deleteMomentComment(own.id, own.comments.first.id);
-      expect(
-        store.data!.moments.firstWhere((m) => m.id == own.id).comments.length,
-        own.comments.length - 1,
-      );
-      await controller.deleteMoment(own.id);
-      expect(store.data!.moments.any((m) => m.id == own.id), isFalse);
     },
   );
 
@@ -623,42 +568,6 @@ void main() {
   );
 
   test(
-    'completed turns still count when all relationship metrics are saturated',
-    () async {
-      final initial = _fixture();
-      final store = FakeStore(
-        initial.copyWith(
-          relationships: [
-            for (final r in initial.relationships)
-              r.id == 'rel_gu'
-                  ? r.copyWith(
-                      metrics: const {'好感': 100, '信任': 100, '心动': 100, '张力': 0},
-                    )
-                  : r,
-          ],
-        ),
-      );
-      final controller = await _start(store, ai: _DeferredAi());
-      final before = controller.state.data.relationships.firstWhere(
-        (r) => r.id == 'rel_gu',
-      );
-      await controller.sendMessage('thread_gu', '我今天学画画了');
-      final after = controller.state.data.relationships.firstWhere(
-        (r) => r.id == 'rel_gu',
-      );
-      expect(after.metrics, before.metrics);
-      expect(after.interactionCount, before.interactionCount + 1);
-      await controller.regenerateLastReply('thread_gu');
-      expect(
-        controller.state.data.relationships
-            .firstWhere((r) => r.id == 'rel_gu')
-            .interactionCount,
-        after.interactionCount,
-      );
-    },
-  );
-
-  test(
     'late main stream cannot recreate messages or growth after restart',
     () async {
       final store = FakeStore(_fixture());
@@ -675,12 +584,7 @@ void main() {
         isFalse,
       );
       expect(controller.state.generatingThreadId, isNull);
-      expect(
-        store.data!.relationships
-            .firstWhere((r) => r.id == 'rel_gu')
-            .interactionCount,
-        0,
-      );
+      expect(store.data!.relationships.any((r) => r.id == 'rel_gu'), isTrue);
     },
   );
 
@@ -694,23 +598,12 @@ void main() {
       final user = controller.state.data.messages.lastWhere(
         (m) => m.threadId == 'thread_gu' && !m.fromAi,
       );
-      final metrics = Map.of(
-        controller.state.data.relationships
-            .firstWhere((r) => r.id == 'rel_gu')
-            .metrics,
-      );
       await controller.editMessage(user.id, '其实我今天去学画画了');
       await controller.regenerateLastReply('thread_gu');
       expect(ai.requests.last.last.content, contains('学画画'));
       expect(
         controller.state.data.messages.where((m) => m.id == user.id).length,
         1,
-      );
-      expect(
-        controller.state.data.relationships
-            .firstWhere((r) => r.id == 'rel_gu')
-            .metrics,
-        metrics,
       );
       // No history was long enough to request quiet summary in this test.
     },

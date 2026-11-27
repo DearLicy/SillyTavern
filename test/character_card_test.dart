@@ -49,7 +49,9 @@ void main() {
     expect(imported.character.name, '知夏');
     expect(imported.character.tags, ['书店', '慢热']);
     expect(imported.character.greeting, contains('雨很大'));
-    expect(imported.character.voiceProfile, contains('不要客服腔'));
+    expect(imported.character.scenario, '雨夜书店即将打烊。');
+    expect(imported.character.systemPrompt, contains('{{char}}'));
+    expect(imported.character.postHistoryInstructions, '不要客服腔。');
     expect(imported.worldBook, isNotNull);
     expect(imported.worldBook!.entries.single.keys, ['旧书店']);
     expect(imported.worldBook!.entries.single.recursive, isTrue);
@@ -162,18 +164,13 @@ void main() {
       expect(data.worldBooks, hasLength(beforeBooks + 1));
       expect(data.characters.last.name, '知夏');
       expect(data.worldBooks.last.name, '旧书店资料');
-      final exported = controller.exportCharacterCard(
-        data.characters.last.id,
-      );
+      final exported = controller.exportCharacterCard(data.characters.last.id);
       expect(exported, contains('"character_book"'));
       expect(exported, contains('旧书店资料'));
       final png = await controller.exportPngCharacterCard(
         data.characters.last.id,
       );
-      expect(
-        const PngCharacterCard().extractJson(png),
-        contains('旧书店资料'),
-      );
+      expect(const PngCharacterCard().extractJson(png), contains('旧书店资料'));
       expect(await store.load(), isNotNull);
     },
   );
@@ -200,7 +197,10 @@ void main() {
     final encoded = codec.encode(imported.character);
     final roundTrip = codec.decode(encoded, id: 'char_alt_2');
     expect(roundTrip.character.creator, '某作者');
-    expect(roundTrip.character.alternateGreetings, imported.character.alternateGreetings);
+    expect(
+      roundTrip.character.alternateGreetings,
+      imported.character.alternateGreetings,
+    );
   });
 
   test('legacy flat V1 card maps alternate greetings', () {

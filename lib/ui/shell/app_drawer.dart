@@ -56,27 +56,68 @@ class AppDrawer extends ConsumerWidget {
                       child: _DrawerGroup(
                         children: [
                           _DrawerRow(
-                            icon: Icons.auto_awesome_rounded,
+                            icon: Icons.people_outline_rounded,
                             iconColor: DtColors.violet,
-                            title: '切换用户人设',
-                            subtitle: currentPersona?.name ?? '未选择',
+                            title: '角色库',
+                            subtitle: '角色卡、标签与分组',
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              context.push('/characters');
+                            },
+                          ),
+                          _DrawerRow(
+                            icon: Icons.auto_awesome_rounded,
+                            iconColor: const Color(0xFFE6A43B),
+                            title: '用户人设',
+                            subtitle: currentPersona?.name ?? '可选 · 当前使用本地用户',
                             onTap: () {
                               Navigator.of(context).pop();
                               context.push('/personas');
                             },
                           ),
                           _DrawerRow(
-                            icon: Icons.photo_library_outlined,
-                            iconColor: const Color(0xFFE6A43B),
-                            title: '剧情相册',
-                            subtitle: '聊天图片已开放；剧情相册将在 V2.3 提供',
-                            onTap: () => _comingSoon(context),
+                            icon: Icons.badge_outlined,
+                            iconColor: DtColors.mint,
+                            title: '角色卡管理',
+                            subtitle: '导入、导出 JSON / PNG',
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              context.push('/character-cards');
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    DtStagger(
+                      index: 2,
+                      child: _DrawerGroup(
+                        children: [
+                          _DrawerRow(
+                            icon: Icons.menu_book_outlined,
+                            iconColor: DtColors.brand,
+                            title: '世界书',
+                            subtitle: 'World Info 与作者注记',
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              context.push('/world-books');
+                            },
                           ),
                           _DrawerRow(
-                            icon: Icons.bookmark_border_rounded,
+                            icon: Icons.tune_rounded,
+                            iconColor: DtColors.violet,
+                            title: '提示词与预设',
+                            subtitle: 'Prompt Manager、正则与 Chat Completion',
+                            onTap: () {
+                              Navigator.of(context).pop();
+                              context.push('/prompts');
+                            },
+                          ),
+                          _DrawerRow(
+                            icon: Icons.psychology_alt_outlined,
                             iconColor: DtColors.mint,
-                            title: '收藏与记忆',
-                            subtitle: '查看角色真正记住的事',
+                            title: '长期记忆',
+                            subtitle: '摘要、事实与可编辑记忆',
                             onTap: () {
                               Navigator.of(context).pop();
                               final relationship =
@@ -91,14 +132,14 @@ class AppDrawer extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     DtStagger(
-                      index: 2,
+                      index: 3,
                       child: _DrawerGroup(
                         children: [
                           _DrawerRow(
                             icon: Icons.shield_outlined,
                             iconColor: DtColors.coral,
                             title: '隐私与安全',
-                            subtitle: '内容上限、边界与安全词',
+                            subtitle: '年龄确认、内容范围与本地权限',
                             onTap: () {
                               Navigator.of(context).pop();
                               context.push('/safety');
@@ -129,7 +170,7 @@ class AppDrawer extends ConsumerWidget {
                     ),
                     const SizedBox(height: 12),
                     DtStagger(
-                      index: 3,
+                      index: 4,
                       child: _DrawerGroup(
                         children: [
                           _DrawerRow(
@@ -148,7 +189,7 @@ class AppDrawer extends ConsumerWidget {
                             icon: Icons.info_outline_rounded,
                             iconColor: const Color(0xFF8090A8),
                             title: '关于 SillyTavern',
-                            subtitle: 'V2.1.4 · 本地 LLM 前端',
+                            subtitle: 'V2.2.0 · 本地 LLM 前端',
                             onTap: () {
                               Navigator.of(context).pop();
                               context.push('/about');
@@ -192,12 +233,6 @@ class AppDrawer extends ConsumerWidget {
         ),
       ),
     );
-  }
-
-  void _comingSoon(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('剧情相册将在 V2.3 开放')));
   }
 }
 

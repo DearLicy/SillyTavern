@@ -1,7 +1,7 @@
 name: sillytavern_app
 description: "SillyTavern APP：LLM 前端，面向角色扮演与 AI 互动。"
 publish_to: 'none'
-version: 2.1.4+13
+version: 2.2.0+14
 
 environment:
   sdk: ^3.9.0

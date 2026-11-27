@@ -86,11 +86,6 @@ extension ProfileManagement on AppController {
     AvatarChange? avatar,
     bool create = false,
   }) async {
-    if (create &&
-        _snapshot.data.personaById(_snapshot.data.settings.currentPersonaId) ==
-            null) {
-      throw StateError('请先创建并选择用户人设');
-    }
     final epoch = _lifecycleGeneration;
     final reference = await _avatarReference(character.avatarReference, avatar);
     await _ensureProfileWrite(epoch, reference);

@@ -19,10 +19,13 @@ void main() {
 
       final system = bundle.messages.first.content;
       expect(bundle.messages.first.role, 'system');
-      expect(system.indexOf('平台安全规则'), lessThan(system.indexOf('AI 角色')));
-      expect(system.indexOf('禁止：'), lessThan(system.indexOf('连续性备忘')));
-      expect(system, contains('亲密推进必须明确、自愿、可随时撤回'));
-      expect(system, contains('关系内部状态'));
+      expect(
+        system.indexOf('平台安全约束'),
+        lessThan(system.indexOf('Character Card')),
+      );
+      expect(system, contains('只扮演明确成年的虚构角色'));
+      expect(system, contains('Character Card'));
+      expect(system, contains('【本轮回复计划】'));
       expect(system, contains('避免复读'));
       expect(bundle.usedMemoryIds, contains('mem_3'));
       expect(bundle.usedMemoryIds.length, lessThanOrEqualTo(3));

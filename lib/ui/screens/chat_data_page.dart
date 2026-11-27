@@ -113,12 +113,12 @@ class ChatDataPage extends ConsumerWidget {
           DtSettingRow(
             icon: Icons.cleaning_services_outlined,
             title: '清空聊天记录',
-            subtitle: '删除消息、图片附件与对话摘要，保留关系数值和长期记忆',
+            subtitle: '删除消息、图片附件与对话摘要，保留长期记忆',
             onTap: () => showDtEditSheet(
               context: context,
               title: '清空与${character.name}的聊天？',
               description:
-                  '将删除当前关系的全部聊天记录、未共享的图片附件和对话摘要。关系数值、长期记忆、角色和用户人设保留。此操作无法撤销。',
+                  '将删除这段对话的全部聊天记录、未共享的图片附件和对话摘要。长期记忆、角色和用户人设保留。此操作无法撤销。',
               actionLabel: '清空聊天记录',
               danger: true,
               onSubmit: (_) => controller.clearChatHistory(threadId),
@@ -126,13 +126,13 @@ class ChatDataPage extends ConsumerWidget {
           ),
           DtSettingRow(
             icon: Icons.restart_alt_rounded,
-            title: '重新开始这段关系',
-            subtitle: '清除聊天与共同记忆，关系数值和当前场景回到初次相遇',
+            title: '重新开始聊天',
+            subtitle: '清除聊天、摘要和非边界记忆，角色设定与用户人设保留',
             onTap: () => showDtEditSheet(
               context: context,
               title: '与${character.name}重新开始？',
               description:
-                  '删除当前关系的消息、附件、摘要和非边界记忆，重置称呼、关系数值、互动次数和当前场景。保留角色人设、用户人设、导演偏好与安全边界，不会自动发送开场白。此操作无法撤销。',
+                  '删除这段对话的消息、附件、摘要和非边界记忆，保留角色卡、用户人设与固定记忆，不会自动发送开场白。此操作无法撤销。',
               actionLabel: '确认重新开始',
               danger: true,
               onSubmit: (_) => controller.restartRelationship(relationship.id),
@@ -142,18 +142,17 @@ class ChatDataPage extends ConsumerWidget {
           DtSettingRow(
             icon: Icons.person_remove_outlined,
             title: '删除角色及全部数据',
-            subtitle: '删除角色的所有关系、聊天、记忆和角色发布的动态',
+            subtitle: '删除角色的所有聊天、记忆与关联附件',
             onTap: () async {
               final deleted = await showDtEditSheet(
                 context: context,
                 title: '删除${character.name}？',
-                description:
-                    '角色及其全部用户人设关系、聊天、图片附件、记忆、角色发布的动态将从本机删除。你的用户人设和其他角色保留。此操作无法撤销。',
+                description: '角色及其全部聊天、图片附件和记忆将从本机删除。你的用户人设和其他角色保留。此操作无法撤销。',
                 actionLabel: '永久删除角色',
                 danger: true,
                 onSubmit: (_) => controller.deleteCharacter(character.id),
               );
-              if (deleted == true && context.mounted) context.go('/contacts');
+              if (deleted == true && context.mounted) context.go('/characters');
             },
           ),
         ],

@@ -25,7 +25,7 @@ node .tmp/qa/node_modules/playwright/cli.js install chromium
 bash tool/qa/run-browser-checks.sh
 ```
 
-CI 额外安装 Chromium 系统依赖，并保存截图和验收日志。全部脚本使用独立新浏览器上下文，不会更改日常浏览器。单独运行脚本时可以通过 `DREAMTIDE_QA_BASE_URL` 指向其他待验收构建；只能在同意写入测试浏览器状态的目标使用。
+CI 额外安装 Chromium 系统依赖，并保存截图和验收日志。全部脚本使用独立新浏览器上下文，不会更改日常浏览器。单独运行脚本时可以通过 `SILLYTAVERN_QA_BASE_URL` 指向其他待验收构建；只能在同意写入测试浏览器状态的目标使用。
 
 脚本测试手机浅/深主题、头像选择预览保存、发送真实图片块、图片重生成、OCR 草稿、联网及来源、实际 PCM 录音与 ASR 上传、TTS 合成播放、带附件备份恢复与刷新。mock 服务检查 Bearer、URL、multipart 和图像/WAV 字节。结果与截图保存在 `.tmp`。
 
@@ -39,7 +39,7 @@ node tool/qa/compatible.e2e.cjs
 
 供应商设置联动验收对应 `node tool/qa/provider.e2e.cjs`：更换地址后不复用旧 Key → 拉取 1500 个模型 → 搜索名称 → 选择保存 → 聊天使用刚保存的模型和 Key，浅深主题均检查无浏览器错误。
 
-默认检查 390/1440 两种宽度及浅/深主题。线上抽查可指定 `DREAMTIDE_QA_WIDTHS=390`、`DREAMTIDE_QA_THEMES=light`，弱网首屏等待可通过 `DREAMTIDE_QA_STARTUP_TIMEOUT_MS` 调整。脚本等待实际画布和聊天控件，不以网络空闲或固定延时假定路由完成；失败时额外保存截图、可访问性树与请求路径。
+默认检查 390/1440 两种宽度及浅/深主题。线上抽查可指定 `SILLYTAVERN_QA_WIDTHS=390`、`SILLYTAVERN_QA_THEMES=light`，弱网首屏等待可通过 `SILLYTAVERN_QA_STARTUP_TIMEOUT_MS` 调整。脚本等待实际画布和聊天控件，不以网络空闲或固定延时假定路由完成；失败时额外保存截图、可访问性树与请求路径。
 
 三套脚本通过 Flutter 的可访问性节点定位控件，使用键盘输入和应用提供的语义操作；录音和消息长按也覆盖浏览器实际输入事件。每步查找有超时，长备份通过一次文本输入写入，避免逐字模拟键盘导致验收挂起。该验证不能替代手机触屏、系统键盘或屏幕阅读器实测。
 

@@ -390,8 +390,7 @@ void main() {
       expect(c.state.generatingThreadId, isNull);
       expect(c.state.data.messages.where((m) => m.fromAi), isEmpty);
       final after = c.state.data.relationships.first;
-      expect(after.interactionCount, before.interactionCount);
-      expect(after.consent.safeWord, before.consent.safeWord);
+      expect(after.lastInteractionAt, before.lastInteractionAt);
     },
   );
 

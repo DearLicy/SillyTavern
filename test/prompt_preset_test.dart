@@ -55,7 +55,12 @@ void main() {
             'target': 'aiOutput',
             'enabled': true,
           },
-          {'name': '禁用规则', 'pattern': 'x', 'replacement': 'y', 'enabled': false},
+          {
+            'name': '禁用规则',
+            'pattern': 'x',
+            'replacement': 'y',
+            'enabled': false,
+          },
         ],
       }),
     );
@@ -91,65 +96,74 @@ void main() {
     );
   });
 
-  test('official Chat Completion preset updates prompts and sampling', () async {
-    final seed = buildSeedData();
-    final store = FakeStore(seed);
-    final controller = await _loadedController(store);
-    addTearDown(controller.dispose);
-    final originalProvider = controller.state.data.settings.provider;
-    final originalRules = controller.state.data.settings.prompts.rules;
+  test(
+    'official Chat Completion preset updates prompts and sampling',
+    () async {
+      final seed = buildSeedData();
+      final store = FakeStore(seed);
+      final controller = await _loadedController(store);
+      addTearDown(controller.dispose);
+      final originalProvider = controller.state.data.settings.provider;
+      final originalRules = controller.state.data.settings.prompts.rules;
 
-    await controller.importPromptPreset(
-      jsonEncode({
-        'name': 'Official style',
-        'chat_completion_source': 'openai',
-        'temperature': 0.7,
-        'top_p': 0.8,
-        'frequency_penalty': 0.2,
-        'presence_penalty': -0.1,
-        'openai_max_tokens': 512,
-        'stop': ['END', '---'],
-        'prompts': [
-          {
-            'identifier': 'main',
-            'name': 'Main Prompt',
-            'role': 'system',
-            'content': 'Write the next roleplay reply.',
-          },
-          {
-            'identifier': 'nsfw',
-            'name': 'Auxiliary Prompt',
-            'content': 'Keep continuity.',
-          },
-          {
-            'identifier': 'jailbreak',
-            'name': 'Post-History Instructions',
-            'content': 'Do not use assistant filler.',
-          },
-          {
-            'identifier': 'chatHistory',
-            'name': 'Chat History',
-            'marker': true,
-            'content': 'must not be copied',
-          },
-        ],
-      }),
-    );
+      await controller.importPromptPreset(
+        jsonEncode({
+          'name': 'Official style',
+          'chat_completion_source': 'openai',
+          'temperature': 0.7,
+          'top_p': 0.8,
+          'frequency_penalty': 0.2,
+          'presence_penalty': -0.1,
+          'openai_max_tokens': 512,
+          'stop': ['END', '---'],
+          'prompts': [
+            {
+              'identifier': 'main',
+              'name': 'Main Prompt',
+              'role': 'system',
+              'content': 'Write the next roleplay reply.',
+            },
+            {
+              'identifier': 'nsfw',
+              'name': 'Auxiliary Prompt',
+              'content': 'Keep continuity.',
+            },
+            {
+              'identifier': 'jailbreak',
+              'name': 'Post-History Instructions',
+              'content': 'Do not use assistant filler.',
+            },
+            {
+              'identifier': 'chatHistory',
+              'name': 'Chat History',
+              'marker': true,
+              'content': 'must not be copied',
+            },
+          ],
+        }),
+      );
 
-    final settings = controller.state.data.settings;
-    expect(settings.prompts.systemPrefix, contains('roleplay reply'));
-    expect(settings.prompts.systemPrefix, contains('Keep continuity'));
-    expect(settings.prompts.systemPrefix, isNot(contains('must not be copied')));
-    expect(settings.prompts.postHistoryInstructions, contains('assistant filler'));
-    expect(settings.prompts.rules, originalRules);
-    expect(settings.provider.baseUrl, originalProvider.baseUrl);
-    expect(settings.provider.model, originalProvider.model);
-    expect(settings.provider.temperature, 0.7);
-    expect(settings.provider.topP, 0.8);
-    expect(settings.provider.frequencyPenalty, 0.2);
-    expect(settings.provider.presencePenalty, -0.1);
-    expect(settings.provider.maxOutputTokens, 512);
-    expect(settings.provider.stopSequences, ['END', '---']);
-    expect(store.data!.settings.provider.temperature, 0.7);
-  });
+      final settings = controller.state.data.settings;
+      expect(settings.prompts.systemPrefix, contains('roleplay reply'));
+      expect(settings.prompts.systemPrefix, contains('Keep continuity'));
+      expect(
+        settings.prompts.systemPrefix,
+        isNot(contains('must not be copied')),
+      );
+      expect(
+        settings.prompts.postHistoryInstructions,
+        contains('assistant filler'),
+      );
+      expect(settings.prompts.rules, originalRules);
+      expect(settings.provider.baseUrl, originalProvider.baseUrl);
+      expect(settings.provider.model, originalProvider.model);
+      expect(settings.provider.temperature, 0.7);
+      expect(settings.provider.topP, 0.8);
+      expect(settings.provider.frequencyPenalty, 0.2);
+      expect(settings.provider.presencePenalty, -0.1);
+      expect(settings.provider.maxOutputTokens, 512);
+      expect(settings.provider.stopSequences, ['END', '---']);
+      expect(store.data!.settings.provider.temperature, 0.7);
+    },
+  );
 }

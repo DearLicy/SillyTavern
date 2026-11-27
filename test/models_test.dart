@@ -23,6 +23,11 @@ void main() {
         source.characters.first.copyWith(
           voiceProfile: '少用客套收尾。',
           personalPreferences: '不喜欢香菜。',
+          scenario: '雨夜里的旧公寓。',
+          exampleDialogue: '{{user}}: 在吗？\n{{char}}: 在。',
+          systemPrompt: '保持克制。',
+          postHistoryInstructions: '不要总结对话。',
+          creatorNotes: '测试角色卡。',
         ),
         ...source.characters.skip(1),
       ],
@@ -30,10 +35,6 @@ void main() {
         source.relationships.first.copyWith(
           replyEnergy: 32,
           lastInteractionAt: memoDate,
-          interactionCount: 7,
-          lastMetricDelta: const {'好感': 2, '信任': 1},
-          lastMetricReason: '你分享了真实近况',
-          lastMetricMessageId: 'message-42',
         ),
         ...source.relationships.skip(1),
       ],
@@ -45,7 +46,6 @@ void main() {
     expect(restored.threads.length, source.threads.length);
     expect(restored.messages.length, source.messages.length);
     expect(restored.memories.length, source.memories.length);
-    expect(restored.moments.length, source.moments.length);
     expect(restored.threads.first.contextMemo, '他们约好周末一起去看海。');
     expect(restored.threads.first.contextMemoUpdatedAt, memoDate);
     expect(restored.threads.first.summarizedThroughMessageId, 'message-42');
@@ -54,12 +54,13 @@ void main() {
     expect(restored.threads.first.branchedFromMessageId, 'message-41');
     expect(restored.characters.first.voiceProfile, '少用客套收尾。');
     expect(restored.characters.first.personalPreferences, '不喜欢香菜。');
+    expect(restored.characters.first.scenario, '雨夜里的旧公寓。');
+    expect(restored.characters.first.exampleDialogue, contains('{{char}}'));
+    expect(restored.characters.first.systemPrompt, '保持克制。');
+    expect(restored.characters.first.postHistoryInstructions, '不要总结对话。');
+    expect(restored.characters.first.creatorNotes, '测试角色卡。');
     expect(restored.relationships.first.replyEnergy, 32);
     expect(restored.relationships.first.lastInteractionAt, memoDate);
-    expect(restored.relationships.first.interactionCount, 7);
-    expect(restored.relationships.first.lastMetricDelta, {'好感': 2, '信任': 1});
-    expect(restored.relationships.first.lastMetricReason, '你分享了真实近况');
-    expect(restored.relationships.first.lastMetricMessageId, 'message-42');
   });
 
   test('empty messages are never renderable', () {

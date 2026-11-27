@@ -24,7 +24,6 @@ AppData buildEmptyData() {
     threads: const [],
     messages: const [],
     memories: const [],
-    moments: const [],
     worldBooks: const [],
   );
 }

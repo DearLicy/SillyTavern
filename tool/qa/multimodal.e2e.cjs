@@ -37,7 +37,7 @@ const report={mode:'release build + fake authenticated provider + real browser m
   await page.waitForTimeout(1500);
  };
  const type=async(text)=>{let last;for(let attempt=0;attempt<6;attempt++){const box=page.getByRole('textbox').last();await box.waitFor({state:'visible',timeout:10000});try{await fillFlutterText(page,box,text);return;}catch(error){last=error;const message=String(error?.message||error);if(!/not attached|detached|stable|Timeout/i.test(message))throw error;await page.waitForTimeout(400);}}throw last;};
- await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/SillyTavern/'),{waitUntil:'networkidle'});await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());await page.waitForTimeout(500);
+ await page.goto((process.env.SILLYTAVERN_QA_BASE_URL || 'http://127.0.0.1:8089/SillyTavern/'),{waitUntil:'networkidle'});await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());await page.waitForTimeout(500);
  step('avatar');await goto('/profile');await page.waitForTimeout(800);await click('更换头像');await file('从相册选择');
  assert.equal((await read()).owner.avatarReference ?? null,null);
  await page.screenshot({path:`.tmp/avatar-preview-${theme}.png`});

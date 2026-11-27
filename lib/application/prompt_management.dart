@@ -28,9 +28,7 @@ extension PromptManagement on AppController {
           caseSensitive: item['caseSensitive'] as bool? ?? false,
           multiline: item['multiline'] as bool? ?? true,
           dotAll: item['dotAll'] as bool? ?? true,
-          order: item['order'] is num
-              ? (item['order'] as num).toInt()
-              : 100,
+          order: item['order'] is num ? (item['order'] as num).toInt() : 100,
         ),
       );
     }
@@ -94,18 +92,20 @@ extension PromptManagement on AppController {
         (e) => e.name == targetName,
         orElse: () => RegexTarget.userInput,
       );
-      newRules.add(RegexRule(
-        id: 'regex_${_uuid.v4()}',
-        name: name,
-        pattern: pattern,
-        replacement: replacement,
-        target: target,
-        enabled: enabled,
-        caseSensitive: map['caseSensitive'] as bool? ?? false,
-        multiline: map['multiline'] as bool? ?? true,
-        dotAll: map['dotAll'] as bool? ?? true,
-        order: map['order'] as int? ?? 100,
-      ));
+      newRules.add(
+        RegexRule(
+          id: 'regex_${_uuid.v4()}',
+          name: name,
+          pattern: pattern,
+          replacement: replacement,
+          target: target,
+          enabled: enabled,
+          caseSensitive: map['caseSensitive'] as bool? ?? false,
+          multiline: map['multiline'] as bool? ?? true,
+          dotAll: map['dotAll'] as bool? ?? true,
+          order: map['order'] as int? ?? 100,
+        ),
+      );
     }
     if (newRules.isEmpty) throw FormatException('未找到有效的正则脚本');
     final before = _snapshot.data;

@@ -7,60 +7,34 @@ import '../ui/screens/backup_page.dart';
 import '../ui/screens/character_detail_page.dart';
 import '../ui/screens/character_cards_page.dart';
 import '../ui/screens/character_editor_page.dart';
+import '../ui/screens/characters_page.dart';
 import '../ui/screens/chat_page.dart';
 import '../ui/screens/chat_data_page.dart';
 import '../ui/screens/chat_history_page.dart';
-import '../ui/screens/consent_page.dart';
-import '../ui/screens/contacts_page.dart';
-import '../ui/screens/director_page.dart';
 import '../ui/screens/memory_page.dart';
 import '../ui/screens/messages_page.dart';
-import '../ui/screens/moments_page.dart';
 import '../ui/screens/persona_editor_page.dart';
 import '../ui/screens/personas_page.dart';
 import '../ui/screens/profile_edit_page.dart';
 import '../ui/screens/prompt_rules_page.dart';
 import '../ui/screens/provider_page.dart';
 import '../ui/screens/safety_page.dart';
-import '../ui/screens/scene_page.dart';
 import '../ui/screens/settings_page.dart';
 import '../ui/screens/tool_settings_page.dart';
 import '../ui/screens/world_books_page.dart';
-import '../ui/shell/root_shell.dart';
+import '../ui/shell/home_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/messages',
+    initialLocation: '/',
     routes: [
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            RootShell(navigationShell: navigationShell),
-        branches: [
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/messages',
-                builder: (context, state) => const MessagesPage(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/contacts',
-                builder: (context, state) => const ContactsPage(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/moments',
-                builder: (context, state) => const MomentsPage(),
-              ),
-            ],
-          ),
-        ],
+      GoRoute(
+        path: '/',
+        builder: (context, state) => const HomePage(child: MessagesPage()),
+      ),
+      GoRoute(
+        path: '/characters',
+        builder: (context, state) => const HomePage(child: CharactersPage()),
       ),
       GoRoute(
         path: '/chat/:threadId',
@@ -115,23 +89,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/memory/:relationshipId',
         builder: (context, state) =>
             MemoryPage(relationshipId: state.pathParameters['relationshipId']!),
-      ),
-      GoRoute(
-        path: '/director/:relationshipId',
-        builder: (context, state) => DirectorPage(
-          relationshipId: state.pathParameters['relationshipId']!,
-        ),
-      ),
-      GoRoute(
-        path: '/consent/:relationshipId',
-        builder: (context, state) => ConsentPage(
-          relationshipId: state.pathParameters['relationshipId']!,
-        ),
-      ),
-      GoRoute(
-        path: '/scene/:relationshipId',
-        builder: (context, state) =>
-            ScenePage(relationshipId: state.pathParameters['relationshipId']!),
       ),
       GoRoute(
         path: '/settings',

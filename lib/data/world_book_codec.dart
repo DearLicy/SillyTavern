@@ -79,7 +79,8 @@ class WorldBookCodec {
           mode: item['constant'] == true
               ? WorldInfoMode.constant
               : WorldInfoMode.keyword,
-          order: _integer(item['order'], fallback: item['insertion_order']) ?? 100,
+          order:
+              _integer(item['order'], fallback: item['insertion_order']) ?? 100,
           probability: (_integer(item['probability']) ?? 100).clamp(0, 100),
           recursive: extensions['recursive'] == true,
           enabled: item['disable'] != true && item['enabled'] != false,
@@ -87,9 +88,8 @@ class WorldBookCodec {
               item['caseSensitive'] == true ||
               item['case_sensitive'] == true ||
               extensions['case_sensitive'] == true,
-          depth:
-              (_integer(item['depth'], fallback: extensions['depth']) ?? 4)
-                  .clamp(0, 20),
+          depth: (_integer(item['depth'], fallback: extensions['depth']) ?? 4)
+              .clamp(0, 20),
         ),
       );
     }
@@ -109,8 +109,10 @@ class WorldBookCodec {
       name: resolvedName,
       entries: entries,
       authorNote: _text(extensions['author_note']),
-      authorNoteDepth:
-          (_integer(extensions['author_note_depth']) ?? 2).clamp(0, 10),
+      authorNoteDepth: (_integer(extensions['author_note_depth']) ?? 2).clamp(
+        0,
+        10,
+      ),
       scanDepth:
           (_integer(root['scan_depth'], fallback: root['scanDepth']) ?? 4)
               .clamp(0, 20),
@@ -169,11 +171,7 @@ class WorldBookCodec {
   List<String> _strings(Object? value, {Object? fallback}) {
     final source = value is List ? value : fallback;
     if (source is! List) return const [];
-    return source
-        .map(_text)
-        .where((item) => item.isNotEmpty)
-        .toSet()
-        .toList();
+    return source.map(_text).where((item) => item.isNotEmpty).toSet().toList();
   }
 
   int? _integer(Object? value, {Object? fallback}) {

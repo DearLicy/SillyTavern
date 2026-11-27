@@ -103,53 +103,49 @@ void main() {
     container.dispose();
   });
 
-  testWidgets('relationship page shows the latest growth and reason', (
-    tester,
-  ) async {
+  testWidgets('character page shows SillyTavern card fields', (tester) async {
     final fixture = buildSeedData();
-    final relationship = fixture.relationships.first.copyWith(
-      interactionCount: 7,
-      lastMetricDelta: const {'好感': 2, '信任': 1},
-      lastMetricReason: '你分享了真实近况',
+    final character = fixture.characters.first.copyWith(
+      scenario: '雨夜里的公寓。',
+      exampleDialogue: '{{user}}: 在吗？\n{{char}}: 在。',
+      postHistoryInstructions: '不要总结对话。',
     );
     final container = await start(
       tester,
       fixture.copyWith(
-        relationships: [relationship, ...fixture.relationships.skip(1)],
+        characters: [character, ...fixture.characters.skip(1)],
         settings: fixture.settings.copyWith(ageConfirmed: true),
       ),
     );
     container.read(appRouterProvider).push('/character/char_gu');
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('上轮变化'), findsOneWidget);
-    expect(find.textContaining('亲近 +2'), findsOneWidget);
-    expect(find.text('你分享了真实近况'), findsOneWidget);
-    expect(find.text('已完成 7 轮关系互动'), findsOneWidget);
+    expect(find.text('场景'), findsOneWidget);
+    expect(find.text('雨夜里的公寓。'), findsOneWidget);
+    expect(find.text('对话示例'), findsOneWidget);
+    expect(find.text('角色后置指令'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     container.dispose();
   });
 
   testWidgets(
-    'first adult confirmation opens a clean app and all three empty roots',
+    'first adult confirmation opens a clean SillyTavern home without tabs',
     (tester) async {
       final container = await start(tester, buildEmptyData());
       await tester.tap(find.text('我已成年，进入应用'));
       await tester.pumpAndSettle();
-      expect(find.text('消息'), findsWidgets);
+      expect(find.text('SillyTavern'), findsWidgets);
       expect(find.text('还没有找到对话'), findsOneWidget);
       expect(find.text('顾言'), findsNothing);
-      expect(find.byKey(const ValueKey('root-bottom-bar')), findsOneWidget);
-      container.read(appRouterProvider).go('/contacts');
+      expect(find.byKey(const ValueKey('root-bottom-bar')), findsNothing);
+      container.read(appRouterProvider).go('/characters');
       await tester.pumpAndSettle();
+      expect(find.text('角色'), findsWidgets);
       expect(find.text('顾言'), findsNothing);
-      container.read(appRouterProvider).go('/moments');
+      container.read(appRouterProvider).go('/');
       await tester.pumpAndSettle();
-      expect(find.text('还没有动态'), findsOneWidget);
-      await tester.tap(find.text('发布动态').last);
-      await tester.pumpAndSettle();
-      expect(find.text('发布到动态'), findsOneWidget);
+      expect(find.text('SillyTavern'), findsWidgets);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       container.dispose();
@@ -196,33 +192,30 @@ void main() {
     },
   );
 
-  testWidgets(
-    'new character requires a user-created persona and model has no manual input',
-    (tester) async {
-      final empty = buildEmptyData();
-      final container = await start(
-        tester,
-        empty.copyWith(settings: empty.settings.copyWith(ageConfirmed: true)),
-      );
-      container.read(appRouterProvider).push('/character/new');
-      await tester.pumpAndSettle();
-      expect(find.text('先创建你的用户人设'), findsOneWidget);
-      expect(find.byKey(const ValueKey('root-bottom-bar')), findsNothing);
-      await tester.tap(find.text('创建用户人设'));
-      await tester.pumpAndSettle();
-      expect(find.text('姓名'), findsOneWidget);
-      container.read(appRouterProvider).go('/provider');
-      await tester.pumpAndSettle();
-      expect(find.text('https://api.deepseek.com'), findsWidgets);
-      expect(find.text('拉取模型'), findsOneWidget);
-      expect(find.text('拉取后点击选择，无需手填'), findsOneWidget);
-      expect(find.text('生成参数'), findsOneWidget);
-      expect(find.text('最大输出 Token'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox());
-      container.dispose();
-    },
-  );
+  testWidgets('new character is independent from an optional user persona', (
+    tester,
+  ) async {
+    final empty = buildEmptyData();
+    final container = await start(
+      tester,
+      empty.copyWith(settings: empty.settings.copyWith(ageConfirmed: true)),
+    );
+    container.read(appRouterProvider).push('/character/new');
+    await tester.pumpAndSettle();
+    expect(find.text('创建角色'), findsWidgets);
+    expect(find.text('角色名'), findsOneWidget);
+    expect(find.byKey(const ValueKey('root-bottom-bar')), findsNothing);
+    container.read(appRouterProvider).go('/provider');
+    await tester.pumpAndSettle();
+    expect(find.text('https://api.deepseek.com'), findsWidgets);
+    expect(find.text('拉取模型'), findsOneWidget);
+    expect(find.text('拉取后点击选择，无需手填'), findsOneWidget);
+    expect(find.text('生成参数'), findsOneWidget);
+    expect(find.text('最大输出 Token'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    container.dispose();
+  });
 
   testWidgets(
     'world books and character cards are reachable full-screen pages',

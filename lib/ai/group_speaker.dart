@@ -18,9 +18,7 @@ class GroupSpeaker {
   static final RegExp _bracketPrefix = RegExp(
     r'^\s*[【\[]\s*([^】\]\n]{1,32}?)\s*[】\]]\s*',
   );
-  static final RegExp _colonPrefix = RegExp(
-    r'^\s*([^：:\n]{1,32})\s*[：:]\s*',
-  );
+  static final RegExp _colonPrefix = RegExp(r'^\s*([^：:\n]{1,32})\s*[：:]\s*');
 
   /// Removes a leading `【角色名】` / `[角色名]` marker for live previews.
   static String stripPrefix(String text) =>

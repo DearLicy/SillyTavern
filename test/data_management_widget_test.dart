@@ -119,7 +119,7 @@ void main() {
   );
 
   testWidgets(
-    'clear history confirmation can cancel and restart really clears scores and records',
+    'clear history confirmation can cancel and restart really clears records',
     (tester) async {
       final data = buildSeedData();
       final container = await fixture.start(
@@ -128,7 +128,7 @@ void main() {
       );
       container.read(appRouterProvider).push('/chat-data/thread_gu');
       await tester.pumpAndSettle();
-      expect(find.text('重新开始这段关系'), findsOneWidget);
+      expect(find.text('重新开始聊天'), findsOneWidget);
       await tester.tap(find.text('清空聊天记录'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('取消'));
@@ -137,13 +137,12 @@ void main() {
         container.read(appControllerProvider).data.messages.length,
         data.messages.length,
       );
-      await tester.tap(find.text('重新开始这段关系'));
+      await tester.tap(find.text('重新开始聊天'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('确认重新开始'));
       await tester.pumpAndSettle();
       final result = container.read(appControllerProvider).data;
       expect(result.messages.where((m) => m.threadId == 'thread_gu'), isEmpty);
-      expect(result.relationships.first.metrics['好感'], 12);
       expect(find.textContaining('0 条消息'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
@@ -173,12 +172,7 @@ void main() {
       await tester.pumpAndSettle();
       final result = container.read(appControllerProvider).data;
       expect(result.messages.where((m) => m.threadId == thread.id), isEmpty);
-      expect(
-        result.relationships
-            .firstWhere((r) => r.id == 'rel_shen')
-            .metrics['好感'],
-        61,
-      );
+      expect(result.relationships.any((r) => r.id == 'rel_shen'), isTrue);
       expect(result.characters.any((c) => c.id == 'char_shen'), isTrue);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
@@ -276,49 +270,4 @@ void main() {
       },
     );
   }
-
-  testWidgets(
-    'moment overflow supports real edit and preserves existing comments',
-    (tester) async {
-      final data = buildSeedData();
-      final container = await fixture.start(
-        tester,
-        data.copyWith(settings: data.settings.copyWith(ageConfirmed: true)),
-      );
-      container.read(appRouterProvider).go('/moments');
-      await tester.pumpAndSettle();
-      final own = data.moments.firstWhere((m) => !m.fromAi);
-      // Avoid depending on how many feed cards the small viewport initially lays out.
-      await tester.scrollUntilVisible(
-        find.text(own.content),
-        180,
-        scrollable: find.byType(Scrollable).last,
-      );
-      final card = find
-          .ancestor(
-            of: find.text(own.content),
-            matching: find.byType(DtSurface),
-          )
-          .first;
-      await tester.tap(
-        find.descendant(of: card, matching: find.byTooltip('动态操作')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('编辑动态'));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(EditableText).last, '今天换一种写法。');
-      await tester.tap(find.text('保存修改'));
-      await tester.pumpAndSettle();
-      final changed = container
-          .read(appControllerProvider)
-          .data
-          .moments
-          .firstWhere((m) => m.id == own.id);
-      expect(changed.content, '今天换一种写法。');
-      expect(changed.comments, own.comments);
-      expect(tester.takeException(), isNull);
-      await tester.pumpWidget(const SizedBox());
-      container.dispose();
-    },
-  );
 }

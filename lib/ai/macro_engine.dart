@@ -73,13 +73,15 @@ class MacroEngine {
       if (text == before) break;
     }
 
-    final changed = variables.length != initial.length ||
+    final changed =
+        variables.length != initial.length ||
         variables.entries.any((entry) => initial[entry.key] != entry.value);
     return MacroResult(text: text, variables: variables, changed: changed);
   }
 
-  static String _bounded(String value) =>
-      value.length <= maxValueLength ? value : value.substring(0, maxValueLength);
+  static String _bounded(String value) => value.length <= maxValueLength
+      ? value
+      : value.substring(0, maxValueLength);
 
   static int _asInt(String? value) => int.tryParse((value ?? '').trim()) ?? 0;
 }

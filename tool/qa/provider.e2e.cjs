@@ -6,9 +6,9 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 (async () => {
  const browser=await chromium.launch({executablePath:process.env.CHROMIUM_EXECUTABLE,headless:true,args:['--no-sandbox','--disable-dev-shm-usage'],env:{...process.env,TMPDIR:process.cwd()+'/.tmp',TMP:process.cwd()+'/.tmp',TEMP:process.cwd()+'/.tmp'}});
  const report=[];
- const widths=(process.env.DREAMTIDE_QA_WIDTHS || '390,1440').split(',').map(Number);
- const themes=(process.env.DREAMTIDE_QA_THEMES || 'light,dark').split(',');
- const startupTimeout=Number(process.env.DREAMTIDE_QA_STARTUP_TIMEOUT_MS || 30000);
+ const widths=(process.env.SILLYTAVERN_QA_WIDTHS || '390,1440').split(',').map(Number);
+ const themes=(process.env.SILLYTAVERN_QA_THEMES || 'light,dark').split(',');
+ const startupTimeout=Number(process.env.SILLYTAVERN_QA_STARTUP_TIMEOUT_MS || 30000);
  try {
   for (const width of widths) for (const theme of themes) {
    const context=await browser.newContext({viewport:{width,height:width===390?844:900},colorScheme:theme});
@@ -38,7 +38,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
    const type=(box,text)=>fillFlutterText(page,box,text);
    const read=()=>page.evaluate(()=>JSON.parse(JSON.parse(localStorage.getItem('flutter.sillytavern.v2.state'))));
    try {
-   await page.goto((process.env.DREAMTIDE_QA_BASE_URL || 'http://127.0.0.1:8089/SillyTavern/')+'#/provider',{waitUntil:'domcontentloaded',timeout:startupTimeout});
+   await page.goto((process.env.SILLYTAVERN_QA_BASE_URL || 'http://127.0.0.1:8089/SillyTavern/')+'#/provider',{waitUntil:'domcontentloaded',timeout:startupTimeout});
    await page.locator('flt-canvas-container canvas').first().waitFor({state:'visible',timeout:startupTimeout});
    await page.locator('flt-semantics-placeholder').waitFor({state:'attached'});await page.evaluate(()=>document.querySelector('flt-semantics-placeholder')?.click());
    await page.getByRole('textbox').first().waitFor();assert.match(await page.title(),/SillyTavern|SillyTavern/);
