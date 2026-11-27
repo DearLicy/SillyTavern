@@ -365,4 +365,34 @@ extension DataManagement on AppController {
       ),
     );
   }
+
+  /// Starts an empty chat with a chosen (primary or alternate) greeting.
+  /// Does nothing once the thread already has a transcript, so it can never
+  /// overwrite or duplicate an existing conversation.
+  Future<void> startWithGreeting(String threadId, String greeting) async {
+    final trimmed = greeting.trim();
+    if (trimmed.isEmpty) return;
+    final data = _snapshot.data;
+    final thread = data.threads.where((t) => t.id == threadId).firstOrNull;
+    if (thread == null) return;
+    if (data.messages.any((m) => m.threadId == threadId)) return;
+    final relationship = data.relationshipForThread(thread);
+    final character = relationship == null
+        ? null
+        : data.characterForRelationship(relationship);
+    if (character == null) return;
+    _invalidateThread(threadId);
+    final message = Message(
+      id: _uuid.v4(),
+      threadId: threadId,
+      senderId: character.id,
+      senderName: character.name,
+      text: trimmed,
+      createdAt: DateTime.now(),
+      fromAi: true,
+    );
+    _appendMessages([message], threadId);
+    await flush();
+  }
 }
+

@@ -61,7 +61,7 @@ SillyTavern APP 是一个面向角色扮演的 LLM 前端：用户通过角色�
 | 长期记忆 | ✅ | 七类可管理记忆；对话积累后由独立非流式请求安静更新本地剧情备忘，并注入后续对话 |
 | 图片聊天与识图 | ✅ | 发送真实 OpenAI / Anthropic 图片内容块，最近图片随上下文送入模型；需选择支持视觉的模型 |
 | 头像管理 | ✅ | 本地用户 / 梦设 / 角色图片头像，支持相册、拍照、预览、移除与关联清理 |
-| SillyTavern 角色卡 | ✅ | Character Card V2 / legacy V1 JSON 导入导出；PNG `ccv3` / `chara` 元数据导入与 PNG 回写（优先嵌入角色头像、系统分享）；保留 creator、alternate greetings、标签与内嵌 `character_book` |
+| SillyTavern 角色卡 | ✅ | Character Card V2 / legacy V1 JSON 导入导出；PNG `ccv3` / `chara` 元数据导入与 PNG 回写（优先嵌入角色头像、系统分享）；保留 creator、alternate greetings、标签与内嵌 `character_book`；空会话可直接选用默认或备选开场 |
 | 世界书 / World Info | ✅ | 关键词命中、常驻词条、排序、递归匹配、启用开关；命中资料在系统提示词前部注入 |
 | 作者注记 | ✅ | 每本世界书可设作者注记与注入深度，用于长期语气和叙事风格约束 |
 | 角色宏 | ✅ | 支持 `{{char}}` / `{{user}}`；聊天级变量 `{{getvar}}`/`{{setvar}}`/`{{addvar}}`/`{{incvar}}`/`{{decvar}}`，有界展开且不执行脚本 |

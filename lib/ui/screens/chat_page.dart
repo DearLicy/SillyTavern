@@ -124,6 +124,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
     final dark = Theme.of(context).brightness == Brightness.dark;
     final attachmentStore = ref.watch(attachmentStoreProvider);
+    final primaryGreeting = character.greeting.trim();
+    final greetings = <String>[
+      if (primaryGreeting.isNotEmpty) primaryGreeting,
+      for (final greeting in character.alternateGreetings)
+        if (greeting.trim().isNotEmpty && greeting.trim() != primaryGreeting)
+          greeting.trim(),
+    ];
+    final controller = ref.read(appControllerProvider.notifier);
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -245,6 +253,19 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     );
                   },
                 ),
+                if (messages.isEmpty &&
+                    state.generatingThreadId != thread.id)
+                  Positioned.fill(
+                    child: _EmptyChatStart(
+                      character: character,
+                      greetings: greetings,
+                      dark: dark,
+                      onStart: (text) => controller.startWithGreeting(
+                        thread.id,
+                        text,
+                      ),
+                    ),
+                  ),
                 if (!_nearBottom && messages.isNotEmpty)
                   Positioned(
                     right: 14,
@@ -1463,6 +1484,102 @@ class _ChatComposer extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _EmptyChatStart extends StatelessWidget {
+  const _EmptyChatStart({
+    required this.character,
+    required this.greetings,
+    required this.dark,
+    required this.onStart,
+  });
+
+  final Character character;
+  final List<String> greetings;
+  final bool dark;
+  final ValueChanged<String> onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+      children: [
+        Center(
+          child: DtAvatar(
+            name: character.name,
+            reference: character.avatarReference,
+            color: character.avatarColor,
+            size: 72,
+            showStatus: true,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          character.name,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+        ),
+        if (character.intro.trim().isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Text(
+            character.intro.trim(),
+            textAlign: TextAlign.center,
+            maxLines: 4,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 12.5,
+              height: 1.6,
+              color: dark ? const Color(0xFF97A2B5) : DtColors.textTertiary,
+            ),
+          ),
+        ],
+        const SizedBox(height: 18),
+        if (greetings.isEmpty)
+          const DtSurface(
+            child: Text(
+              '直接发一条消息，开始这段对话。',
+              style: TextStyle(fontSize: 13, height: 1.6),
+            ),
+          )
+        else
+          for (var i = 0; i < greetings.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: DtSurface(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      i == 0 ? '默认开场' : '备选开场 $i',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: dark
+                            ? const Color(0xFF8E99AD)
+                            : DtColors.textTertiary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      greetings[i],
+                      style: const TextStyle(fontSize: 13.5, height: 1.65),
+                    ),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: DtButton(
+                        label: '用这个开场',
+                        variant: DtButtonVariant.secondary,
+                        onPressed: () => onStart(greetings[i]),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+      ],
     );
   }
 }
