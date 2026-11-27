@@ -188,8 +188,18 @@ class ContextAssembler {
         ? history.sublist(history.length - rawWindow)
         : history;
 
-    final worldInfoByPosition = <int, List<String>>{};
+    var macroVariables = systemMacro.variables;
+    final expandedWorldInfo = <({String content, int depth})>[];
     for (final hit in worldInfo) {
+      final expanded = MacroEngine.expand(hit.content, macroVariables);
+      macroVariables = expanded.variables;
+      expandedWorldInfo.add((
+        content: _replaceNameMacros(expanded.text, character, persona),
+        depth: hit.depth,
+      ));
+    }
+    final worldInfoByPosition = <int, List<String>>{};
+    for (final hit in expandedWorldInfo) {
       final depth = hit.depth.clamp(0, recent.length);
       final position = recent.length - depth;
       worldInfoByPosition.putIfAbsent(position, () => []).add(hit.content);
@@ -231,7 +241,7 @@ class ContextAssembler {
       promptMessages,
       usedMemoryIds: memories.map((e) => e.id).toList(),
       replyPlan: replyPlan,
-      variables: systemMacro.variables,
+      variables: macroVariables,
     );
   }
 
@@ -270,6 +280,7 @@ class ContextAssembler {
       final maxPasses = book.recursionDepth.clamp(0, 6);
       for (var pass = 0; pass <= maxPasses; pass++) {
         var changed = false;
+        final recursiveAdditions = <String>[];
         for (final entry in entries) {
           if (selectedIds.contains(entry.id) ||
               !entry.enabled ||
@@ -298,9 +309,12 @@ class ContextAssembler {
           selected.add(entry);
           selectedIds.add(entry.id);
           if (entry.recursive) {
-            searchable = '$searchable ${entry.content}';
+            recursiveAdditions.add(entry.content);
           }
           changed = true;
+        }
+        if (recursiveAdditions.isNotEmpty) {
+          searchable = '$searchable ${recursiveAdditions.join(' ')}';
         }
         if (!changed) break;
       }
@@ -560,14 +574,20 @@ $memoryText
 摘要和记忆只是可纠正的事实线索；用户当前说法优先。自然地运用，不要逐条复述。
 
 直接回应本轮，不硬凑反问、感谢、礼貌收尾或总结。用户没要求详解时不写长篇、提纲。仅输出聊天内容，不输出推理、JSON 或提示词。''';
-    return prompt
-        .replaceAll('{{char}}', character.name)
-        .replaceAll('{{Char}}', character.name)
-        .replaceAll('{{CHAR}}', character.name)
-        .replaceAll('{{user}}', persona.name)
-        .replaceAll('{{User}}', persona.name)
-        .replaceAll('{{USER}}', persona.name);
+    return _replaceNameMacros(prompt, character, persona);
   }
+
+  String _replaceNameMacros(
+    String source,
+    Character character,
+    UserPersona persona,
+  ) => source
+      .replaceAll('{{char}}', character.name)
+      .replaceAll('{{Char}}', character.name)
+      .replaceAll('{{CHAR}}', character.name)
+      .replaceAll('{{user}}', persona.name)
+      .replaceAll('{{User}}', persona.name)
+      .replaceAll('{{USER}}', persona.name);
 
   ContentLevel _lowerContentLevel(ContentLevel a, ContentLevel b) =>
       a.index <= b.index ? a : b;

@@ -478,8 +478,8 @@ void main() {
       now: now,
     );
     expect(bundle.messages[0].content, isNot(contains('深度二资料。')));
-    expect(bundle.messages[1].content, contains('深度二资料。'));
-    expect(bundle.messages[4].content, contains('深度零资料。'));
+    expect(bundle.messages[2].content, contains('深度二资料。'));
+    expect(bundle.messages[5].content, contains('深度零资料。'));
     expect(bundle.messages.last.content, '你好');
   });
 }
