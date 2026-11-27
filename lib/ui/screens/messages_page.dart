@@ -172,6 +172,15 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                 },
               ),
               DtSettingRow(
+                icon: Icons.groups_2_outlined,
+                title: '发起群聊',
+                subtitle: '选择两个或更多角色加入同一段对话',
+                onTap: () {
+                  Navigator.pop(context);
+                  _showCreateGroup(this.context, ref);
+                },
+              ),
+              DtSettingRow(
                 icon: Icons.person_add_alt_1_rounded,
                 title: '创建角色',
                 subtitle: '设计新的梦境人物',
@@ -185,6 +194,75 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _showCreateGroup(BuildContext context, WidgetRef ref) async {
+    final data = ref.read(appControllerProvider).data;
+    final characters = data.characters;
+    if (characters.length < 2) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('至少需要两个角色才能发起群聊')),
+      );
+      return;
+    }
+    final selected = <String>{};
+    final picked = await showDialog<List<String>>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: const Text('发起群聊'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                for (final character in characters)
+                  CheckboxListTile(
+                    value: selected.contains(character.id),
+                    title: Text(character.name),
+                    subtitle: character.handle,
+                    onChanged: (value) => setDialogState(() {
+                      if (value == true) {
+                        selected.add(character.id);
+                      } else {
+                        selected.remove(character.id);
+                      }
+                    }),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: selected.length < 2
+                  ? null
+                  : () => Navigator.pop(
+                      dialogContext,
+                      selected.toList(growable: false),
+                    ),
+              child: Text('创建（${selected.length}）'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null || picked.length < 2) return;
+    try {
+      final thread = await ref
+          .read(appControllerProvider.notifier)
+          .createGroupChat(characterIds: picked);
+      if (context.mounted) context.push('/chat/${thread.id}');
+    } catch (error) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('群聊创建失败：$error')),
+        );
+      }
+    }
   }
 
   void _showThreadActions(

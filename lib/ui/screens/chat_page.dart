@@ -108,6 +108,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         body: const Center(child: Text('会话缺少角色关系。')),
       );
     }
+    final participants = thread.type == ThreadType.group
+        ? thread.participantIds
+              .map(
+                (id) => data.characters
+                    .where((item) => item.id == id)
+                    .firstOrNull,
+              )
+              .whereType<Character>()
+              .toList()
+        : const <Character>[];
     final messages =
         data.messages
             .where((e) => e.threadId == thread.id && e.isRenderable)
@@ -139,6 +149,11 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       appBar: _ChatAppBar(
         character: character,
         relationship: relationship,
+        displayTitle: thread.type == ThreadType.group ? thread.title : null,
+        displaySubtitle:
+            thread.type == ThreadType.group && participants.isNotEmpty
+            ? '${participants.length} 位角色 · ${relationship.stage}'
+            : null,
         onBack: context.pop,
         onMenu: () => _showChatMenu(context, data, relationship, character),
       ),
@@ -227,7 +242,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                             ),
                           _MessageBubble(
                             message: message,
-                            character: character,
+                            character:
+                                data.characters
+                                    .where(
+                                      (item) => item.id == message.senderId,
+                                    )
+                                    .firstOrNull ??
+                                character,
                             owner: data.owner.copyWith(
                               displayName: data
                                   .personaById(relationship.personaId)
@@ -958,12 +979,16 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.relationship,
     required this.onBack,
     required this.onMenu,
+    this.displayTitle,
+    this.displaySubtitle,
   });
 
   final Character character;
   final Relationship relationship;
   final VoidCallback onBack;
   final VoidCallback onMenu;
+  final String? displayTitle;
+  final String? displaySubtitle;
 
   @override
   Size get preferredSize => const Size.fromHeight(64);
@@ -1000,7 +1025,9 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  character.name,
+                  displayTitle ?? character.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
@@ -1008,7 +1035,8 @@ class _ChatAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 const SizedBox(height: 1),
                 Text(
-                  '${relationship.stage} · ${relationship.consent.ceiling.label}',
+                  displaySubtitle ??
+                      '${relationship.stage} · ${relationship.consent.ceiling.label}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(

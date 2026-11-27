@@ -394,5 +394,67 @@ extension DataManagement on AppController {
     _appendMessages([message], threadId);
     await flush();
   }
+
+  /// Creates (or reuses) a multi-character group chat. All participants share
+  /// this thread, while scene/consent defaults come from the first character.
+  Future<ChatThread> createGroupChat({
+    required List<String> characterIds,
+    String? title,
+  }) async {
+    final data = _snapshot.data;
+    final ids = <String>[];
+    for (final id in characterIds) {
+      if (!ids.contains(id)) ids.add(id);
+    }
+    if (ids.length < 2) throw StateError('请选择至少两个角色');
+    final characters = <Character>[];
+    for (final id in ids) {
+      final character = data.characters
+          .where((item) => item.id == id)
+          .firstOrNull;
+      if (character == null) throw StateError('角色不存在');
+      characters.add(character);
+    }
+    final existing = data.threads
+        .where(
+          (thread) =>
+              thread.type == ThreadType.group &&
+              thread.participantIds.length == ids.length &&
+              thread.participantIds.every(ids.contains),
+        )
+        .firstOrNull;
+    if (existing != null) return existing;
+
+    final personaId = data.settings.currentPersonaId;
+    Relationship? host;
+    for (final relationship in data.relationships) {
+      if (relationship.characterId != characters.first.id) continue;
+      if (relationship.personaId == personaId) {
+        host = relationship;
+        break;
+      }
+      host ??= relationship;
+    }
+    if (host == null) {
+      throw StateError('请先和第一位角色建立关系，再创建群聊');
+    }
+    final now = DateTime.now();
+    final thread = ChatThread(
+      id: 'thread_${_uuid.v4()}',
+      relationshipId: host.id,
+      type: ThreadType.group,
+      title: title?.trim().isNotEmpty == true
+          ? title!.trim()
+          : '${characters.take(3).map((item) => item.name).join('、')} · 群聊',
+      updatedAt: now,
+      participantIds: [for (final character in characters) character.id],
+    );
+    final before = _snapshot.data;
+    await _saveManagementChange(
+      before,
+      before.copyWith(threads: [...before.threads, thread]),
+    );
+    return thread;
+  }
 }
 

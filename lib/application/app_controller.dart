@@ -9,6 +9,7 @@ import 'dart:typed_data';
 import 'dart:convert';
 import '../ai/conversation_summary.dart';
 import '../ai/context_assembler.dart';
+import '../ai/group_speaker.dart';
 import '../ai/relationship_dynamics.dart';
 import '../ai/repetition_guard.dart';
 import '../ai/regex_transformer.dart';
@@ -684,7 +685,10 @@ class AppController extends StateNotifier<ApplicationState> {
       final existingIndex = aiMessageId == null
           ? -1
           : messages.indexWhere((e) => e.id == aiMessageId);
-      final visibleText = prompt.replyPlan.prepareText(fullText);
+      var visibleText = prompt.replyPlan.prepareText(fullText);
+      if (activeThread.type == ThreadType.group) {
+        visibleText = GroupSpeaker.stripPrefix(visibleText);
+      }
       if (visibleText.isEmpty) return;
       if (existingIndex >= 0) {
         messages[existingIndex] = messages[existingIndex].copyWith(
@@ -822,6 +826,28 @@ class AppController extends StateNotifier<ApplicationState> {
       }
       naturalReply = transformedReply;
       final current = state.data;
+      var replySpeaker = activeCharacter;
+      if (activeThread.type == ThreadType.group) {
+        final participants = activeThread.participantIds
+            .map(
+              (id) => current.characters
+                  .where((item) => item.id == id)
+                  .firstOrNull,
+            )
+            .whereType<Character>()
+            .toList();
+        if (participants.length > 1) {
+          final resolved = GroupSpeaker.resolve(
+            raw: naturalReply,
+            participants: participants,
+            history: current.messages
+                .where((message) => message.threadId == threadId)
+                .toList(),
+          );
+          replySpeaker = resolved.character;
+          naturalReply = resolved.text;
+        }
+      }
       final messages = [...current.messages];
       final existingIndex = aiMessageId == null
           ? -1
@@ -830,6 +856,8 @@ class AppController extends StateNotifier<ApplicationState> {
         messages[existingIndex] = messages[existingIndex].copyWith(
           text: naturalReply,
           sources: sources,
+          senderId: replySpeaker.id,
+          senderName: replySpeaker.name,
         );
       } else {
         aiMessageId = _uuid.v4();
@@ -837,8 +865,8 @@ class AppController extends StateNotifier<ApplicationState> {
           Message(
             id: aiMessageId!,
             threadId: threadId,
-            senderId: activeCharacter.id,
-            senderName: activeCharacter.name,
+            senderId: replySpeaker.id,
+            senderName: replySpeaker.name,
             text: naturalReply,
             createdAt: DateTime.now(),
             fromAi: true,

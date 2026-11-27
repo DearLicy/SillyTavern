@@ -84,6 +84,16 @@ class ContextAssembler {
     if (relationship == null || character == null || persona == null) {
       throw const FormatException('会话缺少有效的角色或梦设关系');
     }
+    final groupCharacters = thread.type == ThreadType.group
+        ? thread.participantIds
+              .map(
+                (id) => data.characters
+                    .where((item) => item.id == id)
+                    .firstOrNull,
+              )
+              .whereType<Character>()
+              .toList()
+        : const <Character>[];
 
     final replyPlan = ReplyPlanner.plan(
       character: character,
@@ -132,8 +142,14 @@ class ContextAssembler {
 
     // SillyTavern-compatible chat-scoped macros. Expansion is deterministic and
     // bounded; setvar-style macros in the prompt mutate only this thread's map.
+    final systemBase = _withGroupContext(
+      rawSystem,
+      thread: thread,
+      characters: groupCharacters,
+      host: character,
+    );
     final inputMacro = MacroEngine.expand(userInput.trim(), thread.variables);
-    final systemMacro = MacroEngine.expand(rawSystem, inputMacro.variables);
+    final systemMacro = MacroEngine.expand(systemBase, inputMacro.variables);
 
     final history =
         data.messages
@@ -155,7 +171,7 @@ class ContextAssembler {
         for (final message in recent)
           PromptMessage(
             message.fromAi ? 'assistant' : 'user',
-            _historyText(message),
+            _historyText(message, group: thread.type == ThreadType.group),
             imageReference: message.kind == MessageKind.image
                 ? message.localPath
                 : null,
@@ -467,14 +483,38 @@ $memoryText
   ContentLevel _lowerContentLevel(ContentLevel a, ContentLevel b) =>
       a.index <= b.index ? a : b;
 
-  String _historyText(Message message) {
+  String _historyText(Message message, {bool group = false}) {
     final imagePrefix = message.kind == MessageKind.image
         ? (message.fromAi ? '[角色发送了一张图片]' : '[用户发送了一张图片]')
         : '';
+    final speaker = group && message.fromAi ? '${message.senderName}：' : '';
     final text = [
       imagePrefix,
-      message.text.trim(),
+      '$speaker${message.text.trim()}',
     ].where((part) => part.isNotEmpty).join(' ');
     return message.interrupted ? '（上一条回复被用户打断，尚未说完）$text' : text;
+  }
+
+  String _withGroupContext(
+    String rawSystem, {
+    required ChatThread thread,
+    required List<Character> characters,
+    required Character host,
+  }) {
+    if (thread.type != ThreadType.group || characters.length < 2) {
+      return rawSystem;
+    }
+    final names = characters.map((item) => item.name).join('、');
+    final profiles = characters
+        .map(
+          (item) =>
+              '【${item.name}】${item.intro.trim().isEmpty ? item.persona.trim() : item.intro.trim()}',
+        )
+        .join('\n');
+    return '''【群聊 · 多角色场景】
+你正在同一段群聊里同时扮演：$names。每条回复只能由一位角色发言，且必须以【角色名】开头，例如：【${characters.first.name}】……。保持每个角色独立的性格、语气和关系距离，不要串味；不要替用户发言，不要总结群聊。其他角色可以自然插话、反驳或接梗。当前场景与安全词以 ${host.name} 的关系为主。
+$profiles
+
+$rawSystem''';
   }
 }
