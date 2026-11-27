@@ -22,6 +22,7 @@ import '../data/attachment_store.dart';
 import '../domain/models.dart';
 import '../data/image_content.dart';
 import '../data/character_card.dart';
+import '../data/chat_completion_preset.dart';
 
 part 'data_management.dart';
 part 'profile_management.dart';

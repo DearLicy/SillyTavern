@@ -1,6 +1,42 @@
 part of 'app_controller.dart';
 
 extension PromptManagement on AppController {
+  List<RegexRule> _mergePresetRules(
+    Object? rawRules,
+    List<RegexRule> existing,
+  ) {
+    final merged = <RegexRule>[...existing];
+    if (rawRules is! List) return merged;
+    for (final entry in rawRules.whereType<Map>()) {
+      final item = Map<String, dynamic>.from(entry);
+      final name = (item['name'] as String?)?.trim() ?? '';
+      final pattern = (item['pattern'] as String?)?.trim() ?? '';
+      if (name.isEmpty || pattern.isEmpty) continue;
+      merged.add(
+        RegexRule(
+          id: 'regex_${_uuid.v4()}',
+          name: name,
+          pattern: pattern,
+          replacement: item['replacement'] is String
+              ? item['replacement'] as String
+              : '',
+          target: RegexTarget.values.firstWhere(
+            (e) => e.name == item['target'],
+            orElse: () => RegexTarget.aiOutput,
+          ),
+          enabled: item['enabled'] as bool? ?? true,
+          caseSensitive: item['caseSensitive'] as bool? ?? false,
+          multiline: item['multiline'] as bool? ?? true,
+          dotAll: item['dotAll'] as bool? ?? true,
+          order: item['order'] is num
+              ? (item['order'] as num).toInt()
+              : 100,
+        ),
+      );
+    }
+    return merged;
+  }
+
   Future<void> savePromptConfig(PromptConfig config) async {
     final errors = RegexTransformer.validateAll(config);
     if (errors.isNotEmpty) throw FormatException(errors.first);
@@ -82,8 +118,34 @@ extension PromptManagement on AppController {
   /// Export the current prompt configuration as a shareable preset JSON.
   String exportPromptPreset({String name = 'SillyTavern APP 预设'}) {
     final prompts = _snapshot.data.settings.prompts;
+    final provider = _snapshot.data.settings.provider;
     return jsonEncode({
       'name': name,
+      'chat_completion_source': 'custom',
+      'temperature': provider.temperature,
+      'frequency_penalty': provider.frequencyPenalty,
+      'presence_penalty': provider.presencePenalty,
+      'top_p': provider.topP,
+      if (provider.maxOutputTokens != null)
+        'openai_max_tokens': provider.maxOutputTokens,
+      'prompts': [
+        {
+          'identifier': 'main',
+          'name': 'Main Prompt',
+          'role': 'system',
+          'content': prompts.systemPrefix,
+          'system_prompt': true,
+          'marker': false,
+        },
+        {
+          'identifier': 'jailbreak',
+          'name': 'Post-History Instructions',
+          'role': 'system',
+          'content': prompts.postHistoryInstructions,
+          'system_prompt': true,
+          'marker': false,
+        },
+      ],
       'systemPrefix': prompts.systemPrefix,
       'postHistoryInstructions': prompts.postHistoryInstructions,
       'rules': [
@@ -109,40 +171,49 @@ extension PromptManagement on AppController {
     final decoded = jsonDecode(raw.trim());
     if (decoded is! Map) throw FormatException('预设必须是 JSON 对象');
     final map = Map<String, dynamic>.from(decoded);
+    final existing = _snapshot.data.settings.prompts;
+    if (const ChatCompletionPresetCodec().matches(map)) {
+      final mergedRules = _mergePresetRules(map['rules'], existing.rules);
+      final imported = const ChatCompletionPresetCodec().decode(
+        map,
+        existingRules: mergedRules,
+      );
+      final errors = RegexTransformer.validateAll(imported.prompts);
+      if (errors.isNotEmpty) throw FormatException(errors.first);
+      final before = _snapshot.data;
+      if (_snapshot.generatingThreadId != null ||
+          _activeGenerationAbort != null) {
+        _stopActiveGeneration();
+      }
+      _cancelPendingSummaries();
+      final provider = before.settings.provider.copyWith(
+        temperature: imported.temperature,
+        topP: imported.topP,
+        frequencyPenalty: imported.frequencyPenalty,
+        presencePenalty: imported.presencePenalty,
+        maxOutputTokens: imported.maxOutputTokens,
+        stopSequences: imported.stopSequences.isEmpty
+            ? null
+            : imported.stopSequences,
+      );
+      await _saveManagementChange(
+        before,
+        before.copyWith(
+          settings: before.settings.copyWith(
+            prompts: imported.prompts,
+            provider: provider,
+          ),
+        ),
+      );
+      return;
+    }
     final systemPrefix = map['systemPrefix'] is String
         ? map['systemPrefix'] as String
         : '';
     final postHistory = map['postHistoryInstructions'] is String
         ? map['postHistoryInstructions'] as String
         : '';
-    final existing = _snapshot.data.settings.prompts;
-    final mergedRules = <RegexRule>[...existing.rules];
-    final rawRules = map['rules'];
-    if (rawRules is List) {
-      for (final entry in rawRules.whereType<Map>()) {
-        final item = Map<String, dynamic>.from(entry);
-        final name = (item['name'] as String?)?.trim() ?? '';
-        final pattern = (item['pattern'] as String?)?.trim() ?? '';
-        if (name.isEmpty || pattern.isEmpty) continue;
-        mergedRules.add(RegexRule(
-          id: 'regex_${_uuid.v4()}',
-          name: name,
-          pattern: pattern,
-          replacement: item['replacement'] is String
-              ? item['replacement'] as String
-              : '',
-          target: RegexTarget.values.firstWhere(
-            (e) => e.name == item['target'],
-            orElse: () => RegexTarget.aiOutput,
-          ),
-          enabled: item['enabled'] as bool? ?? true,
-          caseSensitive: item['caseSensitive'] as bool? ?? false,
-          multiline: item['multiline'] as bool? ?? true,
-          dotAll: item['dotAll'] as bool? ?? true,
-          order: item['order'] as int? ?? 100,
-        ));
-      }
-    }
+    final mergedRules = _mergePresetRules(map['rules'], existing.rules);
     final config = PromptConfig(
       systemPrefix: systemPrefix,
       postHistoryInstructions: postHistory,

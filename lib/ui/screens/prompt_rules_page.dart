@@ -299,7 +299,7 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '导入或导出当前系统提示词、后置指令和正则规则的 JSON 预设。导入预设会合并正则规则。',
+                  '支持 SillyTavern Chat Completion 预设；会映射主提示词、辅助提示词、后置指令和常用生成参数，并合并本地正则规则。',
                   style: TextStyle(fontSize: 12, height: 1.6),
                 ),
                 const SizedBox(height: 10),

@@ -87,7 +87,7 @@ class AboutPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 _RoadmapRow(
-                  version: 'V2.1.3',
+                  version: 'V2.1.4',
                   text: '三栏 IM、用户人设、记忆、导演、角色卡、世界书、提示词、正则规则、生成参数与对话分支',
                 ),
                 _RoadmapRow(version: 'V2.1', text: '生活状态、关系日历、主动消息、本地通知'),
