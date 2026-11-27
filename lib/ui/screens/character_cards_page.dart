@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../application/app_controller.dart';
 import '../../data/png_character_card.dart';
@@ -88,7 +90,12 @@ class CharacterCardsPage extends ConsumerWidget {
                         DtIconButton(
                           icon: Icons.image_outlined,
                           tooltip: '导出 PNG 角色卡',
-                          onTap: () => _exportPng(context, controller, character.id),
+                          onTap: () => _exportPng(
+                            context,
+                            controller,
+                            character.id,
+                            character.name,
+                          ),
                         ),
                         DtIconButton(
                           icon: Icons.copy_all_outlined,
@@ -129,23 +136,42 @@ class CharacterCardsPage extends ConsumerWidget {
     BuildContext context,
     AppController controller,
     String characterId,
+    String characterName,
   ) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final pngBytes = await controller.exportPngCharacterCard(characterId);
-      final kb = (pngBytes.length / 1024).toStringAsFixed(1);
-      await Clipboard.setData(
-        ClipboardData(text: 'PNG 角色卡已生成 ($kb KB) — 可通过分享功能保存'),
-      );
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('PNG 角色卡已生成 ($kb KB)'),
-          action: SnackBarAction(
-            label: '复制 JSON',
-            onPressed: () => _copyJson(context, controller, characterId),
-          ),
+      final safeName = characterName
+          .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
+          .trim();
+      final fileName =
+          '${safeName.isEmpty ? 'character' : safeName}_SillyTavernCard.png';
+      final box = context.findRenderObject() as RenderBox?;
+      final origin = box == null
+          ? null
+          : box.localToGlobal(Offset.zero) & box.size;
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile.fromData(pngBytes, mimeType: 'image/png')],
+          fileNameOverrides: [fileName],
+          subject: '$characterName 角色卡',
+          text: '由 SillyTavern APP 导出的角色卡',
+          sharePositionOrigin: origin,
         ),
       );
+      if (!context.mounted) return;
+      if (result.status == ShareResultStatus.unavailable) {
+        final kb = (pngBytes.length / 1024).toStringAsFixed(1);
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('当前环境不支持系统分享，PNG 已生成 ($kb KB)。可改用复制 JSON。'),
+            action: SnackBarAction(
+              label: '复制 JSON',
+              onPressed: () => _copyJson(context, controller, characterId),
+            ),
+          ),
+        );
+      }
     } catch (error) {
       messenger.showSnackBar(
         SnackBar(content: Text('PNG 导出失败：$error')),

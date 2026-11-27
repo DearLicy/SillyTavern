@@ -157,4 +157,58 @@ class PngCharacterCard {
     }
     return crc ^ 0xFFFFFFFF;
   }
+
+  /// Inserts or replaces [ccv3] metadata inside an existing PNG image while
+  /// keeping every other chunk (pixels, ICC, color data) byte-identical.
+  /// Returns null when [imageBytes] is not a well-formed PNG; callers should
+  /// fall back to [encodePng] in that case.
+  static Uint8List? embedJson(Uint8List imageBytes, String json) {
+    if (imageBytes.length < 8 + 12 || imageBytes.length > 32 * 1024 * 1024) {
+      return null;
+    }
+    const signature = <int>[137, 80, 78, 71, 13, 10, 26, 10];
+    for (var i = 0; i < signature.length; i++) {
+      if (imageBytes[i] != signature[i]) return null;
+    }
+    final payload = base64Encode(utf8.encode(json));
+    final textChunk = _pngChunk(
+      'tEXt',
+      Uint8List.fromList([...utf8.encode('ccv3'), 0, ...utf8.encode(payload)]),
+    );
+    final out = BytesBuilder(copy: false);
+    out.add(signature);
+    final data = ByteData.sublistView(imageBytes);
+    var offset = 8;
+    var inserted = false;
+    while (offset + 12 <= imageBytes.length) {
+      final length = data.getUint32(offset, Endian.big);
+      if (offset + 12 + length > imageBytes.length) return null;
+      final type = ascii.decode(
+        imageBytes.sublist(offset + 4, offset + 8),
+        allowInvalid: false,
+      );
+      if (type == 'IEND') {
+        if (!inserted) out.add(textChunk);
+        out.add(imageBytes.sublist(offset));
+        return out.takeBytes();
+      }
+      final isCardText = (type == 'tEXt' || type == 'iTXt') &&
+          _isCardKeyword(imageBytes.sublist(offset + 8, offset + 8 + length));
+      if (!isCardText) out.add(imageBytes.sublist(offset, offset + 12 + length));
+      offset += 12 + length;
+    }
+    return null;
+  }
+
+  static bool _isCardKeyword(Uint8List chunk) {
+    final separator = chunk.indexOf(0);
+    if (separator <= 0) return false;
+    try {
+      final keyword = ascii.decode(chunk.sublist(0, separator), allowInvalid: false);
+      return keyword == 'ccv3' || keyword == 'chara';
+    } on FormatException {
+      return false;
+    }
+  }
+
 }
