@@ -108,4 +108,45 @@ void main() {
       expect(await store.load(), isNotNull);
     },
   );
+
+  test('V2 card preserves creator and alternate greetings', () {
+    const card = """
+    {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "晚晴",
+        "description": "{{char}} 是海边旅店的老板娘。",
+        "first_mes": "风大，先进来。",
+        "alternate_greetings": ["雨停了，要出去走走吗？", "早餐在桌上。"],
+        "creator": "某作者",
+        "tags": ["海边"]
+      }
+    }
+    """;
+    final imported = codec.decode(card, id: 'char_alt');
+    expect(imported.character.creator, '某作者');
+    expect(imported.character.alternateGreetings, ['雨停了，要出去走走吗？', '早餐在桌上。']);
+
+    final encoded = codec.encode(imported.character);
+    final roundTrip = codec.decode(encoded, id: 'char_alt_2');
+    expect(roundTrip.character.creator, '某作者');
+    expect(roundTrip.character.alternateGreetings, imported.character.alternateGreetings);
+  });
+
+  test('legacy flat V1 card maps alternate greetings', () {
+    const card = """
+    {
+      "name": "旧卡角色",
+      "description": "旧格式描述",
+      "first_mes": "你好。",
+      "alternate_greetings": ["晚上好。"],
+      "creator": "legacy"
+    }
+    """;
+    final imported = codec.decode(card, id: 'char_legacy');
+    expect(imported.character.name, '旧卡角色');
+    expect(imported.character.creator, 'legacy');
+    expect(imported.character.alternateGreetings, ['晚上好。']);
+  });
 }

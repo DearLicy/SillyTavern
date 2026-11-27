@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -77,6 +78,47 @@ class CharacterDetailPage extends ConsumerWidget {
           if (relationship != null) ...[
             const SizedBox(height: 14),
             _RelationshipPanel(relationship: relationship, persona: persona),
+          ],
+          if (character.alternateGreetings.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            DtSurface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '备选开场',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 9),
+                  for (var i = 0; i < character.alternateGreetings.length; i++)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Text(
+                        '${i + 1}. ${character.alternateGreetings[i]}',
+                        maxLines: 6,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 13, height: 1.6),
+                      ),
+                    ),
+                  DtButton(
+                    label: '复制全部备选开场',
+                    variant: DtButtonVariant.secondary,
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        ClipboardData(
+                          text: character.alternateGreetings.join('\n\n'),
+                        ),
+                      );
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('备选开场已复制')),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
           ],
           const SizedBox(height: 14),
           DtSurface(

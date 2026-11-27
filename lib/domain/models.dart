@@ -191,6 +191,8 @@ class Character {
     this.voiceProfile = '',
     this.personalPreferences = '',
     this.avatarReference,
+    this.alternateGreetings = const [],
+    this.creator = '',
   });
 
   final String? avatarReference;
@@ -210,6 +212,12 @@ class Character {
   /// Harmless tastes and opinions that make the character distinct.
   final String personalPreferences;
 
+  /// SillyTavern alternate greetings. The primary greeting stays [greeting].
+  final List<String> alternateGreetings;
+
+  /// Original card creator, preserved across JSON/PNG round trips.
+  final String creator;
+
   Character copyWith({
     String? avatarReference,
     bool clearAvatar = false,
@@ -223,6 +231,8 @@ class Character {
     List<String>? tags,
     String? voiceProfile,
     String? personalPreferences,
+    List<String>? alternateGreetings,
+    String? creator,
   }) => Character(
     avatarReference: clearAvatar
         ? null
@@ -238,6 +248,8 @@ class Character {
     tags: tags ?? this.tags,
     voiceProfile: voiceProfile ?? this.voiceProfile,
     personalPreferences: personalPreferences ?? this.personalPreferences,
+    alternateGreetings: alternateGreetings ?? this.alternateGreetings,
+    creator: creator ?? this.creator,
   );
 
   Map<String, dynamic> toJson() => {
@@ -253,6 +265,8 @@ class Character {
     'tags': tags,
     'voiceProfile': voiceProfile,
     'personalPreferences': personalPreferences,
+    'alternateGreetings': alternateGreetings,
+    'creator': creator,
   };
 
   factory Character.fromJson(Map<String, dynamic> json) => Character(
@@ -269,6 +283,13 @@ class Character {
         (json['tags'] as List?)?.map((e) => e.toString()).toList() ?? const [],
     voiceProfile: json['voiceProfile'] as String? ?? '',
     personalPreferences: json['personalPreferences'] as String? ?? '',
+    alternateGreetings:
+        (json['alternateGreetings'] as List?)
+            ?.map((e) => e.toString())
+            .where((e) => e.trim().isNotEmpty)
+            .toList() ??
+        const [],
+    creator: json['creator'] as String? ?? '',
   );
 }
 

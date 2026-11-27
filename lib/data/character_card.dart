@@ -20,6 +20,8 @@ class CharacterCardCodec {
     WorldBook? worldBook,
     String creator = 'SillyTavern APP',
   }) {
+    final resolvedCreator =
+        character.creator.trim().isEmpty ? creator : character.creator.trim();
     final data = <String, dynamic>{
       'name': character.name,
       'description': character.intro,
@@ -30,12 +32,12 @@ class CharacterCardCodec {
       'creator_notes': character.intro,
       'system_prompt': character.persona,
       'post_history_instructions': character.voiceProfile,
-      'alternate_greetings': const <String>[],
+      'alternate_greetings': character.alternateGreetings,
       'character_book': worldBook == null
           ? null
           : _encodeCharacterBook(worldBook),
       'tags': character.tags,
-      'creator': creator,
+      'creator': resolvedCreator,
       'character_version': '1.0',
       'extensions': {
         'sillytavern_app_handle': character.handle,
@@ -88,6 +90,22 @@ class CharacterCardCodec {
       return value is String ? value.trim() : '';
     }
 
+    final creator =
+        text('creator').isNotEmpty
+            ? text('creator')
+            : (root['creator'] is String ? (root['creator'] as String).trim() : '');
+    final alternateGreetings = [
+      for (final value
+          in (data['alternate_greetings'] as List? ??
+              root['alternate_greetings'] as List? ??
+              const []))
+        value.toString().trim(),
+    ]
+        .where((e) => e.isNotEmpty)
+        .take(20)
+        .map((e) => e.length <= 4000 ? e : e.substring(0, 4000))
+        .toList();
+
     final description = text('description');
     final personality = text('personality');
     final scenario = text('scenario');
@@ -126,6 +144,8 @@ class CharacterCardCodec {
           extension('sillytavern_app_voice_profile'),
       ].join('\n\n'),
       personalPreferences: extension('sillytavern_app_personal_preferences'),
+      alternateGreetings: alternateGreetings,
+      creator: creator,
     );
 
     final bookRaw = data['character_book'];

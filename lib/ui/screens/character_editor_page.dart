@@ -217,6 +217,12 @@ class _CharacterEditorPageState extends ConsumerState<CharacterEditorPage> {
               }
               final controller = ref.read(appControllerProvider.notifier);
               final id = _existingId ?? _draftId;
+              final prior = ref
+                  .read(appControllerProvider)
+                  .data
+                  .characters
+                  .where((item) => item.id == id)
+                  .firstOrNull;
               final character = Character(
                 id: id,
                 avatarReference: _avatarReference,
@@ -236,6 +242,8 @@ class _CharacterEditorPageState extends ConsumerState<CharacterEditorPage> {
                     .map((e) => e.trim())
                     .where((e) => e.isNotEmpty)
                     .toList(),
+                alternateGreetings: prior?.alternateGreetings ?? const [],
+                creator: prior?.creator ?? '',
               );
               setState(() {
                 _saveStatus = DtButtonStatus.loading;
