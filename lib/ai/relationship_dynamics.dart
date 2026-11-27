@@ -54,6 +54,12 @@ class RelationshipDynamics {
     final playfulConflict = RegExp(r'(笨蛋|欠揍|讨厌|不理你|生气|吃醋|欺负)').hasMatch(input);
     final meaningful =
         isImage || input.replaceAll(RegExp(r'\s+'), '').length >= 2;
+    final deepConversation = input.runes.length >= 18 || reply.runes.length >= 60;
+    final vulnerable = RegExp(
+      r'(害怕|孤独|委屈|压力|失眠|哭|崩溃|不安|想念|紧张|心烦|疲惫|难受)',
+    ).hasMatch(input);
+    final grateful = RegExp(r'(谢谢|谢啦|多亏你|辛苦了|感动|暖)').hasMatch(input);
+    final curious = RegExp(r'(你呢|你觉得|你喜欢|你为什么|你会不会|告诉我|想听你)').hasMatch(input);
 
     var affectionRaw = 0;
     var trustRaw = 0;
@@ -71,19 +77,39 @@ class RelationshipDynamics {
         affectionRaw += 1;
         reasons.add('认真接住了这次互动');
       }
+      if (deepConversation) {
+        affectionRaw += 1;
+        trustRaw += 1;
+        reasons.add('聊得更深入了一些');
+      }
       if (personalShare) {
         trustRaw += 2;
         affectionRaw += 1;
         reasons.add('你分享了真实近况');
       }
+      if (vulnerable) {
+        trustRaw += 1;
+        heartRaw += 1;
+        reasons.add('愿意把脆弱的一面说出来');
+      }
       if (affection) {
         heartRaw += 2;
+        affectionRaw += 1;
         reasons.add('表达了明确的亲近');
       }
       if (sharedFuture) {
         heartRaw += 1;
         trustRaw += 1;
         reasons.add('出现了共同的未来安排');
+      }
+      if (grateful) {
+        affectionRaw += 1;
+        trustRaw += 1;
+        reasons.add('这句感谢让彼此更贴近');
+      }
+      if (curious) {
+        heartRaw += 1;
+        reasons.add('主动想更了解对方');
       }
       if (playfulConflict) {
         tensionRaw += 2;

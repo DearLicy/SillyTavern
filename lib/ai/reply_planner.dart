@@ -242,6 +242,22 @@ class ReplyPlanner {
       reason = '按关系熟悉度和消息长度自然接话';
     }
 
+    // 终结“不想聊了”、“没事了”等极短无意义回复的长篇大论生成
+    if (act == ReplyAct.chat &&
+        length == ReplyLength.medium &&
+        runes < 24) {
+      // 降短，改用短回复或沉默
+      return ReplyPlan(
+        act: ReplyAct.chat,
+        length: ReplyLength.short,
+        maxQuestions: 0,
+        energy: energy,
+        reason: '$reason；输入过短已降为单句/留白处理',
+      );
+    }
+
+
+
     if (character.voiceProfile.contains(RegExp(r'寡言|少说话|短句|冷淡')) &&
         length == ReplyLength.medium) {
       return ReplyPlan(
