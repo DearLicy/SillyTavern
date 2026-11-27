@@ -854,6 +854,32 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 },
               ),
               DtSettingRow(
+                icon: Icons.account_tree_outlined,
+                title: '从这里创建分支',
+                subtitle: '复制到这条消息为止，原会话保持不变',
+                onTap: () async {
+                  Navigator.pop(context);
+                  try {
+                    final branch = await ref
+                        .read(appControllerProvider.notifier)
+                        .branchFromMessage(message.threadId, message.id);
+                    if (!mounted) return;
+                    this.context.pushReplacement('/chat/${branch.id}');
+                  } catch (error) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(this.context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          error is StateError
+                              ? error.message
+                              : '创建分支失败，请重试。',
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+              DtSettingRow(
                 icon: Icons.delete_outline_rounded,
                 title: '删除消息',
                 onTap: () {

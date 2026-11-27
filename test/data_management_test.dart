@@ -278,6 +278,58 @@ void main() {
     },
   );
 
+  test('chat branch copies history and isolates later mutations', () async {
+    final data = buildSeedData();
+    final store = FakeStore(data);
+    final controller = await _start(store);
+    final branch = await controller.branchFromMessage(
+      'thread_gu',
+      'msg_gu_3',
+    );
+    final result = store.data!;
+    expect(branch.parentThreadId, 'thread_gu');
+    expect(branch.branchedFromMessageId, 'msg_gu_3');
+    expect(branch.title, contains('分支'));
+    final branchMessages = result.messages
+        .where((message) => message.threadId == branch.id)
+        .toList()
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    expect(branchMessages, hasLength(3));
+    expect(branchMessages.map((message) => message.text), [
+      '还没睡？窗边的灯一直亮着，我猜你又在赶东西。',
+      '差一点。你怎么也还没睡？',
+      '本来想等你先开口。后来发现，比起猜，我更想直接问你——今晚要不要我陪你一会儿？',
+    ]);
+    expect(branchMessages.map((message) => message.id).toSet(), hasLength(3));
+    expect(
+      result.messages.where((message) => message.threadId == 'thread_gu'),
+      hasLength(5),
+    );
+    final branchRelationship = result.relationships.firstWhere(
+      (relationship) => relationship.id == branch.relationshipId,
+    );
+    final sourceRelationship = data.relationships.firstWhere(
+      (relationship) => relationship.id == 'rel_gu',
+    );
+    expect(branchRelationship.metrics, sourceRelationship.metrics);
+    expect(branchRelationship.interactionCount, 1);
+    final copiedMemory = result.memories.firstWhere(
+      (memory) =>
+          memory.relationshipId == branch.relationshipId && memory.id != '',
+    );
+    expect(copiedMemory.sourceThreadId, branch.id);
+
+    await controller.deleteMessage(branchMessages.first.id);
+    expect(
+      store.data!.messages.where((message) => message.threadId == branch.id),
+      hasLength(2),
+    );
+    expect(
+      store.data!.messages.where((message) => message.threadId == 'thread_gu'),
+      hasLength(5),
+    );
+  });
+
   test(
     'delete character cascades all owned records but not other relationships or personas',
     () async {

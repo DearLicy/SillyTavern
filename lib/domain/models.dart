@@ -687,6 +687,8 @@ class ChatThread {
     this.summarizedThroughMessageId,
     this.suppressedMemoryKeys = const [],
     this.variables = const {},
+    this.parentThreadId,
+    this.branchedFromMessageId,
   });
 
   final String id;
@@ -710,6 +712,10 @@ class ChatThread {
   /// Chat-scoped macro variables (SillyTavern-compatible getvar/setvar/etc.).
   final Map<String, String> variables;
 
+  /// Set when this conversation is an independent branch of another thread.
+  final String? parentThreadId;
+  final String? branchedFromMessageId;
+
   ChatThread copyWith({
     String? title,
     DateTime? updatedAt,
@@ -724,6 +730,8 @@ class ChatThread {
     bool clearSummarizedThroughMessageId = false,
     List<String>? suppressedMemoryKeys,
     Map<String, String>? variables,
+    String? parentThreadId,
+    String? branchedFromMessageId,
   }) => ChatThread(
     id: id,
     relationshipId: relationshipId,
@@ -743,6 +751,9 @@ class ChatThread {
         : summarizedThroughMessageId ?? this.summarizedThroughMessageId,
     suppressedMemoryKeys: suppressedMemoryKeys ?? this.suppressedMemoryKeys,
     variables: variables ?? this.variables,
+    parentThreadId: parentThreadId ?? this.parentThreadId,
+    branchedFromMessageId:
+        branchedFromMessageId ?? this.branchedFromMessageId,
   );
 
   Map<String, dynamic> toJson() => {
@@ -760,6 +771,8 @@ class ChatThread {
     'summarizedThroughMessageId': summarizedThroughMessageId,
     'suppressedMemoryKeys': suppressedMemoryKeys,
     'variables': variables,
+    'parentThreadId': parentThreadId,
+    'branchedFromMessageId': branchedFromMessageId,
   };
 
   factory ChatThread.fromJson(Map<String, dynamic> json) => ChatThread(
@@ -791,6 +804,8 @@ class ChatThread {
             (key, value) => MapEntry(key, value?.toString() ?? ''),
           )
         : const {},
+    parentThreadId: json['parentThreadId'] as String?,
+    branchedFromMessageId: json['branchedFromMessageId'] as String?,
   );
 }
 

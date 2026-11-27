@@ -14,6 +14,8 @@ void main() {
           contextMemoUpdatedAt: memoDate,
           summarizedThroughMessageId: 'message-42',
           suppressedMemoryKeys: const ['promise:过期计划'],
+          parentThreadId: 'thread_parent',
+          branchedFromMessageId: 'message-41',
         ),
         ...source.threads.skip(1),
       ],
@@ -48,6 +50,8 @@ void main() {
     expect(restored.threads.first.contextMemoUpdatedAt, memoDate);
     expect(restored.threads.first.summarizedThroughMessageId, 'message-42');
     expect(restored.threads.first.suppressedMemoryKeys, ['promise:过期计划']);
+    expect(restored.threads.first.parentThreadId, 'thread_parent');
+    expect(restored.threads.first.branchedFromMessageId, 'message-41');
     expect(restored.characters.first.voiceProfile, '少用客套收尾。');
     expect(restored.characters.first.personalPreferences, '不喜欢香菜。');
     expect(restored.relationships.first.replyEnergy, 32);
