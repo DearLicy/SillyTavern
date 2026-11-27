@@ -91,8 +91,6 @@ class PngCharacterCard {
       throw const FormatException('PNG 角色卡元数据不是有效 Base64 JSON');
     }
   }
-}
-
 
   /// Encodes a character card JSON into a PNG file with a [ccv3] tEXt chunk.
   /// Returns a minimal valid PNG (1x1 grayscale) with the card embedded.

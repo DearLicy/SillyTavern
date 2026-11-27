@@ -48,31 +48,15 @@ extension CharacterCardManagement on AppController {
     }
     return books.length == 1 ? books.first : null;
   }
+
+  /// Exports a character card as a PNG file with embedded V2 metadata.
+  Future<Uint8List> exportPngCharacterCard(String characterId) async {
+    final data = _snapshot.data;
+    final character = data.characters
+        .where((e) => e.id == characterId)
+        .firstOrNull;
+    if (character == null) throw StateError('角色不存在');
+    final pngJson = const CharacterCardCodec().encode(character);
+    return PngCharacterCard.encodePng(pngJson);
+  }
 }
-
-  /// Exports a character card as a PNG file with embedded V2 metadata.
-  /// The PNG contains the character card JSON as a ccv3 tEXt chunk,
-  /// and can be shared via the system share sheet or saved to device storage.
-  /// The associated avatar bytes (if any) are not embedded in this minimal PNG;
-  /// they are stored separately through the attachment store.
-  Future<Uint8List> exportPngCharacterCard(String characterId) async {
-    final data = _snapshot.data;
-    final character = data.characters
-        .where((e) => e.id == characterId)
-        .firstOrNull;
-    if (character == null) throw StateError('角色不存在');
-    final pngJson = const CharacterCardCodec().encode(character);
-    return PngCharacterCard.encodePng(pngJson);
-  }
-
-
-  /// Exports a character card as a PNG file with embedded V2 metadata.
-  Future<Uint8List> exportPngCharacterCard(String characterId) async {
-    final data = _snapshot.data;
-    final character = data.characters
-        .where((e) => e.id == characterId)
-        .firstOrNull;
-    if (character == null) throw StateError('角色不存在');
-    final pngJson = const CharacterCardCodec().encode(character);
-    return PngCharacterCard.encodePng(pngJson);
-  }

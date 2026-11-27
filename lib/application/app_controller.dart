@@ -13,6 +13,7 @@ import '../ai/relationship_dynamics.dart';
 import '../ai/repetition_guard.dart';
 import '../ai/regex_transformer.dart';
 import '../data/local_store.dart';
+import '../data/png_character_card.dart';
 import '../data/local_store_factory.dart';
 import '../data/provider_key_store.dart';
 import '../data/initial_data.dart';
