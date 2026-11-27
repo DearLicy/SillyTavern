@@ -61,10 +61,12 @@ void main() {
     final prompts = controller.state.data.settings.prompts;
     expect(prompts.systemPrefix, '新的系统提示');
     expect(prompts.postHistoryInstructions, '新的后置指令');
-    expect(prompts.rules, hasLength(before + 1));
-    final added = prompts.rules.last;
-    expect(added.name, '移除风扇');
-    expect(added.target, RegexTarget.aiOutput);
+    expect(prompts.rules, hasLength(before + 2));
+    final enabled = prompts.rules[prompts.rules.length - 2];
+    expect(enabled.name, '移除风扇');
+    expect(enabled.enabled, isTrue);
+    expect(enabled.target, RegexTarget.aiOutput);
+    expect(prompts.rules.last.enabled, isFalse);
     expect(store.data, isNotNull);
   });
 
