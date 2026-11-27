@@ -178,6 +178,10 @@ class CharacterCardCodec {
               for (final key in (item['keys'] as List? ?? const []))
                 key.toString().trim(),
             ].where((e) => e.isNotEmpty).toList(),
+            secondaryKeys: [
+              for (final key in (item['secondary_keys'] as List? ?? const []))
+                key.toString().trim(),
+            ].where((e) => e.isNotEmpty).toList(),
             content: '${item['content'] ?? ''}'.trim(),
             comment: '${item['comment'] ?? item['name'] ?? ''}'.trim(),
             mode: item['constant'] == true
@@ -187,13 +191,34 @@ class CharacterCardCodec {
                 (item['insertion_order'] as num?)?.toInt() ??
                 (item['order'] as num?)?.toInt() ??
                 100,
+            probability: ((item['probability'] as num?)?.toInt() ?? 100)
+                .clamp(0, 100),
             recursive:
                 item['extensions'] is Map &&
                 (item['extensions'] as Map)['recursive'] == true,
+            caseSensitive:
+                item['extensions'] is Map &&
+                (item['extensions'] as Map)['case_sensitive'] == true,
+            depth:
+                (item['extensions'] is Map
+                    ? (item['extensions'] as Map)['depth'] as num?
+                    : null)?.toInt() ??
+                4,
             enabled: item['enabled'] as bool? ?? true,
           ),
       ].where((e) => e.content.isNotEmpty).toList(),
       enabled: true,
+      scanDepth: (raw['scan_depth'] as num?)?.toInt() ?? 4,
+      maxEntries:
+          (raw['extensions'] is Map
+              ? (raw['extensions'] as Map)['max_entries'] as num?
+              : null)?.toInt() ??
+          4,
+      recursionDepth:
+          (raw['extensions'] is Map
+              ? (raw['extensions'] as Map)['recursion_depth'] as num?
+              : null)?.toInt() ??
+          2,
     );
   }
 
@@ -204,7 +229,8 @@ class CharacterCardCodec {
         {
           'id': i,
           'keys': book.entries[i].keys,
-          'secondary_keys': const <String>[],
+          'secondary_keys': book.entries[i].secondaryKeys,
+          'probability': book.entries[i].probability,
           'comment': book.entries[i].comment,
           'content': book.entries[i].content,
           'constant': book.entries[i].mode == WorldInfoMode.constant,
@@ -212,12 +238,19 @@ class CharacterCardCodec {
           'insertion_order': book.entries[i].order,
           'enabled': book.entries[i].enabled,
           'position': 'before_char',
-          'extensions': {'recursive': book.entries[i].recursive},
+          'extensions': {
+            'recursive': book.entries[i].recursive,
+            'case_sensitive': book.entries[i].caseSensitive,
+            'depth': book.entries[i].depth,
+          },
         },
     ],
+    'scan_depth': book.scanDepth,
     'extensions': {
       'author_note': book.authorNote,
       'author_note_depth': book.authorNoteDepth,
+      'max_entries': book.maxEntries,
+      'recursion_depth': book.recursionDepth,
     },
   };
 

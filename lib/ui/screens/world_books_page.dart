@@ -53,7 +53,7 @@ class _WorldBooksPageState extends ConsumerState<WorldBooksPage> {
                     icon: Icons.auto_stories_outlined,
                     title: book.name,
                     subtitle:
-                        '${book.entries.length} 条词条 · 注记深度 ${book.authorNoteDepth}',
+                        '${book.entries.length} 条词条 · 扫描 ${book.scanDepth} 条 · 注记深度 ${book.authorNoteDepth}',
                     onTap: () => _edit(context, controller, book),
                   ),
                 );
@@ -99,6 +99,9 @@ class _WorldBookEditorPageState extends ConsumerState<WorldBookEditorPage> {
   final _name = TextEditingController();
   final _authorNote = TextEditingController();
   final _depth = TextEditingController(text: '2');
+  final _scanDepth = TextEditingController(text: '4');
+  final _maxEntries = TextEditingController(text: '4');
+  final _recursionDepth = TextEditingController(text: '2');
   late List<WorldInfoEntry> _entries;
   bool _enabled = true;
 
@@ -114,6 +117,9 @@ class _WorldBookEditorPageState extends ConsumerState<WorldBookEditorPage> {
     _name.text = book?.name ?? '默认世界书';
     _authorNote.text = book?.authorNote ?? '';
     _depth.text = '${book?.authorNoteDepth ?? 2}';
+    _scanDepth.text = '${book?.scanDepth ?? 4}';
+    _maxEntries.text = '${book?.maxEntries ?? 4}';
+    _recursionDepth.text = '${book?.recursionDepth ?? 2}';
     _enabled = book?.enabled ?? true;
     _entries = List<WorldInfoEntry>.of(book?.entries ?? const []);
   }
@@ -123,6 +129,9 @@ class _WorldBookEditorPageState extends ConsumerState<WorldBookEditorPage> {
     _name.dispose();
     _authorNote.dispose();
     _depth.dispose();
+    _scanDepth.dispose();
+    _maxEntries.dispose();
+    _recursionDepth.dispose();
     super.dispose();
   }
 
@@ -152,8 +161,24 @@ class _WorldBookEditorPageState extends ConsumerState<WorldBookEditorPage> {
                 name: _name.text.trim(),
                 entries: _entries,
                 authorNote: _authorNote.text.trim(),
-                authorNoteDepth: int.tryParse(_depth.text.trim()) ?? 2,
+                authorNoteDepth: (int.tryParse(_depth.text.trim()) ?? 2).clamp(
+                  0,
+                  10,
+                ),
                 enabled: _enabled,
+                scanDepth: (int.tryParse(_scanDepth.text.trim()) ?? 4).clamp(
+                  0,
+                  20,
+                ),
+                maxEntries: (int.tryParse(_maxEntries.text.trim()) ?? 4).clamp(
+                  1,
+                  20,
+                ),
+                recursionDepth:
+                    (int.tryParse(_recursionDepth.text.trim()) ?? 2).clamp(
+                      0,
+                      6,
+                    ),
               );
               Navigator.of(context).pop(book);
             },
@@ -211,6 +236,53 @@ class _WorldBookEditorPageState extends ConsumerState<WorldBookEditorPage> {
             ),
           ),
           const SizedBox(height: 14),
+          DtSurface(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '扫描与递归',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DtTextField(
+                        controller: _scanDepth,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: '扫描消息数',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: DtTextField(
+                        controller: _maxEntries,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: '最多词条'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: DtTextField(
+                        controller: _recursionDepth,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(labelText: '递归层数'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '每次只扫描本会话最近消息；最多词条控制单本书本轮注入上限。',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -248,7 +320,10 @@ class _WorldBookEditorPageState extends ConsumerState<WorldBookEditorPage> {
   ) async {
     final result = await Navigator.of(context).push<WorldInfoEntry>(
       MaterialPageRoute<WorldInfoEntry>(
-        builder: (_) => WorldInfoEditorPage(entryId: existing?.id ?? 'new'),
+        builder: (_) => WorldInfoEditorPage(
+          entryId: existing?.id ?? 'new',
+          initial: existing,
+        ),
       ),
     );
     if (result == null) return;
@@ -263,9 +338,14 @@ class _WorldBookEditorPageState extends ConsumerState<WorldBookEditorPage> {
 }
 
 class WorldInfoEditorPage extends ConsumerStatefulWidget {
-  const WorldInfoEditorPage({super.key, required this.entryId});
+  const WorldInfoEditorPage({
+    super.key,
+    required this.entryId,
+    this.initial,
+  });
 
   final String entryId;
+  final WorldInfoEntry? initial;
 
   @override
   ConsumerState<WorldInfoEditorPage> createState() =>
@@ -274,24 +354,41 @@ class WorldInfoEditorPage extends ConsumerStatefulWidget {
 
 class _WorldInfoEditorPageState extends ConsumerState<WorldInfoEditorPage> {
   final _keys = TextEditingController();
+  final _secondaryKeys = TextEditingController();
   final _content = TextEditingController();
   final _comment = TextEditingController();
   final _order = TextEditingController(text: '100');
+  final _probability = TextEditingController(text: '100');
+  final _depth = TextEditingController(text: '4');
   late WorldInfoMode _mode;
-  bool _recursive = false, _enabled = true;
+  bool _recursive = false, _enabled = true, _caseSensitive = false;
 
   @override
   void initState() {
     super.initState();
-    _mode = WorldInfoMode.keyword;
+    final initial = widget.initial;
+    _mode = initial?.mode ?? WorldInfoMode.keyword;
+    _keys.text = initial?.keys.join('、') ?? '';
+    _secondaryKeys.text = initial?.secondaryKeys.join('、') ?? '';
+    _content.text = initial?.content ?? '';
+    _comment.text = initial?.comment ?? '';
+    _order.text = '${initial?.order ?? 100}';
+    _probability.text = '${initial?.probability ?? 100}';
+    _depth.text = '${initial?.depth ?? 4}';
+    _recursive = initial?.recursive ?? false;
+    _enabled = initial?.enabled ?? true;
+    _caseSensitive = initial?.caseSensitive ?? false;
   }
 
   @override
   void dispose() {
     _keys.dispose();
+    _secondaryKeys.dispose();
     _content.dispose();
     _comment.dispose();
     _order.dispose();
+    _probability.dispose();
+    _depth.dispose();
     super.dispose();
   }
 
@@ -327,8 +424,17 @@ class _WorldInfoEditorPageState extends ConsumerState<WorldInfoEditorPage> {
                   comment: _comment.text.trim(),
                   mode: _mode,
                   order: int.tryParse(_order.text.trim()) ?? 100,
+                  probability: (int.tryParse(_probability.text.trim()) ?? 100)
+                      .clamp(0, 100),
                   recursive: _recursive,
                   enabled: _enabled,
+                  secondaryKeys: _secondaryKeys.text
+                      .split(RegExp(r'[,，、]'))
+                      .map((e) => e.trim())
+                      .where((e) => e.isNotEmpty)
+                      .toList(),
+                  caseSensitive: _caseSensitive,
+                  depth: (int.tryParse(_depth.text.trim()) ?? 4).clamp(0, 20),
                 ),
               );
             },
@@ -350,6 +456,14 @@ class _WorldInfoEditorPageState extends ConsumerState<WorldInfoEditorPage> {
                 ),
                 const SizedBox(height: 12),
                 DtTextField(
+                  controller: _secondaryKeys,
+                  decoration: const InputDecoration(
+                    labelText: '次要关键词',
+                    hintText: '可选；需同时命中其中一个',
+                  ),
+                ),
+                const SizedBox(height: 12),
+                DtTextField(
                   controller: _comment,
                   decoration: const InputDecoration(labelText: '备注'),
                 ),
@@ -365,6 +479,30 @@ class _WorldInfoEditorPageState extends ConsumerState<WorldInfoEditorPage> {
                   controller: _order,
                   keyboardType: TextInputType.number,
                   decoration: const InputDecoration(labelText: '排序'),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DtTextField(
+                        controller: _probability,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: '触发概率 %',
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: DtTextField(
+                        controller: _depth,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: '插入深度',
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -392,6 +530,17 @@ class _WorldInfoEditorPageState extends ConsumerState<WorldInfoEditorPage> {
                   trailing: FSwitch(
                     value: _recursive,
                     onChange: (v) => setState(() => _recursive = v),
+                  ),
+                  onTap: null,
+                ),
+                const Divider(indent: 62),
+                DtSettingRow(
+                  icon: Icons.text_fields_rounded,
+                  title: '区分大小写',
+                  subtitle: '仅影响英文关键词匹配',
+                  trailing: FSwitch(
+                    value: _caseSensitive,
+                    onChange: (v) => setState(() => _caseSensitive = v),
                   ),
                   onTap: null,
                 ),

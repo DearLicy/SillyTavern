@@ -137,26 +137,19 @@ class ContextAssembler {
       memories.removeRange(6, memories.length);
     }
     final authorNote = resolveAuthorNote(data, relationship.id);
-    final entryContent = resolveWorldInfo(
+    final scanHistory =
+        data.messages
+            .where((item) => item.threadId == thread.id && item.isRenderable)
+            .toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final worldInfo = resolveWorldInfo(
       data,
-      relationshipId: relationship.id,
       character: character,
       query: userInput,
+      historyLines: [
+        for (final item in scanHistory) '${item.senderName}: ${item.text}',
+      ],
     );
-    if (entryContent.isNotEmpty) {
-      memories.insert(
-        0,
-        MemoryItem(
-          id: 'worldinfo-${relationship.id}',
-          relationshipId: relationship.id,
-          type: MemoryType.scene,
-          title: '世界资料',
-          content: entryContent.join('\n'),
-          createdAt: now ?? DateTime.now(),
-          pinned: true,
-        ),
-      );
-    }
 
     final rawSystem = _buildSystemPrompt(
       data: data,
@@ -195,77 +188,143 @@ class ContextAssembler {
         ? history.sublist(history.length - rawWindow)
         : history;
 
-    return PromptBundle(
-      [
-        PromptMessage('system', systemMacro.text),
-        for (final message in recent)
+    final worldInfoByPosition = <int, List<String>>{};
+    for (final hit in worldInfo) {
+      final depth = hit.depth.clamp(0, recent.length);
+      final position = recent.length - depth;
+      worldInfoByPosition.putIfAbsent(position, () => []).add(hit.content);
+    }
+    final promptMessages = <PromptMessage>[
+      PromptMessage('system', systemMacro.text),
+    ];
+    for (var index = 0; index <= recent.length; index++) {
+      final content = worldInfoByPosition[index];
+      if (content != null && content.isNotEmpty) {
+        promptMessages.add(
           PromptMessage(
-            message.fromAi ? 'assistant' : 'user',
-            _historyText(message, group: thread.type == ThreadType.group),
-            imageReference: message.kind == MessageKind.image
-                ? message.localPath
-                : null,
+            'system',
+            '【世界资料 · 按注入深度排列】\n${content.join('\n')}',
           ),
+        );
+      }
+      if (index == recent.length) continue;
+      final message = recent[index];
+      promptMessages.add(
         PromptMessage(
-          'user',
-          inputMacro.text.trim(),
-          imageReference: imageReference,
+          message.fromAi ? 'assistant' : 'user',
+          _historyText(message, group: thread.type == ThreadType.group),
+          imageReference: message.kind == MessageKind.image
+              ? message.localPath
+              : null,
         ),
-      ],
+      );
+    }
+    promptMessages.add(
+      PromptMessage(
+        'user',
+        inputMacro.text.trim(),
+        imageReference: imageReference,
+      ),
+    );
+
+    return PromptBundle(
+      promptMessages,
       usedMemoryIds: memories.map((e) => e.id).toList(),
       replyPlan: replyPlan,
       variables: systemMacro.variables,
     );
   }
 
-  List<String> resolveWorldInfo(
+  List<({String content, int depth})> resolveWorldInfo(
     AppData data, {
-    required String relationshipId,
     required Character character,
     required String query,
+    List<String> historyLines = const [],
   }) {
-    final result = <String>[];
+    final result = <({String content, int depth})>[];
+    final seenContent = <String>{};
     for (final book in data.worldBooks) {
       if (!book.enabled) continue;
+      final scanDepth = book.scanDepth.clamp(0, 20);
+      final scannedHistory = scanDepth == 0 || historyLines.isEmpty
+          ? ''
+          : historyLines
+                .skip(
+                  historyLines.length > scanDepth
+                      ? historyLines.length - scanDepth
+                      : 0,
+                )
+                .join('\n');
       final entries = [...book.entries]
         ..sort((a, b) => a.order.compareTo(b.order));
       final selected = <WorldInfoEntry>[];
       final selectedIds = <String>{};
       var searchable = [
         query,
+        scannedHistory,
         character.name,
         character.intro,
         character.persona,
         ...character.tags,
-      ].join(' ').toLowerCase();
-      for (var pass = 0; pass <= entries.length; pass++) {
+      ].where((part) => part.trim().isNotEmpty).join(' ');
+      final maxPasses = book.recursionDepth.clamp(0, 6);
+      for (var pass = 0; pass <= maxPasses; pass++) {
         var changed = false;
         for (final entry in entries) {
           if (selectedIds.contains(entry.id) ||
               !entry.enabled ||
               entry.content.trim().isEmpty ||
-              entry.probability < 100) {
+              !_probabilityHit(entry, query)) {
             continue;
           }
-          final keys = entry.keys
-              .map((key) => key.trim().toLowerCase())
-              .where((key) => key.isNotEmpty);
-          final hit =
+          final haystack = entry.caseSensitive
+              ? searchable
+              : searchable.toLowerCase();
+          String needle(String value) =>
+              entry.caseSensitive ? value.trim() : value.trim().toLowerCase();
+          final primaryHit =
               entry.mode == WorldInfoMode.constant ||
-              keys.any(searchable.contains);
-          if (!hit) continue;
+              entry.keys.any((key) {
+                final value = needle(key);
+                return value.isNotEmpty && haystack.contains(value);
+              });
+          final secondaryHit =
+              entry.secondaryKeys.isEmpty ||
+              entry.secondaryKeys.any((key) {
+                final value = needle(key);
+                return value.isNotEmpty && haystack.contains(value);
+              });
+          if (!primaryHit || !secondaryHit) continue;
           selected.add(entry);
           selectedIds.add(entry.id);
           if (entry.recursive) {
-            searchable = '$searchable ${entry.content.toLowerCase()}';
+            searchable = '$searchable ${entry.content}';
           }
           changed = true;
         }
         if (!changed) break;
       }
-      result.addAll(selected.map((entry) => entry.content.trim()));
+      final limited = selected.take(book.maxEntries.clamp(1, 20));
+      for (final entry in limited) {
+        if (result.length >= 8) break;
+        final content = entry.content.trim();
+        if (!seenContent.add(content)) continue;
+        result.add((content: content, depth: entry.depth.clamp(0, 20)));
+      }
+      if (result.length >= 8) break;
     }
-    return result.take(4).toList();
+    return result;
+  }
+
+  bool _probabilityHit(WorldInfoEntry entry, String query) {
+    final probability = entry.probability.clamp(0, 100);
+    if (probability >= 100) return true;
+    if (probability <= 0) return false;
+    var hash = 17;
+    for (final rune in '${entry.id}|$query'.runes) {
+      hash = (hash * 31 + rune) & 0x7fffffff;
+    }
+    return hash % 100 < probability;
   }
 
   ({String text, int depth})? resolveAuthorNote(

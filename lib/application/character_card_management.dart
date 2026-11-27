@@ -56,7 +56,10 @@ extension CharacterCardManagement on AppController {
         .where((e) => e.id == characterId)
         .firstOrNull;
     if (character == null) throw StateError('角色不存在');
-    final pngJson = const CharacterCardCodec().encode(character);
+    final pngJson = const CharacterCardCodec().encode(
+      character,
+      worldBook: _worldBookForCharacter(character),
+    );
     final reference = character.avatarReference;
     if (reference != null && reference.trim().isNotEmpty) {
       final avatar = await _attachmentStore?.readImage(reference);

@@ -1321,6 +1321,9 @@ class WorldInfoEntry {
     this.probability = 100,
     this.recursive = false,
     this.enabled = true,
+    this.secondaryKeys = const [],
+    this.caseSensitive = false,
+    this.depth = 4,
   });
 
   final String id;
@@ -1333,6 +1336,11 @@ class WorldInfoEntry {
   final bool recursive;
   final bool enabled;
 
+  /// SillyTavern secondary keys: when present, at least one must also match.
+  final List<String> secondaryKeys;
+  final bool caseSensitive;
+  final int depth;
+
   WorldInfoEntry copyWith({
     List<String>? keys,
     String? content,
@@ -1342,6 +1350,9 @@ class WorldInfoEntry {
     int? probability,
     bool? recursive,
     bool? enabled,
+    List<String>? secondaryKeys,
+    bool? caseSensitive,
+    int? depth,
   }) => WorldInfoEntry(
     id: id,
     keys: keys ?? this.keys,
@@ -1352,6 +1363,9 @@ class WorldInfoEntry {
     probability: probability ?? this.probability,
     recursive: recursive ?? this.recursive,
     enabled: enabled ?? this.enabled,
+    secondaryKeys: secondaryKeys ?? this.secondaryKeys,
+    caseSensitive: caseSensitive ?? this.caseSensitive,
+    depth: depth ?? this.depth,
   );
 
   Map<String, dynamic> toJson() => {
@@ -1364,6 +1378,9 @@ class WorldInfoEntry {
     'probability': probability,
     'recursive': recursive,
     'enabled': enabled,
+    'secondaryKeys': secondaryKeys,
+    'caseSensitive': caseSensitive,
+    'depth': depth,
   };
 
   factory WorldInfoEntry.fromJson(Map<String, dynamic> json) => WorldInfoEntry(
@@ -1377,6 +1394,13 @@ class WorldInfoEntry {
     probability: (json['probability'] as num?)?.toInt() ?? 100,
     recursive: json['recursive'] as bool? ?? false,
     enabled: json['enabled'] as bool? ?? true,
+    secondaryKeys:
+        (json['secondaryKeys'] as List?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        const [],
+    caseSensitive: json['caseSensitive'] as bool? ?? false,
+    depth: (json['depth'] as num?)?.toInt() ?? 4,
   );
 }
 
@@ -1388,6 +1412,9 @@ class WorldBook {
     this.authorNote = '',
     this.authorNoteDepth = 2,
     this.enabled = true,
+    this.scanDepth = 4,
+    this.maxEntries = 4,
+    this.recursionDepth = 2,
   });
 
   final String id;
@@ -1396,6 +1423,9 @@ class WorldBook {
   final String authorNote;
   final int authorNoteDepth;
   final bool enabled;
+  final int scanDepth;
+  final int maxEntries;
+  final int recursionDepth;
 
   WorldBook copyWith({
     String? name,
@@ -1403,6 +1433,9 @@ class WorldBook {
     String? authorNote,
     int? authorNoteDepth,
     bool? enabled,
+    int? scanDepth,
+    int? maxEntries,
+    int? recursionDepth,
   }) => WorldBook(
     id: id,
     name: name ?? this.name,
@@ -1410,6 +1443,9 @@ class WorldBook {
     authorNote: authorNote ?? this.authorNote,
     authorNoteDepth: authorNoteDepth ?? this.authorNoteDepth,
     enabled: enabled ?? this.enabled,
+    scanDepth: scanDepth ?? this.scanDepth,
+    maxEntries: maxEntries ?? this.maxEntries,
+    recursionDepth: recursionDepth ?? this.recursionDepth,
   );
 
   Map<String, dynamic> toJson() => {
@@ -1419,6 +1455,9 @@ class WorldBook {
     'authorNote': authorNote,
     'authorNoteDepth': authorNoteDepth,
     'enabled': enabled,
+    'scanDepth': scanDepth,
+    'maxEntries': maxEntries,
+    'recursionDepth': recursionDepth,
   };
 
   factory WorldBook.fromJson(Map<String, dynamic> json) => WorldBook(
@@ -1433,6 +1472,9 @@ class WorldBook {
     authorNote: json['authorNote'] as String? ?? '',
     authorNoteDepth: (json['authorNoteDepth'] as num?)?.toInt() ?? 2,
     enabled: json['enabled'] as bool? ?? true,
+    scanDepth: (json['scanDepth'] as num?)?.toInt() ?? 4,
+    maxEntries: (json['maxEntries'] as num?)?.toInt() ?? 4,
+    recursionDepth: (json['recursionDepth'] as num?)?.toInt() ?? 2,
   );
 }
 

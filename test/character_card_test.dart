@@ -1,5 +1,6 @@
 import 'package:sillytavern_app/application/app_controller.dart';
 import 'package:sillytavern_app/data/character_card.dart';
+import 'package:sillytavern_app/data/png_character_card.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fixtures/fake_store.dart';
@@ -54,6 +55,62 @@ void main() {
     expect(imported.worldBook!.entries.single.recursive, isTrue);
   });
 
+  test('V2 world book preserves SillyTavern matching controls', () {
+    const card = '''
+    {
+      "spec": "chara_card_v2",
+      "spec_version": "2.0",
+      "data": {
+        "name": "知夏",
+        "description": "旧城书店的店员。",
+        "first_mes": "雨还没停。",
+        "character_book": {
+          "name": "书店规则",
+          "scan_depth": 6,
+          "extensions": {
+            "max_entries": 3,
+            "recursion_depth": 1
+          },
+          "entries": [
+            {
+              "id": 1,
+              "keys": ["Old Bookshop"],
+              "secondary_keys": ["rain"],
+              "probability": 35,
+              "content": "Rain closes the back room.",
+              "insertion_order": 10,
+              "enabled": true,
+              "extensions": {
+                "recursive": true,
+                "case_sensitive": true,
+                "depth": 2
+              }
+            }
+          ]
+        }
+      }
+    }
+    ''';
+    final imported = codec.decode(card, id: 'char_world_info');
+    final book = imported.worldBook!;
+    final entry = book.entries.single;
+    expect(book.scanDepth, 6);
+    expect(book.maxEntries, 3);
+    expect(book.recursionDepth, 1);
+    expect(entry.secondaryKeys, ['rain']);
+    expect(entry.probability, 35);
+    expect(entry.caseSensitive, isTrue);
+    expect(entry.depth, 2);
+
+    final encoded = codec.encode(imported.character, worldBook: book);
+    final roundTrip = codec.decode(encoded, id: 'char_world_info_2');
+    expect(roundTrip.worldBook!.scanDepth, 6);
+    expect(roundTrip.worldBook!.maxEntries, 3);
+    expect(roundTrip.worldBook!.entries.single.secondaryKeys, ['rain']);
+    expect(roundTrip.worldBook!.entries.single.caseSensitive, isTrue);
+    expect(roundTrip.worldBook!.entries.single.depth, 2);
+  });
+
   test('exported V2 card round trips and excludes local paths or keys', () {
     final seed = buildSeedData();
     final character = seed.characters.first;
@@ -105,6 +162,18 @@ void main() {
       expect(data.worldBooks, hasLength(beforeBooks + 1));
       expect(data.characters.last.name, '知夏');
       expect(data.worldBooks.last.name, '旧书店资料');
+      final exported = controller.exportCharacterCard(
+        data.characters.last.id,
+      );
+      expect(exported, contains('"character_book"'));
+      expect(exported, contains('旧书店资料'));
+      final png = await controller.exportPngCharacterCard(
+        data.characters.last.id,
+      );
+      expect(
+        const PngCharacterCard().extractJson(png),
+        contains('旧书店资料'),
+      );
       expect(await store.load(), isNotNull);
     },
   );
