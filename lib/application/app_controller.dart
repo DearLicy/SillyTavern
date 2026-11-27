@@ -11,6 +11,7 @@ import '../ai/conversation_summary.dart';
 import '../ai/context_assembler.dart';
 import '../ai/relationship_dynamics.dart';
 import '../ai/repetition_guard.dart';
+import '../ai/regex_transformer.dart';
 import '../data/local_store.dart';
 import '../data/local_store_factory.dart';
 import '../data/provider_key_store.dart';
@@ -25,6 +26,7 @@ part 'profile_management.dart';
 part 'media_tools.dart';
 part 'world_book_management.dart';
 part 'character_card_management.dart';
+part 'prompt_management.dart';
 part 'portable_backup.dart';
 
 class ApplicationState {
@@ -583,9 +585,17 @@ class AppController extends StateNotifier<ApplicationState> {
       return;
     }
 
-    final promptInput = isImage
+    final rawPromptInput = isImage
         ? (trimmed.isEmpty ? '（用户发送了一张图片）' : '（用户发送了一张图片）$trimmed')
         : trimmed;
+    final transformedInput = RegexTransformer.apply(
+      rawPromptInput,
+      data.settings.prompts,
+      RegexTarget.userInput,
+    );
+    final promptInput = transformedInput.trim().isEmpty
+        ? rawPromptInput
+        : transformedInput;
     final priorUser = userMessageId == null
         ? null
         : data.messages
@@ -794,6 +804,15 @@ class AppController extends StateNotifier<ApplicationState> {
       }
 
       if (!mounted || generation != _generation) return;
+      final transformedReply = RegexTransformer.apply(
+        naturalReply,
+        data.settings.prompts,
+        RegexTarget.aiOutput,
+      );
+      if (transformedReply.trim().isEmpty) {
+        throw const AiClientException('正则规则过滤掉了全部可见回复');
+      }
+      naturalReply = transformedReply;
       final current = state.data;
       final messages = [...current.messages];
       final existingIndex = aiMessageId == null

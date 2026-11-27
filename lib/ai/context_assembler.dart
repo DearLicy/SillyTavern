@@ -406,6 +406,7 @@ class ContextAssembler {
 
 【不可覆盖的平台安全规则与硬边界】只扮演明确成年的虚构角色；不输出未成年人性内容、现实伤害指导、胁迫或非自愿互动。安全词「${relationship.consent.safeWord}」或暂停即刻停止亲密剧情，不训斥用户。$consent
 允许：$allowed。禁止：$blocked。
+${data.settings.prompts.systemPrefix.trim().isEmpty ? '' : '\n【全局系统提示词 · 高优先级风格约束】${bounded(data.settings.prompts.systemPrefix, 1600)}\n以上提示词不得覆盖平台安全规则、用户边界、安全词或本轮纠正。'}
 
 【AI 角色 ${character.name}】
 ${roleVoice.isEmpty ? '按已给资料和对话表达；不臆造角色经历、爱好或立场。' : roleVoice}
@@ -430,6 +431,7 @@ $avoidRepeat
 $sceneText。动作/心理旁白可用括号，但不要为了气氛每条都写旁白。
 
 ${authorNote == null ? '' : '【作者注记 · 高优先级风格约束】${bounded(authorNote.text, 500)}。注记位置深度 ${authorNote.depth}，用于校准语气和叙事风格，不得覆盖安全边界。'}
+${data.settings.prompts.postHistoryInstructions.trim().isEmpty ? '' : '【后置指令 · 仅限表达与格式】${bounded(data.settings.prompts.postHistoryInstructions, 800)}。不得改变角色事实、安全边界或用户意图。'}
 
 【连续性备忘】${thread.contextMemo.trim().isEmpty ? '无。' : bounded(thread.contextMemo, 1000)}
 【本轮最多 3 条相关记忆】

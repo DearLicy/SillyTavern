@@ -159,4 +159,29 @@ void main() {
     expect(system, contains('旧书店旁边是新月码头。'));
     expect(system, contains('码头只在凌晨开放。'));
   });
+
+  test(
+    'global prompt prefix and post-history instructions reach the system prompt',
+    () {
+      final seed = buildSeedData();
+      final data = seed.copyWith(
+        settings: seed.settings.copyWith(
+          prompts: const PromptConfig(
+            systemPrefix: '{{char}} 和 {{user}} 都用短句。',
+            postHistoryInstructions: '绝不写客服收尾。',
+          ),
+        ),
+      );
+      final bundle = assembler.assemble(
+        data: data,
+        thread: data.threads.first,
+        userInput: '你好',
+        now: DateTime(2026, 11, 26),
+      );
+      final system = bundle.messages.first.content;
+      expect(system, contains('【全局系统提示词 · 高优先级风格约束】'));
+      expect(system, contains('顾言 和 林澈 都用短句。'));
+      expect(system, contains('【后置指令 · 仅限表达与格式】绝不写客服收尾。'));
+    },
+  );
 }

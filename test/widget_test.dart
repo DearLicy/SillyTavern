@@ -245,6 +245,13 @@ void main() {
       expect(find.text('从剪贴板导入 JSON'), findsOneWidget);
       expect(find.text('选择 PNG 角色卡'), findsOneWidget);
       expect(find.byKey(const ValueKey('root-bottom-bar')), findsNothing);
+
+      container.read(appRouterProvider).go('/prompts');
+      await tester.pumpAndSettle();
+      expect(find.text('提示词与正则'), findsWidgets);
+      expect(find.text('全局系统提示词'), findsOneWidget);
+      expect(find.text('保存提示词规则'), findsOneWidget);
+      expect(find.byKey(const ValueKey('root-bottom-bar')), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       container.dispose();

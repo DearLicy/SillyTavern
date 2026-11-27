@@ -62,6 +62,16 @@ class SettingsPage extends ConsumerWidget {
                 ),
                 const Divider(indent: 62),
                 DtSettingRow(
+                  icon: Icons.code_rounded,
+                  iconColor: DtColors.brand,
+                  title: '提示词与正则',
+                  subtitle: settings.prompts.rules.isEmpty
+                      ? '全局提示词、后置指令与文本规则'
+                      : '${settings.prompts.rules.length} 条本地正则规则',
+                  onTap: () => context.push('/prompts'),
+                ),
+                const Divider(indent: 62),
+                DtSettingRow(
                   icon: Icons.menu_book_outlined,
                   iconColor: DtColors.mint,
                   title: '世界书',

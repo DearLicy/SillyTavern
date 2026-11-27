@@ -1057,6 +1057,136 @@ class DeepSeekToolConfig {
       );
 }
 
+enum RegexTarget {
+  userInput('用户输入'),
+  aiOutput('AI 输出');
+
+  const RegexTarget(this.label);
+  final String label;
+
+  static RegexTarget fromName(String? value) => values.firstWhere(
+    (e) => e.name == value,
+    orElse: () => RegexTarget.aiOutput,
+  );
+}
+
+/// Power-user text transformation. Patterns are regex only; no JavaScript,
+/// shell, network or arbitrary code execution is supported.
+class RegexRule {
+  const RegexRule({
+    required this.id,
+    required this.name,
+    required this.pattern,
+    required this.replacement,
+    this.target = RegexTarget.aiOutput,
+    this.enabled = true,
+    this.caseSensitive = false,
+    this.multiline = true,
+    this.dotAll = true,
+    this.order = 100,
+  });
+
+  final String id;
+  final String name;
+  final String pattern;
+  final String replacement;
+  final RegexTarget target;
+  final bool enabled;
+  final bool caseSensitive;
+  final bool multiline;
+  final bool dotAll;
+  final int order;
+
+  RegexRule copyWith({
+    String? name,
+    String? pattern,
+    String? replacement,
+    RegexTarget? target,
+    bool? enabled,
+    bool? caseSensitive,
+    bool? multiline,
+    bool? dotAll,
+    int? order,
+  }) => RegexRule(
+    id: id,
+    name: name ?? this.name,
+    pattern: pattern ?? this.pattern,
+    replacement: replacement ?? this.replacement,
+    target: target ?? this.target,
+    enabled: enabled ?? this.enabled,
+    caseSensitive: caseSensitive ?? this.caseSensitive,
+    multiline: multiline ?? this.multiline,
+    dotAll: dotAll ?? this.dotAll,
+    order: order ?? this.order,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'pattern': pattern,
+    'replacement': replacement,
+    'target': target.name,
+    'enabled': enabled,
+    'caseSensitive': caseSensitive,
+    'multiline': multiline,
+    'dotAll': dotAll,
+    'order': order,
+  };
+
+  factory RegexRule.fromJson(Map<String, dynamic> json) => RegexRule(
+    id: json['id'] as String? ?? '',
+    name: json['name'] as String? ?? '未命名规则',
+    pattern: json['pattern'] as String? ?? '',
+    replacement: json['replacement'] as String? ?? '',
+    target: RegexTarget.fromName(json['target'] as String?),
+    enabled: json['enabled'] as bool? ?? true,
+    caseSensitive: json['caseSensitive'] as bool? ?? false,
+    multiline: json['multiline'] as bool? ?? true,
+    dotAll: json['dotAll'] as bool? ?? true,
+    order: (json['order'] as num?)?.toInt() ?? 100,
+  );
+}
+
+class PromptConfig {
+  const PromptConfig({
+    this.systemPrefix = '',
+    this.postHistoryInstructions = '',
+    this.rules = const [],
+  });
+
+  final String systemPrefix;
+  final String postHistoryInstructions;
+  final List<RegexRule> rules;
+
+  PromptConfig copyWith({
+    String? systemPrefix,
+    String? postHistoryInstructions,
+    List<RegexRule>? rules,
+  }) => PromptConfig(
+    systemPrefix: systemPrefix ?? this.systemPrefix,
+    postHistoryInstructions:
+        postHistoryInstructions ?? this.postHistoryInstructions,
+    rules: rules ?? this.rules,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'systemPrefix': systemPrefix,
+    'postHistoryInstructions': postHistoryInstructions,
+    'rules': rules.map((e) => e.toJson()).toList(),
+  };
+
+  factory PromptConfig.fromJson(Map<String, dynamic> json) => PromptConfig(
+    systemPrefix: json['systemPrefix'] as String? ?? '',
+    postHistoryInstructions: json['postHistoryInstructions'] as String? ?? '',
+    rules:
+        (json['rules'] as List?)
+            ?.whereType<Map>()
+            .map((e) => RegexRule.fromJson(Map<String, dynamic>.from(e)))
+            .toList() ??
+        const [],
+  );
+}
+
 class AppSettings {
   const AppSettings({
     this.themeMode = AppThemeMode.system,
@@ -1065,6 +1195,7 @@ class AppSettings {
     this.currentPersonaId = '',
     this.provider = const ProviderConfig(),
     this.tools = const DeepSeekToolConfig(),
+    this.prompts = const PromptConfig(),
     this.contentCeiling = ContentLevel.mature,
   });
 
@@ -1074,6 +1205,7 @@ class AppSettings {
   final String currentPersonaId;
   final ProviderConfig provider;
   final DeepSeekToolConfig tools;
+  final PromptConfig prompts;
   final ContentLevel contentCeiling;
 
   AppSettings copyWith({
@@ -1083,6 +1215,7 @@ class AppSettings {
     String? currentPersonaId,
     ProviderConfig? provider,
     DeepSeekToolConfig? tools,
+    PromptConfig? prompts,
     ContentLevel? contentCeiling,
   }) => AppSettings(
     themeMode: themeMode ?? this.themeMode,
@@ -1091,6 +1224,7 @@ class AppSettings {
     currentPersonaId: currentPersonaId ?? this.currentPersonaId,
     provider: provider ?? this.provider,
     tools: tools ?? this.tools,
+    prompts: prompts ?? this.prompts,
     contentCeiling: contentCeiling ?? this.contentCeiling,
   );
 
@@ -1101,6 +1235,7 @@ class AppSettings {
     'currentPersonaId': currentPersonaId,
     'provider': provider.toJson(),
     'tools': tools.toJson(),
+    'prompts': prompts.toJson(),
     'contentCeiling': contentCeiling.name,
   };
 
@@ -1117,6 +1252,9 @@ class AppSettings {
     ),
     tools: DeepSeekToolConfig.fromJson(
       Map<String, dynamic>.from(json['tools'] as Map? ?? const {}),
+    ),
+    prompts: PromptConfig.fromJson(
+      Map<String, dynamic>.from(json['prompts'] as Map? ?? const {}),
     ),
     contentCeiling: ContentLevel.fromName(json['contentCeiling'] as String?),
   );
