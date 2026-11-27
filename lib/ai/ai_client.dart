@@ -353,6 +353,24 @@ $safeConversationExcerpt
     return '';
   }
 
+  String _reasoningDetailsText(dynamic details) {
+    if (details is! List) return '';
+    final buffer = StringBuffer();
+    for (final item in details) {
+      if (item is! Map) continue;
+      final text = item['text'];
+      if (text is String && text.isNotEmpty) {
+        buffer.write(text);
+        continue;
+      }
+      final summary = item['summary'];
+      if (summary is String && summary.isNotEmpty) {
+        buffer.write(summary);
+      }
+    }
+    return buffer.toString();
+  }
+
   Future<String> _streamOpenAi({
     required ProviderConfig config,
     required String apiKey,
@@ -390,19 +408,27 @@ $safeConversationExcerpt
           attempt.finishReason == 'function_call') {
         throw const AiClientException('供应商返回了工具调用而非聊天正文，请选择支持直接对话的模型。');
       }
-      if (budget != null &&
-          (attempt.reasoningCharacters > 0 ||
-              attempt.finishReason == 'length')) {
-        // Preserve an unbounded provider default when no budget was supplied;
-        // never accidentally shrink an explicit larger budget to 4096.
-        final expanded = budget * 2;
-        budget = expanded < 1536 ? 1536 : expanded;
+      final needsBudgetRetry =
+          attempt.reasoningCharacters > 0 || attempt.finishReason == 'length';
+      if (needsBudgetRetry) {
+        // Never send max_tokens by default. Only expand when the provider
+        // demonstrably used the budget for reasoning or hit a length limit.
+        if (budget == null) {
+          budget = 4096;
+        } else {
+          final expanded = budget * 2;
+          budget = expanded < 1536 ? 1536 : expanded;
+        }
       }
     }
     if ((attempt?.reasoningCharacters ?? 0) > 0) {
-      throw const AiClientException('供应商只返回了内部推理，没有正文；已尝试非流式兼容请求。请检查该模型的推理配置。');
+      throw const AiClientException(
+        '供应商只返回了内部推理，没有正文；已尝试非流式兼容请求。请检查该模型的推理配置或换用支持直接对话的模型。',
+      );
     }
-    throw const AiClientException('供应商的流式及非流式请求均未返回聊天正文。请检查所选模型与接口配置，或稍后重试。');
+    throw const AiClientException(
+      '供应商的流式及非流式请求均未返回聊天正文。请检查所选模型与接口配置，或稍后重试。',
+    );
   }
 
   Future<_OpenAiAttempt> _streamOpenAiAttempt({
@@ -531,8 +557,14 @@ $safeConversationExcerpt
     final reasoning = _firstText([
       delta['reasoning_content'],
       delta['reasoning'],
+      delta['thinking'],
+      delta['thought'],
       message['reasoning_content'],
       message['reasoning'],
+      message['thinking'],
+      message['thought'],
+      _reasoningDetailsText(delta['reasoning_details']),
+      _reasoningDetailsText(message['reasoning_details']),
     ]);
     if (announce && content.trim().isNotEmpty) onUpdate?.call(content.trim());
     return _OpenAiAttempt(
