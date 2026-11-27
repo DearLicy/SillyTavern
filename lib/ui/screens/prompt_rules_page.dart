@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
@@ -92,6 +93,64 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
     });
   }
 
+  Future<void> _importScripts() async {
+    final controller = ref.read(appControllerProvider.notifier);
+    final messenger = ScaffoldMessenger.of(context);
+    final pasted = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        final textController = TextEditingController();
+        return AlertDialog(
+          title: const Text('导入 SillyTavern 正则脚本'),
+          content: TextField(
+            controller: textController,
+            maxLines: 10,
+            decoration: const InputDecoration(
+              hintText: '粘贴包含 scripts 数组的 JSON',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, textController.text),
+              child: const Text('导入'),
+            ),
+          ],
+        );
+      },
+    );
+    if (pasted == null || pasted.trim().isEmpty) return;
+    try {
+      await controller.importRegexScripts(pasted);
+      if (!mounted) return;
+      final rules = ref.read(appControllerProvider).data.settings.prompts.rules;
+      setState(() {
+        _rules = [...rules];
+        _error = null;
+      });
+      messenger.showSnackBar(const SnackBar(content: Text('正则脚本已导入')));
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(content: Text(error is FormatException ? error.message : '导入失败：$error')),
+      );
+    }
+  }
+
+  Future<void> _exportScripts() async {
+    final controller = ref.read(appControllerProvider.notifier);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final json = controller.exportRegexScripts();
+      await Clipboard.setData(ClipboardData(text: json));
+      messenger.showSnackBar(const SnackBar(content: Text('正则脚本 JSON 已复制')));
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text('导出失败：$error')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final sorted = [..._rules]..sort((a, b) => a.order.compareTo(b.order));
@@ -173,6 +232,16 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
                   '正则变换',
                   style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                 ),
+              ),
+              DtIconButton(
+                icon: Icons.file_download_outlined,
+                tooltip: '导入 ST 正则脚本',
+                onTap: _importScripts,
+              ),
+              DtIconButton(
+                icon: Icons.ios_share_rounded,
+                tooltip: '导出 ST 正则脚本',
+                onTap: _exportScripts,
               ),
               DtIconButton(
                 icon: Icons.add_rounded,

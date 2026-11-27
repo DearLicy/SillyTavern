@@ -114,10 +114,9 @@ class PngCharacterCard {
 
     // IDAT: compressed scanline for 1x1 grayscale pixel (filter 0, value 0)
     // zlib header 0x78 0x01, deflate block, adler32
+    // zlib.compress(b'\x00\x00', 1): filter byte + one grayscale pixel
     final idatData = Uint8List.fromList([
-      0x78, 0x01, // zlib header
-      0x01, 0x01, 0x00, 0xfe, 0xff, 0x00, // deflate stored block: len=1, nlen=~1, data=0x00
-      0x00, 0x01, 0x00, 0x00, // adler32 for single 0x00 byte
+      0x78, 0x01, 0x63, 0x60, 0x00, 0x00, 0x00, 0x02, 0x00, 0x01,
     ]);
     final idat = _pngChunk('IDAT', idatData);
     final iend = _pngChunk('IEND', Uint8List(0));
