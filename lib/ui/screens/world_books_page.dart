@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../application/app_controller.dart';
+import '../../data/world_book_codec.dart';
 import '../../domain/models.dart';
 import '../components/dt_controls.dart';
 import '../components/dt_detail_page.dart';
+import '../components/dt_edit_sheet.dart';
 import '../components/dt_input.dart';
 
 class WorldBooksPage extends ConsumerStatefulWidget {
@@ -24,8 +27,13 @@ class _WorldBooksPageState extends ConsumerState<WorldBooksPage> {
     final books = state.data.worldBooks;
     return DtDetailPage(
       title: '世界书',
-      subtitle: '关键词资料与作者注记',
+      subtitle: 'SillyTavern World Info 关键词资料',
       actions: [
+        DtIconButton(
+          icon: Icons.content_paste_go_rounded,
+          tooltip: '导入世界书 JSON',
+          onTap: () => _import(context, controller),
+        ),
         DtIconButton(
           icon: Icons.add_rounded,
           tooltip: '新建世界书',
@@ -54,6 +62,11 @@ class _WorldBooksPageState extends ConsumerState<WorldBooksPage> {
                     title: book.name,
                     subtitle:
                         '${book.entries.length} 条词条 · 扫描 ${book.scanDepth} 条 · 注记深度 ${book.authorNoteDepth}',
+                    trailing: DtIconButton(
+                      icon: Icons.copy_all_outlined,
+                      tooltip: '复制世界书 JSON',
+                      onTap: () => _copyJson(context, book),
+                    ),
                     onTap: () => _edit(context, controller, book),
                   ),
                 );
@@ -81,6 +94,42 @@ class _WorldBooksPageState extends ConsumerState<WorldBooksPage> {
       if (mounted) {
         messenger.showSnackBar(const SnackBar(content: Text('世界书保存失败，请重试。')));
       }
+    }
+  }
+
+  Future<void> _import(BuildContext context, AppController controller) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final imported = await showDtEditSheet(
+      context: context,
+      title: '导入世界书',
+      description:
+          '粘贴 SillyTavern World Info / Lorebook JSON。导入会新增一本世界书，不覆盖现有资料。脚本、正则键和远程资源不会执行。',
+      actionLabel: '导入',
+      initialText: '',
+      onSubmit: (text) async {
+        final book = const WorldBookCodec().decode(
+          text,
+          id: 'wb_${const Uuid().v4()}',
+        );
+        await controller.saveWorldBook(book, create: true);
+      },
+    );
+    if (imported == true) {
+      messenger.showSnackBar(const SnackBar(content: Text('世界书已导入')));
+    }
+  }
+
+  Future<void> _copyJson(BuildContext context, WorldBook book) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await Clipboard.setData(
+        ClipboardData(text: const WorldBookCodec().encode(book)),
+      );
+      messenger.showSnackBar(
+        const SnackBar(content: Text('世界书 JSON 已复制')),
+      );
+    } catch (_) {
+      messenger.showSnackBar(const SnackBar(content: Text('世界书导出失败，请重试')));
     }
   }
 }
