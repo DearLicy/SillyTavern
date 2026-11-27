@@ -157,3 +157,4 @@ class PngCharacterCard {
     }
     return crc ^ 0xFFFFFFFF;
   }
+}
