@@ -62,7 +62,7 @@ void main() {
         '心动': 18,
         '张力': 5,
       }),
-      '试探靠近',
+      '初步认识',
     );
     expect(
       RelationshipDynamics.stageFor(const {
@@ -71,7 +71,7 @@ void main() {
         '心动': 80,
         '张力': 10,
       }),
-      '关系升温',
+      '关系稳固',
     );
   });
 }

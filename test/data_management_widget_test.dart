@@ -52,7 +52,7 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
       await tester.tap(find.text('返回'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('我已成年，进入梦境'));
+      await tester.tap(find.text('我已成年，进入应用'));
       await tester.pumpAndSettle();
       expect(find.text('聊天记录'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -69,7 +69,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('返回'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('我已成年，进入梦境'));
+    await tester.tap(find.text('我已成年，进入应用'));
     await tester.pumpAndSettle();
     expect(container.read(appControllerProvider).data.characters, isEmpty);
     expect(container.read(appControllerProvider).data.messages, isEmpty);

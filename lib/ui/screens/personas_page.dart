@@ -19,13 +19,13 @@ class PersonasPage extends ConsumerWidget {
     final data = ref.watch(appControllerProvider).data;
     final dark = Theme.of(context).brightness == Brightness.dark;
     return DtDetailPage(
-      title: '梦设',
+      title: '用户人设',
       subtitle: '同一个角色，可以拥有不同的故事版本',
       actions: [
         DtIconButton(
           onTap: () => context.push('/persona/new'),
           icon: Icons.add_rounded,
-          tooltip: '创建梦设',
+          tooltip: '创建用户人设',
           soft: true,
         ),
       ],
@@ -47,12 +47,12 @@ class PersonasPage extends ConsumerWidget {
               onEdit: () => context.push('/persona/${persona.id}'),
               onDelete: () => showDtEditSheet(
                 context: context,
-                title: '删除梦设「${persona.name}」？',
+                title: '删除用户人设「${persona.name}」？',
                 description:
                     data.relationships.any((r) => r.personaId == persona.id)
-                    ? '该梦设仍绑定着角色关系，不能直接删除，以免混淆身份和记忆。请先管理相关角色。'
-                    : '将删除这套梦设。若它是当前梦设，会自动切换到剩余梦设；没有剩余时回到未选择状态。此操作无法撤销。',
-                actionLabel: '删除梦设',
+                    ? '该用户人设仍绑定着角色关系，不能直接删除，以免混淆身份和记忆。请先管理相关角色。'
+                    : '将删除这套用户人设。若它是当前用户人设，会自动切换到剩余用户人设；没有剩余时回到未选择状态。此操作无法撤销。',
+                actionLabel: '删除用户人设',
                 danger: true,
                 onSubmit: (_) => ref
                     .read(appControllerProvider.notifier)
@@ -63,7 +63,7 @@ class PersonasPage extends ConsumerWidget {
           ],
           const SizedBox(height: 6),
           DtButton(
-            label: '创建新的梦设',
+            label: '创建新的用户人设',
             icon: Icons.auto_awesome_rounded,
             variant: DtButtonVariant.secondary,
             onPressed: () => context.push('/persona/new'),
@@ -100,7 +100,7 @@ class _InfoBanner extends StatelessWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              '每段关系绑定一个梦设。角色知道的姓名、背景、称呼、边界与共同记忆彼此独立。',
+              '每段关系绑定一个用户人设。角色知道的姓名、背景、称呼、边界与共同记忆彼此独立。',
               style: TextStyle(fontSize: 12.5, height: 1.55),
             ),
           ),
@@ -132,7 +132,7 @@ class _PersonaCard extends StatelessWidget {
     final dark = Theme.of(context).brightness == Brightness.dark;
     return DtPressable(
       onTap: onTap,
-      semanticLabel: '切换梦设 ${persona.name}',
+      semanticLabel: '切换用户人设 ${persona.name}',
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(16),
@@ -227,7 +227,7 @@ class _PersonaCard extends StatelessWidget {
                       const Spacer(),
                       DtIconButton(
                         icon: Icons.delete_outline,
-                        tooltip: '删除梦设',
+                        tooltip: '删除用户人设',
                         onTap: onDelete,
                       ),
                       DtActionButton.icon(

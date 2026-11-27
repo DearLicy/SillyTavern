@@ -44,7 +44,7 @@ class MomentsPage extends ConsumerWidget {
                   ),
                 ),
                 title: '动态',
-                subtitle: '梦境空间 · 只有你和角色们',
+                subtitle: '角色与你的本地动态',
                 actions: [
                   DtIconButton(
                     icon: Icons.edit_outlined,
@@ -62,7 +62,7 @@ class MomentsPage extends ConsumerWidget {
               child: DtEmptyState(
                 icon: Icons.chat_bubble_outline,
                 title: '还没有动态',
-                body: '在梦境空间留下属于你的第一条记录。',
+                body: '在这里留下你的第一条动态。',
                 action: DtButton(
                   label: '发布动态',
                   onPressed: () => _showComposer(context, ref),
@@ -176,7 +176,7 @@ class MomentsPage extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              '发布到梦境空间',
+              '发布到动态',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 6),

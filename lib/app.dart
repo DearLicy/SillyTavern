@@ -146,7 +146,7 @@ class _LoadingPage extends StatelessWidget {
                 child: CircularProgressIndicator(strokeWidth: 2.5),
               ),
               SizedBox(height: 18),
-              Text('正在进入梦境', style: TextStyle(fontWeight: FontWeight.w600)),
+              Text('正在进入应用', style: TextStyle(fontWeight: FontWeight.w600)),
             ],
           ),
         ),

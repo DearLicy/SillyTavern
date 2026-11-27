@@ -36,7 +36,7 @@ class _BackupPageState extends ConsumerState<BackupPage> {
                 ),
                 const SizedBox(height: 10),
                 const Text(
-                  '导出角色、梦设、关系、消息、记忆、动态及图片原件。备份包含私人内容，请保存在你信任的地方。',
+                  '导出角色、用户人设、关系、消息、记忆、动态及图片原件。备份包含私人内容，请保存在你信任的地方。',
                   style: TextStyle(fontSize: 13, height: 1.6),
                 ),
                 const SizedBox(height: 14),
@@ -106,11 +106,11 @@ class _BackupPageState extends ConsumerState<BackupPage> {
           DtSettingRow(
             icon: Icons.delete_outline,
             title: '清空本地数据',
-            subtitle: '删除全部角色、梦设、图片和密钥，恢复空白状态',
+            subtitle: '删除全部角色、用户人设、图片和密钥，恢复空白状态',
             onTap: () => showDtEditSheet(
               context: context,
               title: '清空全部本地数据？',
-              description: '角色、梦设、会话、记忆、动态、图片和 API Key 都会被删除。此操作无法撤销。',
+              description: '角色、用户人设、会话、记忆、动态、图片和 API Key 都会被删除。此操作无法撤销。',
               actionLabel: '清空全部数据',
               danger: true,
               onSubmit: (_) async {

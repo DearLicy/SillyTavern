@@ -23,6 +23,12 @@ class RelationshipDynamics {
 
   static const metricOrder = ['好感', '信任', '心动', '张力'];
 
+  static String displayLabel(String key) => switch (key) {
+    '好感' => '亲近',
+    '心动' => '共鸣',
+    _ => key,
+  };
+
   static RelationshipAdjustment evaluate({
     required Relationship relationship,
     required String userText,
@@ -150,11 +156,11 @@ class RelationshipDynamics {
     final trust = metrics['信任'] ?? 0;
     final heart = metrics['心动'] ?? 0;
     final affinity = affection * 0.4 + trust * 0.35 + heart * 0.25;
-    if (affinity >= 84) return '深度依恋';
-    if (affinity >= 68) return '关系升温';
-    if (affinity >= 50) return '彼此在意';
-    if (affinity >= 32) return '渐渐熟悉';
-    if (affinity >= 18) return '试探靠近';
+    if (affinity >= 84) return '高度默契';
+    if (affinity >= 68) return '关系稳固';
+    if (affinity >= 50) return '互相信任';
+    if (affinity >= 32) return '逐渐熟悉';
+    if (affinity >= 18) return '初步认识';
     return '刚刚相遇';
   }
 

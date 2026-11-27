@@ -106,7 +106,7 @@ class _ConsentPageState extends ConsumerState<ConsentPage> {
                   controller: _allowed,
                   decoration: const InputDecoration(
                     labelText: '允许主题',
-                    hintText: '慢热恋爱、私密约会……',
+                    hintText: '日常互动、剧情冒险、悬疑……',
                   ),
                 ),
                 const SizedBox(height: 12),

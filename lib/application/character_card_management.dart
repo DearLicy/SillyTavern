@@ -7,7 +7,7 @@ extension CharacterCardManagement on AppController {
   Future<ChatThread> importCharacterCard(String raw) async {
     final data = _snapshot.data;
     if (data.personaById(data.settings.currentPersonaId) == null) {
-      throw StateError('请先创建并选择梦设，再导入角色卡');
+      throw StateError('请先创建并选择用户人设，再导入角色卡');
     }
     final decoded = const CharacterCardCodec().decode(
       raw,

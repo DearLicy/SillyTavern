@@ -135,7 +135,7 @@ void main() {
     'first adult confirmation opens a clean app and all three empty roots',
     (tester) async {
       final container = await start(tester, buildEmptyData());
-      await tester.tap(find.text('我已成年，进入梦境'));
+      await tester.tap(find.text('我已成年，进入应用'));
       await tester.pumpAndSettle();
       expect(find.text('消息'), findsWidgets);
       expect(find.text('还没有找到对话'), findsOneWidget);
@@ -149,7 +149,7 @@ void main() {
       expect(find.text('还没有动态'), findsOneWidget);
       await tester.tap(find.text('发布动态').last);
       await tester.pumpAndSettle();
-      expect(find.text('发布到梦境空间'), findsOneWidget);
+      expect(find.text('发布到动态'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       container.dispose();
@@ -206,9 +206,9 @@ void main() {
       );
       container.read(appRouterProvider).push('/character/new');
       await tester.pumpAndSettle();
-      expect(find.text('先创建你的梦设'), findsOneWidget);
+      expect(find.text('先创建你的用户人设'), findsOneWidget);
       expect(find.byKey(const ValueKey('root-bottom-bar')), findsNothing);
-      await tester.tap(find.text('创建梦设'));
+      await tester.tap(find.text('创建用户人设'));
       await tester.pumpAndSettle();
       expect(find.text('姓名'), findsOneWidget);
       container.read(appRouterProvider).go('/provider');

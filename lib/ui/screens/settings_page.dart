@@ -56,8 +56,8 @@ class SettingsPage extends ConsumerWidget {
                 DtSettingRow(
                   icon: Icons.auto_awesome_rounded,
                   iconColor: DtColors.violet,
-                  title: '梦设管理',
-                  subtitle: '${state.data.personas.length} 套梦设',
+                  title: '用户人设管理',
+                  subtitle: '${state.data.personas.length} 套用户人设',
                   onTap: () => context.push('/personas'),
                 ),
                 const Divider(indent: 62),

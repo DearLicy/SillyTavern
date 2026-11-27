@@ -50,11 +50,11 @@ class ChatDataPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '当前梦设：${data.personaById(relationship.personaId)?.name ?? '未绑定'}',
+                  '当前用户人设：${data.personaById(relationship.personaId)?.name ?? '未绑定'}',
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '清空和重新开始仅影响这段关系；梦设、模型配置和其他角色保持不变。',
+                  '清空和重新开始仅影响这段关系；用户人设、模型配置和其他角色保持不变。',
                   style: TextStyle(fontSize: 12, height: 1.6),
                 ),
               ],
@@ -118,7 +118,7 @@ class ChatDataPage extends ConsumerWidget {
               context: context,
               title: '清空与${character.name}的聊天？',
               description:
-                  '将删除当前关系的全部聊天记录、未共享的图片附件和对话摘要。关系数值、长期记忆、角色和梦设保留。此操作无法撤销。',
+                  '将删除当前关系的全部聊天记录、未共享的图片附件和对话摘要。关系数值、长期记忆、角色和用户人设保留。此操作无法撤销。',
               actionLabel: '清空聊天记录',
               danger: true,
               onSubmit: (_) => controller.clearChatHistory(threadId),
@@ -132,7 +132,7 @@ class ChatDataPage extends ConsumerWidget {
               context: context,
               title: '与${character.name}重新开始？',
               description:
-                  '删除当前关系的消息、附件、摘要和非边界记忆，重置称呼、关系数值、互动次数和当前场景。保留角色人设、梦设、导演偏好与安全边界，不会自动发送开场白。此操作无法撤销。',
+                  '删除当前关系的消息、附件、摘要和非边界记忆，重置称呼、关系数值、互动次数和当前场景。保留角色人设、用户人设、导演偏好与安全边界，不会自动发送开场白。此操作无法撤销。',
               actionLabel: '确认重新开始',
               danger: true,
               onSubmit: (_) => controller.restartRelationship(relationship.id),
@@ -148,7 +148,7 @@ class ChatDataPage extends ConsumerWidget {
                 context: context,
                 title: '删除${character.name}？',
                 description:
-                    '角色及其全部梦设关系、聊天、图片附件、记忆、角色发布的动态将从本机删除。你的梦设和其他角色保留。此操作无法撤销。',
+                    '角色及其全部用户人设关系、聊天、图片附件、记忆、角色发布的动态将从本机删除。你的用户人设和其他角色保留。此操作无法撤销。',
                 actionLabel: '永久删除角色',
                 danger: true,
                 onSubmit: (_) => controller.deleteCharacter(character.id),

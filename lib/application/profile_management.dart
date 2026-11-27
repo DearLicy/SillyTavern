@@ -59,7 +59,7 @@ extension ProfileManagement on AppController {
           !_snapshot.data.attachmentReferences.contains(reference)) {
         await _attachmentStore?.delete(reference);
       }
-      throw StateError('这个梦设已被删除。');
+      throw StateError('这个用户人设已被删除。');
     }
     final saved = persona.copyWith(
       avatarReference: reference,
@@ -89,7 +89,7 @@ extension ProfileManagement on AppController {
     if (create &&
         _snapshot.data.personaById(_snapshot.data.settings.currentPersonaId) ==
             null) {
-      throw StateError('请先创建并选择梦设');
+      throw StateError('请先创建并选择用户人设');
     }
     final epoch = _lifecycleGeneration;
     final reference = await _avatarReference(character.avatarReference, avatar);

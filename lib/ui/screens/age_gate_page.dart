@@ -117,7 +117,7 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
                                 ),
                                 const SizedBox(height: 16),
                                 const Text(
-                                  'SillyTavern 是本地优先的虚构角色恋爱与角色扮演空间，包含成人向文字内容。所有性相关内容仅限明确成年、自愿的虚构角色。',
+                                  'SillyTavern 是本地优先的 AI 角色扮演与创作客户端，包含成人向文字内容。所有性相关内容仅限明确成年、自愿的虚构角色。',
                                   style: TextStyle(fontSize: 14, height: 1.65),
                                 ),
                                 const SizedBox(height: 12),
@@ -136,7 +136,7 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
                           ),
                           const SizedBox(height: 22),
                           DtButton(
-                            label: '我已成年，进入梦境',
+                            label: '我已成年，进入应用',
                             status: _status,
                             loadingText: '正在确认…',
                             successText: '已成年，正在进入',

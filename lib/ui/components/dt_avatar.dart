@@ -31,7 +31,7 @@ class DtAvatar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final safeName = name.trim().isEmpty ? '梦' : name.trim();
+    final safeName = name.trim().isEmpty ? '用' : name.trim();
     final start = Color(color);
     final end = Color.lerp(start, Colors.white, 0.34) ?? start;
     final avatar = Container(

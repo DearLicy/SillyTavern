@@ -91,9 +91,9 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
             SliverFillRemaining(
               hasScrollBody: false,
               child: DtEmptyState(
-                icon: Icons.nights_stay_rounded,
+                icon: Icons.forum_outlined,
                 title: '还没有找到对话',
-                body: '创建自己的梦设和角色，开始第一段对话。',
+                body: '创建自己的用户人设和角色，开始第一段对话。',
                 action: DtButton(
                   label: '创建角色',
                   onPressed: () => context.push('/character/new'),
@@ -183,7 +183,7 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
               DtSettingRow(
                 icon: Icons.person_add_alt_1_rounded,
                 title: '创建角色',
-                subtitle: '设计新的梦境人物',
+                subtitle: '创建新的角色',
                 onTap: () {
                   Navigator.pop(context);
                   context.push('/character/new');
@@ -311,14 +311,14 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                 icon: Icons.delete_sweep_outlined,
                 iconColor: DtColors.coral,
                 title: '清空单人物聊天记录',
-                subtitle: '只清掉这段对话，保留角色、梦设和关系数值',
+                subtitle: '只清掉这段对话，保留角色、用户人设和关系数值',
                 onTap: () {
                   Navigator.pop(context);
                   showDtEditSheet(
                     context: this.context,
                     title: '清空与${thread.title}的聊天？',
                     description:
-                        '将删除这条会话的全部消息、图片附件与对话摘要。角色、梦设、长期记忆和关系数值都会保留，不会自动发送开场白。此操作无法撤销。',
+                        '将删除这条会话的全部消息、图片附件与对话摘要。角色、用户人设、长期记忆和关系数值都会保留，不会自动发送开场白。此操作无法撤销。',
                     actionLabel: '清空聊天记录',
                     danger: true,
                     onSubmit: (_) => controller.clearChatHistory(thread.id),

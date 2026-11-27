@@ -285,7 +285,7 @@ class AppController extends StateNotifier<ApplicationState> {
   ChatThread addCharacterWithRelationship(Character character) {
     final data = state.data;
     if (data.personaById(data.settings.currentPersonaId) == null) {
-      throw StateError('请先创建并选择梦设');
+      throw StateError('请先创建并选择用户人设');
     }
     final now = DateTime.now();
     final relationship = Relationship(
@@ -297,7 +297,7 @@ class AppController extends StateNotifier<ApplicationState> {
       metrics: const {'好感': 12, '信任': 8, '心动': 10, '张力': 5},
       consent: const ConsentProfile(),
       scene: const SceneState(
-        location: '梦境初次相遇的地方',
+        location: '初次相遇的地方',
         timeHint: '刚刚开始',
         mood: '好奇、克制',
         notes: '这是这段关系的第一次对话。',

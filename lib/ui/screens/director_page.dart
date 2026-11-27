@@ -116,7 +116,7 @@ class _DirectorPageState extends ConsumerState<DirectorPage> {
                       : const Color(0xFFEDF0F6),
                 ),
                 _SliderRow(
-                  title: '场景亲密度',
+                  title: '关系推进强度',
                   value: _intimacy,
                   onChanged: (value) => setState(() => _intimacy = value),
                   hint: '仍受关系内容上限与用户硬边界约束。',

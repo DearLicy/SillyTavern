@@ -91,7 +91,7 @@ class _ProfileEditPageState extends ConsumerState<ProfileEditPage> {
                   maxLines: 4,
                   decoration: const InputDecoration(
                     labelText: '个性签名',
-                    hintText: '写一句留给梦境的话',
+                    hintText: '写一句个性签名',
                   ),
                 ),
                 const SizedBox(height: 12),

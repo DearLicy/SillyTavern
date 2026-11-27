@@ -5,7 +5,7 @@ AppData buildEmptyData() {
     schemaVersion: 2,
     owner: const OwnerProfile(
       id: 'owner',
-      displayName: '梦主',
+      displayName: '本地用户',
       signature: '',
       avatarColor: 0xFF6A4DFF,
       status: '在线',

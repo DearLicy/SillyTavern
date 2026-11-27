@@ -74,8 +74,8 @@ class _PersonaEditorPageState extends ConsumerState<PersonaEditorPage> {
   @override
   Widget build(BuildContext context) {
     return DtDetailPage(
-      title: _id == null ? '创建梦设' : '编辑梦设',
-      subtitle: '梦设只属于对应的关系，不影响其他故事',
+      title: _id == null ? '创建用户人设' : '编辑用户人设',
+      subtitle: '用户人设只属于对应的关系，不影响其他故事',
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -154,7 +154,7 @@ class _PersonaEditorPageState extends ConsumerState<PersonaEditorPage> {
           ),
           const SizedBox(height: 18),
           DtButton(
-            label: '保存梦设',
+            label: '保存用户人设',
             status: _saveStatus,
             successText: '已保存',
             onPressed: () async {
@@ -167,7 +167,7 @@ class _PersonaEditorPageState extends ConsumerState<PersonaEditorPage> {
                 final persona = UserPersona(
                   id: _id ?? _draftId,
                   avatarReference: _avatarReference,
-                  name: _name.text.trim().isEmpty ? '未命名梦设' : _name.text.trim(),
+                  name: _name.text.trim().isEmpty ? '未命名用户人设' : _name.text.trim(),
                   age: _age.text.trim().isEmpty ? '成年' : _age.text.trim(),
                   pronouns: _pronouns.text.trim().isEmpty
                       ? '她'
@@ -194,7 +194,7 @@ class _PersonaEditorPageState extends ConsumerState<PersonaEditorPage> {
                 if (mounted) {
                   setState(() {
                     _saveStatus = DtButtonStatus.idle;
-                    _saveError = '梦设保存失败，请重试。';
+                    _saveError = '用户人设保存失败，请重试。';
                   });
                 }
               }

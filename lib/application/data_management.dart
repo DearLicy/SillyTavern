@@ -127,7 +127,7 @@ extension DataManagement on AppController {
                     lastMetricReason: '',
                     clearLastMetricMessageId: true,
                     scene: SceneState(
-                      location: '梦境初次相遇的地方',
+                      location: '初次相遇的地方',
                       timeHint: '刚刚开始',
                       mood: '好奇、克制',
                       notes: '这是这段关系的第一次对话。',
@@ -182,7 +182,7 @@ extension DataManagement on AppController {
 
   Future<void> deletePersona(String personaId) async {
     if (_snapshot.data.relationships.any((r) => r.personaId == personaId)) {
-      throw StateError('这个梦设仍绑定着关系，请先在角色资料中删除相关角色。');
+      throw StateError('这个用户人设仍绑定着关系，请先在角色资料中删除相关角色。');
     }
     final before = _snapshot.data;
     final remaining = before.personas.where((p) => p.id != personaId).toList();

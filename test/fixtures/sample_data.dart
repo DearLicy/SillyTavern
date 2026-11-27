@@ -5,9 +5,9 @@ AppData buildSeedData() {
   const owner = OwnerProfile(
     id: 'owner',
     displayName: '林澈',
-    signature: '把每一个不愿醒来的梦，留在这里。',
+    signature: '在另一个世界里，写下新的故事。',
     avatarColor: 0xFF6D83F2,
-    status: '梦境在线',
+    status: '在线',
   );
 
   const personas = [
@@ -46,7 +46,7 @@ AppData buildSeedData() {
           '顾言，29 岁成年男性，建筑师。说话简洁、有分寸，习惯用具体行动表达关心。不会替用户做决定，也不会用命令式口吻强迫对方。面对亲近关系时先确认边界，再靠近。',
       greeting: '还没睡？窗边的灯一直亮着，我猜你又在赶东西。',
       avatarColor: 0xFF4F7DF3,
-      tags: ['慢热', '成熟恋爱', '建筑师'],
+      tags: ['慢热', '成熟', '建筑师'],
     ),
     Character(
       id: 'char_shen',
@@ -91,12 +91,12 @@ AppData buildSeedData() {
       id: 'rel_gu',
       characterId: 'char_gu',
       personaId: 'persona_lin',
-      stage: '刚刚确认心意',
+      stage: '高度默契',
       nickname: '阿澈',
       metrics: const {'好感': 82, '信任': 68, '心动': 76, '张力': 41},
       consent: const ConsentProfile(
         ceiling: ContentLevel.mature,
-        allowedThemes: ['慢热恋爱', '私密约会', '温柔亲密'],
+        allowedThemes: ['慢热互动', '私密对话', '情感张力'],
         blockedThemes: ['强迫', '羞辱', '永久伤害'],
       ),
       scene: const SceneState(
@@ -119,7 +119,7 @@ AppData buildSeedData() {
       id: 'rel_shen',
       characterId: 'char_shen',
       personaId: 'persona_lin',
-      stage: '暧昧观察期',
+      stage: '逐渐熟悉',
       nickname: '小朋友',
       metrics: const {'好感': 61, '信任': 55, '心动': 48, '张力': 66},
       consent: const ConsentProfile(

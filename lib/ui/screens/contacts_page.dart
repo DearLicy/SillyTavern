@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/app_controller.dart';
+import '../../ai/relationship_dynamics.dart';
 import '../../domain/models.dart';
 import '../components/dt_avatar.dart';
 import '../components/dt_controls.dart';
@@ -183,7 +184,7 @@ class _ContactsPageState extends ConsumerState<ContactsPage> {
                   DtStagger(
                     index: 1,
                     child: _GroupCard(
-                      title: '梦境常客',
+                      title: '最近角色',
                       count: data.relationships.length,
                       color: DtColors.brand,
                     ),
@@ -323,7 +324,7 @@ class _CharacterTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '心动',
+                    RelationshipDynamics.displayLabel('心动'),
                     style: TextStyle(
                       fontSize: 9.5,
                       color: dark
@@ -506,7 +507,7 @@ class _RelationshipCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        entry.key,
+                        RelationshipDynamics.displayLabel(entry.key),
                         style: TextStyle(
                           fontSize: 10,
                           color: dark

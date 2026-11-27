@@ -89,10 +89,10 @@ class _CharacterEditorPageState extends ConsumerState<CharacterEditorPage> {
         title: '创建角色',
         child: DtEmptyState(
           icon: Icons.person_outline,
-          title: '先创建你的梦设',
-          body: '梦设代表这段关系中的你。创建后即可继续设计角色。',
+          title: '先创建你的用户人设',
+          body: '用户人设代表这段关系中的你。创建后即可继续设计角色。',
           action: DtButton(
-            label: '创建梦设',
+            label: '创建用户人设',
             onPressed: () => context.push('/persona/new'),
           ),
         ),

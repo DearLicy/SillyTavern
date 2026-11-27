@@ -58,7 +58,7 @@ class AppDrawer extends ConsumerWidget {
                           _DrawerRow(
                             icon: Icons.auto_awesome_rounded,
                             iconColor: DtColors.violet,
-                            title: '切换梦设',
+                            title: '切换用户人设',
                             subtitle: currentPersona?.name ?? '未选择',
                             onTap: () {
                               Navigator.of(context).pop();
@@ -68,7 +68,7 @@ class AppDrawer extends ConsumerWidget {
                           _DrawerRow(
                             icon: Icons.photo_library_outlined,
                             iconColor: const Color(0xFFE6A43B),
-                            title: '梦境相册',
+                            title: '剧情相册',
                             subtitle: '聊天图片已开放；剧情相册将在 V2.3 提供',
                             onTap: () => _comingSoon(context),
                           ),
@@ -197,7 +197,7 @@ class AppDrawer extends ConsumerWidget {
   void _comingSoon(BuildContext context) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(const SnackBar(content: Text('梦境相册将在 V2.3 开放')));
+    ).showSnackBar(const SnackBar(content: Text('剧情相册将在 V2.3 开放')));
   }
 }
 
@@ -272,7 +272,7 @@ class _ProfileCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(99),
                         ),
                         child: const Text(
-                          '梦主',
+                          '用户',
                           style: TextStyle(
                             color: DtColors.brand,
                             fontSize: 9,
@@ -297,7 +297,7 @@ class _ProfileCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    persona == null ? '尚未选择梦设' : '当前梦设 · ${persona!.name}',
+                    persona == null ? '尚未选择用户人设' : '当前用户人设 · ${persona!.name}',
                     style: const TextStyle(
                       color: DtColors.violet,
                       fontSize: 11,

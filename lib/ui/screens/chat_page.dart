@@ -95,7 +95,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     if (thread == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('会话不存在')),
-        body: const Center(child: Text('这段梦境已经找不到。')),
+        body: const Center(child: Text('这个会话已经找不到。')),
       );
     }
     final relationship = data.relationshipForThread(thread);

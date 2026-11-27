@@ -4,9 +4,9 @@ import 'search_source.dart';
 export 'search_source.dart';
 
 enum ContentLevel {
-  sfw('SFW', '日常与恋爱'),
-  mature('Mature', '成熟恋爱与暧昧'),
-  nsfw('NSFW', '成年人自愿亲密互动');
+  sfw('SFW', '日常、冒险与剧情'),
+  mature('Mature', '成熟主题与情感张力'),
+  nsfw('NSFW', '成年人自愿成人角色扮演');
 
   const ContentLevel(this.label, this.description);
 
@@ -92,8 +92,8 @@ class OwnerProfile {
   factory OwnerProfile.fromJson(Map<String, dynamic> json) => OwnerProfile(
     avatarReference: json['avatarReference'] as String?,
     id: json['id'] as String? ?? 'owner',
-    displayName: json['displayName'] as String? ?? '梦境旅人',
-    signature: json['signature'] as String? ?? '今晚也做一个好梦。',
+    displayName: json['displayName'] as String? ?? '本地用户',
+    signature: json['signature'] as String? ?? '保持好奇，继续探索。',
     avatarColor: (json['avatarColor'] as num?)?.toInt() ?? 0xFF5B7CFA,
     status: json['status'] as String? ?? '在线',
   );
@@ -166,7 +166,7 @@ class UserPersona {
   factory UserPersona.fromJson(Map<String, dynamic> json) => UserPersona(
     avatarReference: json['avatarReference'] as String?,
     id: json['id'] as String? ?? '',
-    name: json['name'] as String? ?? '未命名梦设',
+    name: json['name'] as String? ?? '未命名用户人设',
     age: json['age'] as String? ?? '',
     pronouns: json['pronouns'] as String? ?? '她',
     appearance: json['appearance'] as String? ?? '',
@@ -399,7 +399,7 @@ class SceneState {
 class ConsentProfile {
   const ConsentProfile({
     this.ceiling = ContentLevel.mature,
-    this.allowedThemes = const ['慢热恋爱', '私密约会'],
+    this.allowedThemes = const ['日常互动', '剧情冒险'],
     this.blockedThemes = const ['强迫', '羞辱'],
     this.safeWord = 'red',
     this.paused = false,

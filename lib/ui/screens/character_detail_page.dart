@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../application/app_controller.dart';
+import '../../ai/relationship_dynamics.dart';
 import '../../domain/models.dart';
 import '../components/dt_avatar.dart';
 import '../components/dt_controls.dart';
@@ -310,7 +311,8 @@ class _RelationshipPanel extends StatelessWidget {
     final deltas = relationship.lastMetricDelta.entries
         .where((entry) => entry.value != 0)
         .map(
-          (entry) => '${entry.key} ${entry.value > 0 ? '+' : ''}${entry.value}',
+          (entry) =>
+              '${RelationshipDynamics.displayLabel(entry.key)} ${entry.value > 0 ? '+' : ''}${entry.value}',
         )
         .join(' · ');
     return DtSurface(
@@ -345,7 +347,7 @@ class _RelationshipPanel extends StatelessWidget {
           Row(
             children: [
               Text(
-                '梦设 · ${persona?.name ?? '未设置'}',
+                '用户人设 · ${persona?.name ?? '未设置'}',
                 style: TextStyle(
                   fontSize: 11.5,
                   color: dark
@@ -400,7 +402,7 @@ class _RelationshipPanel extends StatelessWidget {
                       ),
                       const SizedBox(height: 5),
                       Text(
-                        entry.key,
+                        RelationshipDynamics.displayLabel(entry.key),
                         style: TextStyle(
                           fontSize: 10.5,
                           color: dark

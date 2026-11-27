@@ -97,8 +97,8 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
         .toList(),
   );
 
-  double _parseDouble(TextEditingController controller, double min, double max) {
-    final parsed = double.tryParse(controller.text.trim()) ?? 0;
+  double _parseDouble(String value, double min, double max) {
+    final parsed = double.tryParse(value.trim()) ?? 0;
     return parsed.clamp(min, max);
   }
 

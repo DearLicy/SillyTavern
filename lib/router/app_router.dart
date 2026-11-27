@@ -168,7 +168,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/about', builder: (context, state) => const AboutPage()),
     ],
     errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('梦境迷失')),
+      appBar: AppBar(title: const Text('页面不存在')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
