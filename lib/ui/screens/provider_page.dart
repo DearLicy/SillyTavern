@@ -154,7 +154,7 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
         if (context.canPop()) {
           context.pop();
         } else {
-          context.go('/messages');
+          context.go('/');
         }
       }
     } catch (error) {

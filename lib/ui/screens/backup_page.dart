@@ -115,7 +115,7 @@ class _BackupPageState extends ConsumerState<BackupPage> {
               danger: true,
               onSubmit: (_) async {
                 await controller.resetData();
-                if (context.mounted) context.go('/messages');
+                if (context.mounted) context.go('/');
               },
             ),
           ),

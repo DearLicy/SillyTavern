@@ -54,7 +54,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
     const raw=localStorage.getItem('flutter.sillytavern.v2.state');
     return raw && JSON.parse(JSON.parse(raw)).settings.provider.model==='model-1499';
    });
-   await page.waitForURL(url=>url.hash==='#/messages');
+   await page.waitForFunction(()=>location.hash==='#/' || location.hash==='');
    let saved=await read();assert.equal(saved.settings.provider.model,'model-1499');assert.equal(saved.settings.provider.baseUrl,'https://catalog.example');
    await page.evaluate(()=>location.hash='/chat/thread_gu');
    // A textbox also exists on the provider screen. Wait for the chat controls

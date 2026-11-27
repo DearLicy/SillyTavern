@@ -137,8 +137,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               Text('找不到页面：${state.uri.path}', textAlign: TextAlign.center),
               const SizedBox(height: 18),
               FilledButton(
-                onPressed: () => context.go('/messages'),
-                child: const Text('回到消息'),
+                onPressed: () => context.go('/'),
+                child: const Text('回到会话'),
               ),
             ],
           ),
