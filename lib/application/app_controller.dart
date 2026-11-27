@@ -882,32 +882,38 @@ class AppController extends StateNotifier<ApplicationState> {
           ? null
           : current.relationshipForThread(currentThread);
       final now = DateTime.now();
-      final adjustment = currentRelationship == null
+      final speakerRelationship =
+          current.relationshipForCharacter(
+            replySpeaker.id,
+            personaId: current.settings.currentPersonaId,
+          ) ??
+          currentRelationship;
+      final adjustment = speakerRelationship == null
           ? null
           : RelationshipDynamics.evaluate(
-              relationship: currentRelationship,
+              relationship: speakerRelationship,
               userText: promptInput,
               assistantReply: naturalReply,
               userMessageId: userMessage.id,
               isImage: isImage,
             );
       final updatedRelationship =
-          currentRelationship == null || adjustment == null
+          speakerRelationship == null || adjustment == null
           ? null
-          : currentRelationship.copyWith(
+          : speakerRelationship.copyWith(
               metrics: adjustment.metrics,
               stage: adjustment.stage,
               interactionCount:
-                  currentRelationship.interactionCount +
-                  (currentRelationship.lastMetricMessageId != userMessage.id
+                  speakerRelationship.interactionCount +
+                  (speakerRelationship.lastMetricMessageId != userMessage.id
                       ? 1
                       : 0),
               lastMetricDelta: adjustment.changed
                   ? adjustment.delta
-                  : currentRelationship.lastMetricDelta,
+                  : speakerRelationship.lastMetricDelta,
               lastMetricReason: adjustment.changed
                   ? adjustment.reason
-                  : currentRelationship.lastMetricReason,
+                  : speakerRelationship.lastMetricReason,
               lastMetricMessageId: userMessage.id,
               updatedAt: now,
             );

@@ -79,4 +79,77 @@ void main() {
     expect(system, contains('沈砚'));
     expect(system, contains('【角色名】'));
   });
+
+  test('group context retrieves memories from every participant', () {
+    final seed = buildSeedData();
+    final now = DateTime(2026, 1, 1);
+    final data = seed.copyWith(
+      memories: [
+        MemoryItem(
+          id: 'mem_gu',
+          relationshipId: 'rel_gu',
+          type: MemoryType.experience,
+          title: '雨夜',
+          content: '顾言和用户一起在书店躲雨。',
+          createdAt: now,
+          pinned: true,
+        ),
+        MemoryItem(
+          id: 'mem_shen',
+          relationshipId: 'rel_shen',
+          type: MemoryType.userFact,
+          title: '药',
+          content: '用户经常忘记按时吃药。',
+          createdAt: now,
+          pinned: true,
+        ),
+      ],
+    );
+    final thread = ChatThread(
+      id: 'group_2',
+      relationshipId: 'rel_gu',
+      type: ThreadType.group,
+      title: '顾言、沈砚 · 群聊',
+      updatedAt: now,
+      participantIds: const ['char_gu', 'char_shen'],
+    );
+    final bundle = const ContextAssembler().assemble(
+      data: data,
+      thread: thread,
+      userInput: '还记得之前的事吗？',
+      now: now,
+    );
+    final system = bundle.messages.first.content;
+    expect(system, contains('顾言 · 雨夜'));
+    expect(system, contains('沈砚 · 药'));
+  });
+
+  test('relationshipForCharacter prefers the active persona', () {
+    final seed = buildSeedData();
+    final relationships = [
+      ...seed.relationships,
+      Relationship(
+        id: 'rel_gu_other',
+        characterId: 'char_gu',
+        personaId: 'persona_other',
+        stage: '刚刚相遇',
+        nickname: '你',
+        metrics: const {'好感': 1, '信任': 1, '心动': 1, '张力': 1},
+        consent: seed.relationships.first.consent,
+        scene: seed.relationships.first.scene,
+        updatedAt: DateTime(2026, 1, 1),
+      ),
+    ];
+    final data = seed.copyWith(relationships: relationships);
+    final active = data.relationshipForCharacter(
+      'char_gu',
+      personaId: 'persona_lin',
+    );
+    expect(active?.id, 'rel_gu');
+    final fallback = data.relationshipForCharacter(
+      'char_gu',
+      personaId: 'missing',
+    );
+    expect(fallback, isNotNull);
+  });
 }

@@ -101,11 +101,41 @@ class ContextAssembler {
       userInput: userInput,
       now: now,
     );
-    final memories = retrieveMemories(
-      all: data.memories.where((e) => e.relationshipId == relationship.id),
-      query: userInput,
-      limit: retrievedMemoryLimit,
-    );
+    final participantRelationships = <Relationship>[];
+    if (thread.type == ThreadType.group) {
+      for (final member in groupCharacters) {
+        final rel = data.relationshipForCharacter(
+          member.id,
+          personaId: relationship.personaId,
+        );
+        if (rel != null) participantRelationships.add(rel);
+      }
+    }
+    if (participantRelationships.isEmpty) {
+      participantRelationships.add(relationship);
+    }
+
+    final memories = <MemoryItem>[];
+    final seenMemories = <String>{};
+    for (final rel in participantRelationships) {
+      final member = data.characterForRelationship(rel);
+      final found = retrieveMemories(
+        all: data.memories.where((e) => e.relationshipId == rel.id),
+        query: userInput,
+        limit: thread.type == ThreadType.group ? 2 : retrievedMemoryLimit,
+      );
+      for (final item in found) {
+        if (!seenMemories.add(item.id)) continue;
+        memories.add(
+          thread.type == ThreadType.group && member != null
+              ? item.copyWith(title: '${member.name} · ${item.title}')
+              : item,
+        );
+      }
+    }
+    if (memories.length > 6) {
+      memories.removeRange(6, memories.length);
+    }
     final authorNote = resolveAuthorNote(data, relationship.id);
     final entryContent = resolveWorldInfo(
       data,

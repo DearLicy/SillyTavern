@@ -1589,6 +1589,22 @@ class AppData {
     return null;
   }
 
+  /// Finds a character's relationship, preferring the active persona.
+  Relationship? relationshipForCharacter(
+    String characterId, {
+    String? personaId,
+  }) {
+    Relationship? fallback;
+    for (final relationship in relationships) {
+      if (relationship.characterId != characterId) continue;
+      if (personaId == null || relationship.personaId == personaId) {
+        return relationship;
+      }
+      fallback ??= relationship;
+    }
+    return fallback;
+  }
+
   ChatThread? threadForRelationship(String relationshipId) {
     for (final thread in threads) {
       if (thread.relationshipId == relationshipId) return thread;
