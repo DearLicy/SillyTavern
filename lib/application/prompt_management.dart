@@ -78,4 +78,76 @@ extension PromptManagement on AppController {
     );
     await savePromptConfig(config);
   }
+
+  /// Export the current prompt configuration as a shareable preset JSON.
+  String exportPromptPreset({String name = 'SillyTavern APP 预设'}) {
+    final prompts = _snapshot.data.settings.prompts;
+    return jsonEncode({
+      'name': name,
+      'systemPrefix': prompts.systemPrefix,
+      'postHistoryInstructions': prompts.postHistoryInstructions,
+      'rules': [
+        for (final rule in prompts.rules)
+          {
+            'name': rule.name,
+            'pattern': rule.pattern,
+            'replacement': rule.replacement,
+            'target': rule.target.name,
+            'enabled': rule.enabled,
+            'caseSensitive': rule.caseSensitive,
+            'multiline': rule.multiline,
+            'dotAll': rule.dotAll,
+            'order': rule.order,
+          },
+      ],
+    });
+  }
+
+  /// Import a prompt preset. Replaces the system prompt and post-history
+  /// instructions; merges any preset rules after existing rules.
+  Future<void> importPromptPreset(String raw) async {
+    final decoded = jsonDecode(raw.trim());
+    if (decoded is! Map) throw FormatException('预设必须是 JSON 对象');
+    final map = Map<String, dynamic>.from(decoded);
+    final systemPrefix = map['systemPrefix'] is String
+        ? map['systemPrefix'] as String
+        : '';
+    final postHistory = map['postHistoryInstructions'] is String
+        ? map['postHistoryInstructions'] as String
+        : '';
+    final existing = _snapshot.data.settings.prompts;
+    final mergedRules = <RegexRule>[...existing.rules];
+    final rawRules = map['rules'];
+    if (rawRules is List) {
+      for (final entry in rawRules.whereType<Map>()) {
+        final item = Map<String, dynamic>.from(entry);
+        final name = (item['name'] as String?)?.trim() ?? '';
+        final pattern = (item['pattern'] as String?)?.trim() ?? '';
+        if (name.isEmpty || pattern.isEmpty) continue;
+        mergedRules.add(RegexRule(
+          id: 'regex_${_uuid.v4()}',
+          name: name,
+          pattern: pattern,
+          replacement: item['replacement'] is String
+              ? item['replacement'] as String
+              : '',
+          target: RegexTarget.values.firstWhere(
+            (e) => e.name == item['target'],
+            orElse: () => RegexTarget.aiOutput,
+          ),
+          enabled: item['enabled'] as bool? ?? true,
+          caseSensitive: item['caseSensitive'] as bool? ?? false,
+          multiline: item['multiline'] as bool? ?? true,
+          dotAll: item['dotAll'] as bool? ?? true,
+          order: item['order'] as int? ?? 100,
+        ));
+      }
+    }
+    final config = PromptConfig(
+      systemPrefix: systemPrefix,
+      postHistoryInstructions: postHistory,
+      rules: mergedRules,
+    );
+    await savePromptConfig(config);
+  }
 }

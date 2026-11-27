@@ -93,6 +93,70 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
     });
   }
 
+  Future<void> _importPreset() async {
+    final controller = ref.read(appControllerProvider.notifier);
+    final messenger = ScaffoldMessenger.of(context);
+    final pasted = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        final textController = TextEditingController();
+        return AlertDialog(
+          title: const Text('导入提示词预设'),
+          content: TextField(
+            controller: textController,
+            maxLines: 10,
+            decoration: const InputDecoration(
+              hintText: '粘贴包含 systemPrefix / rules 的 JSON',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(dialogContext, textController.text),
+              child: const Text('导入'),
+            ),
+          ],
+        );
+      },
+    );
+    if (pasted == null || pasted.trim().isEmpty) return;
+    try {
+      await controller.importPromptPreset(pasted);
+      if (!mounted) return;
+      final prompts = ref.read(appControllerProvider).data.settings.prompts;
+      setState(() {
+        _systemPrompt.text = prompts.systemPrefix;
+        _postHistory.text = prompts.postHistoryInstructions;
+        _rules = [...prompts.rules];
+        _error = null;
+      });
+      messenger.showSnackBar(const SnackBar(content: Text('预设已导入')));
+    } catch (error) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            error is FormatException ? error.message : '预设导入失败：$error',
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _exportPreset() async {
+    final controller = ref.read(appControllerProvider.notifier);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      final json = controller.exportPromptPreset();
+      await Clipboard.setData(ClipboardData(text: json));
+      messenger.showSnackBar(const SnackBar(content: Text('提示词预设 JSON 已复制')));
+    } catch (error) {
+      messenger.showSnackBar(SnackBar(content: Text('预设导出失败：$error')));
+    }
+  }
+
   Future<void> _importScripts() async {
     final controller = ref.read(appControllerProvider.notifier);
     final messenger = ScaffoldMessenger.of(context);
@@ -220,6 +284,43 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
                   decoration: const InputDecoration(
                     hintText: '例如：不要总结旧对话，不长篇解释。',
                   ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          DtSurface(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '提示词预设',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '导入或导出当前系统提示词、后置指令和正则规则的 JSON 预设。导入预设会合并正则规则。',
+                  style: TextStyle(fontSize: 12, height: 1.6),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
+                      child: DtButton(
+                        label: '导入预设',
+                        variant: DtButtonVariant.secondary,
+                        onPressed: _importPreset,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: DtButton(
+                        label: '导出预设',
+                        variant: DtButtonVariant.secondary,
+                        onPressed: _exportPreset,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
