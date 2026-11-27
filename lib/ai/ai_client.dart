@@ -93,7 +93,7 @@ class AiClient {
           apiKey: apiKey,
           messages: messages,
           onUpdate: onUpdate,
-          maxOutputTokens: maxOutputTokens,
+          maxOutputTokens: maxOutputTokens ?? config.maxOutputTokens,
           abortTrigger: abortTrigger,
         );
       case ProviderKind.anthropic:
@@ -102,7 +102,7 @@ class AiClient {
           apiKey: apiKey,
           messages: messages,
           onUpdate: onUpdate,
-          maxOutputTokens: maxOutputTokens,
+          maxOutputTokens: maxOutputTokens ?? config.maxOutputTokens,
           abortTrigger: abortTrigger,
         );
     }
@@ -451,8 +451,14 @@ $safeConversationExcerpt
           ..body = jsonEncode({
             'model': config.model,
             'stream': streaming,
-            'temperature': 0.85,
+            'temperature': config.temperature,
+            if (config.topP < 1) 'top_p': config.topP,
+            if (config.frequencyPenalty != 0)
+              'frequency_penalty': config.frequencyPenalty,
+            if (config.presencePenalty != 0)
+              'presence_penalty': config.presencePenalty,
             if (maxOutputTokens != null) 'max_tokens': maxOutputTokens,
+            if (config.stopSequences.isNotEmpty) 'stop': config.stopSequences,
             'messages': [
               for (final message in messages)
                 {'role': message.role, 'content': message.openAiContent},
@@ -639,6 +645,10 @@ $safeConversationExcerpt
             'model': config.model,
             'max_tokens': maxOutputTokens ?? 4096,
             'stream': true,
+            'temperature': config.temperature.clamp(0, 1),
+            if (config.topP < 1) 'top_p': config.topP,
+            if (config.stopSequences.isNotEmpty)
+              'stop_sequences': config.stopSequences,
             'system': system,
             'messages': [
               for (final message in chat)

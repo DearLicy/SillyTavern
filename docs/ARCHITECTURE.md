@@ -103,6 +103,7 @@ V2.0.2 计划在原生端接入 SQLCipher，并把应用锁、数据库密钥和
 - SSE 流式增量；
 - OpenAI 兼容流可识别 `delta.content`、完整 `message.content`、普通 JSON 回包和只包含 `reasoning_content` 的推理模型；
 - OpenAI 兼容聊天默认省略 `max_tokens`，长度由提示词规划而非正文截断控制；
+- 供应商配置可控制温度、Top P、频率/存在惩罚、最大输出 Token 和停止序列；OpenAI 兼容接口使用 `stop`，Anthropic 使用 `stop_sequences`，未配置的可选参数不会发送；
 - 错误统一收束为角色消息与可见错误提示。
 
 请求路径：

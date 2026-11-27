@@ -148,7 +148,7 @@ class AppDrawer extends ConsumerWidget {
                             icon: Icons.info_outline_rounded,
                             iconColor: const Color(0xFF8090A8),
                             title: '关于 SillyTavern',
-                            subtitle: 'V2.1.1 · 本地 LLM 前端',
+                            subtitle: 'V2.1.2 · 本地 LLM 前端',
                             onTap: () {
                               Navigator.of(context).pop();
                               context.push('/about');

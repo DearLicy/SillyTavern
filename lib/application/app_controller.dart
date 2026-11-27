@@ -1238,9 +1238,7 @@ class AppController extends StateNotifier<ApplicationState> {
       // Do not overwrite a manual edit or another summary that completed while
       // this provider request was running.
       if (currentThread == null ||
-          current.settings.provider.kind != config.kind ||
-          current.settings.provider.baseUrl != config.baseUrl ||
-          current.settings.provider.model != config.model ||
+          !current.settings.provider.hasSameRequestSettingsAs(config) ||
           currentThread.contextMemo != thread.contextMemo ||
           currentThread.summarizedThroughMessageId !=
               thread.summarizedThroughMessageId) {

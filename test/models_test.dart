@@ -81,4 +81,26 @@ void main() {
     expect(data.characterForRelationship(relationship!)?.name, '顾言');
     expect(data.personaById(relationship.personaId)?.name, '林澈');
   });
+
+  test('provider generation parameters survive backup JSON', () {
+    const provider = ProviderConfig(
+      model: 'model',
+      temperature: 0.35,
+      topP: 0.8,
+      frequencyPenalty: 0.25,
+      presencePenalty: -0.15,
+      maxOutputTokens: 2048,
+      stopSequences: ['END', '---'],
+    );
+    final data = buildSeedData().copyWith(
+      settings: buildSeedData().settings.copyWith(provider: provider),
+    );
+    final restored = AppData.fromJson(data.toJson()).settings.provider;
+    expect(restored.temperature, 0.35);
+    expect(restored.topP, 0.8);
+    expect(restored.frequencyPenalty, 0.25);
+    expect(restored.presencePenalty, -0.15);
+    expect(restored.maxOutputTokens, 2048);
+    expect(restored.stopSequences, ['END', '---']);
+  });
 }

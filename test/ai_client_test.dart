@@ -101,6 +101,42 @@ void main() {
     ai.close();
   });
 
+  test('Anthropic sends configured generation parameters', () async {
+    Map<String, dynamic>? body;
+    final ai = AiClient(
+      client: MockClient((request) async {
+        body = jsonDecode(request.body) as Map<String, dynamic>;
+        return http.Response(
+          'data: {"type":"content_block_delta","delta":{"text":"收到"}}\n\n',
+          200,
+          headers: {'content-type': 'text/event-stream; charset=utf-8'},
+        );
+      }),
+    );
+    addTearDown(ai.close);
+    expect(
+      await ai.streamReply(
+        config: const ProviderConfig(
+          kind: ProviderKind.anthropic,
+          baseUrl: 'https://anthropic.example',
+          model: 'claude-test',
+          temperature: 1.4,
+          topP: 0.6,
+          maxOutputTokens: 222,
+          stopSequences: ['END'],
+        ),
+        apiKey: 'test-key',
+        messages: const [PromptMessage('user', '你好')],
+        onUpdate: (_) {},
+      ),
+      '收到',
+    );
+    expect(body?['temperature'], 1);
+    expect(body?['top_p'], 0.6);
+    expect(body?['max_tokens'], 222);
+    expect(body?['stop_sequences'], ['END']);
+  });
+
   test(
     'DeepSeek memory request is a separate non-streaming compatible call',
     () async {

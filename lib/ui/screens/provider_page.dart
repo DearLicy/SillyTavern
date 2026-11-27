@@ -21,10 +21,16 @@ class ProviderPage extends ConsumerStatefulWidget {
 class _ProviderPageState extends ConsumerState<ProviderPage> {
   late final TextEditingController _baseUrl;
   final _apiKey = TextEditingController();
+  final _maxOutputTokens = TextEditingController();
+  final _frequencyPenalty = TextEditingController();
+  final _presencePenalty = TextEditingController();
+  final _stopSequences = TextEditingController();
   late ProviderKind _kind;
   late bool _remember;
   late List<String> _models;
   late String _model;
+  late double _temperature;
+  late double _topP;
   final _names = <String, String>{};
   bool _obscure = true, _fetching = false;
   DtButtonStatus _saveStatus = DtButtonStatus.idle;
@@ -38,6 +44,16 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
     _baseUrl = TextEditingController(text: provider.baseUrl);
     _kind = provider.kind;
     _remember = provider.rememberKey;
+    _temperature = provider.temperature;
+    _topP = provider.topP;
+    _maxOutputTokens.text = provider.maxOutputTokens?.toString() ?? '';
+    _frequencyPenalty.text = provider.frequencyPenalty == 0
+        ? ''
+        : '${provider.frequencyPenalty}';
+    _presencePenalty.text = provider.presencePenalty == 0
+        ? ''
+        : '${provider.presencePenalty}';
+    _stopSequences.text = provider.stopSequences.join('\n');
     _models = List.of(provider.models);
     // Older saved ids are retained; fresh installations always start empty.
     if (_models.isEmpty && provider.model.isNotEmpty) {
@@ -65,7 +81,26 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
     model: _model,
     models: _models,
     rememberKey: _remember,
+    temperature: _temperature.clamp(0, 2),
+    topP: _topP.clamp(0, 1),
+    frequencyPenalty: _parseDouble(_frequencyPenalty.text, -2, 2),
+    presencePenalty: _parseDouble(_presencePenalty.text, -2, 2),
+    maxOutputTokens: switch (int.tryParse(_maxOutputTokens.text.trim())) {
+      final int value when value > 0 => value.clamp(1, 131072),
+      _ => null,
+    },
+    stopSequences: _stopSequences.text
+        .split(RegExp(r'[\n，]'))
+        .map((value) => value.trim())
+        .where((value) => value.isNotEmpty)
+        .take(4)
+        .toList(),
   );
+
+  double _parseDouble(TextEditingController controller, double min, double max) {
+    final parsed = double.tryParse(controller.text.trim()) ?? 0;
+    return parsed.clamp(min, max);
+  }
 
   Future<void> _fetchModels() async {
     if (_fetching) return;
@@ -147,6 +182,10 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
     _request++;
     _baseUrl.dispose();
     _apiKey.dispose();
+    _maxOutputTokens.dispose();
+    _frequencyPenalty.dispose();
+    _presencePenalty.dispose();
+    _stopSequences.dispose();
     super.dispose();
   }
 
@@ -286,6 +325,98 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
               ),
             ),
             const SizedBox(height: 16),
+            DtSurface(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '生成参数',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    '这些参数按供应商原样发送；不支持的供应商可能忽略或拒绝，出现错误时恢复默认值再试。',
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.5,
+                      color: Color(0xFF777A85),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  _ProviderSlider(
+                    title: '温度',
+                    value: _temperature,
+                    min: 0,
+                    max: 2,
+                    format: (value) => value.toStringAsFixed(2),
+                    hint: '越高越发散，角色聊天建议 0.7–1.0。',
+                    onChanged: (value) => setState(() => _temperature = value),
+                  ),
+                  const SizedBox(height: 12),
+                  _ProviderSlider(
+                    title: 'Top P',
+                    value: _topP,
+                    min: 0,
+                    max: 1,
+                    format: (value) => value.toStringAsFixed(2),
+                    hint: '1 表示不额外截断候选词；通常无需和温度同时调低。',
+                    onChanged: (value) => setState(() => _topP = value),
+                  ),
+                  const SizedBox(height: 12),
+                  DtTextField(
+                    controller: _maxOutputTokens,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: '最大输出 Token',
+                      hintText: '留空自动',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DtTextField(
+                          controller: _frequencyPenalty,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                            signed: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: '频率惩罚',
+                            hintText: '0',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: DtTextField(
+                          controller: _presencePenalty,
+                          keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true,
+                            signed: true,
+                          ),
+                          decoration: const InputDecoration(
+                            labelText: '存在惩罚',
+                            hintText: '0',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  DtTextField(
+                    controller: _stopSequences,
+                    minLines: 1,
+                    maxLines: 4,
+                    decoration: const InputDecoration(
+                      labelText: '停止序列',
+                      hintText: '每行一个，最多 4 个',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
             const Text(
               '聊天请求直接发送给你选择的供应商。图片会作为真实多模态输入，需选择支持识图的模型。搜索、OCR 和语音可单独配置 DeepSeek 官方 Key，与第三方聊天同时使用。SillyTavern 不托管密钥或聊天内容。',
               style: TextStyle(
@@ -317,6 +448,71 @@ class _ProviderPageState extends ConsumerState<ProviderPage> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProviderSlider extends StatelessWidget {
+  const _ProviderSlider({
+    required this.title,
+    required this.value,
+    required this.min,
+    required this.max,
+    required this.format,
+    required this.hint,
+    required this.onChanged,
+  });
+
+  final String title;
+  final double value;
+  final double min;
+  final double max;
+  final String Function(double value) format;
+  final String hint;
+  final ValueChanged<double> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final selected = value.clamp(min, max);
+    final normalized = max == min ? 0.0 : (selected - min) / (max - min);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            const Spacer(),
+            Text(
+              format(selected),
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+        FSlider(
+          controller: null,
+          initialSelection: FSliderSelection(max: normalized),
+          onChange: (selection) {
+            onChanged(min + (max - min) * selection.offset.max);
+          },
+        ),
+        Text(
+          hint,
+          style: TextStyle(
+            fontSize: 10.5,
+            height: 1.4,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? const Color(0xFF7F889C)
+                : const Color(0xFF8C95A7),
+          ),
+        ),
+      ],
     );
   }
 }

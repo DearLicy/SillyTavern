@@ -990,6 +990,12 @@ class ProviderConfig {
     this.model = '',
     this.models = const [],
     this.rememberKey = false,
+    this.temperature = 0.85,
+    this.topP = 1,
+    this.frequencyPenalty = 0,
+    this.presencePenalty = 0,
+    this.maxOutputTokens,
+    this.stopSequences = const [],
   });
 
   final ProviderKind kind;
@@ -997,6 +1003,12 @@ class ProviderConfig {
   final String model;
   final bool rememberKey;
   final List<String> models;
+  final double temperature;
+  final double topP;
+  final double frequencyPenalty;
+  final double presencePenalty;
+  final int? maxOutputTokens;
+  final List<String> stopSequences;
 
   bool get isOfficialDeepSeek {
     final uri = Uri.tryParse(baseUrl.trim());
@@ -1045,13 +1057,39 @@ class ProviderConfig {
     String? model,
     List<String>? models,
     bool? rememberKey,
+    double? temperature,
+    double? topP,
+    double? frequencyPenalty,
+    double? presencePenalty,
+    int? maxOutputTokens,
+    bool clearMaxOutputTokens = false,
+    List<String>? stopSequences,
   }) => ProviderConfig(
     kind: kind ?? this.kind,
     baseUrl: baseUrl ?? this.baseUrl,
     model: model ?? this.model,
     models: models ?? this.models,
     rememberKey: rememberKey ?? this.rememberKey,
+    temperature: temperature ?? this.temperature,
+    topP: topP ?? this.topP,
+    frequencyPenalty: frequencyPenalty ?? this.frequencyPenalty,
+    presencePenalty: presencePenalty ?? this.presencePenalty,
+    maxOutputTokens: clearMaxOutputTokens
+        ? null
+        : maxOutputTokens ?? this.maxOutputTokens,
+    stopSequences: stopSequences ?? this.stopSequences,
   );
+
+  bool hasSameRequestSettingsAs(ProviderConfig other) =>
+      kind == other.kind &&
+      baseUrl == other.baseUrl &&
+      model == other.model &&
+      temperature == other.temperature &&
+      topP == other.topP &&
+      frequencyPenalty == other.frequencyPenalty &&
+      presencePenalty == other.presencePenalty &&
+      maxOutputTokens == other.maxOutputTokens &&
+      stopSequences.join('\u0000') == other.stopSequences.join('\u0000');
 
   Map<String, dynamic> toJson() => {
     'kind': kind.name,
@@ -1059,6 +1097,12 @@ class ProviderConfig {
     'model': model,
     'models': models,
     'rememberKey': rememberKey,
+    'temperature': temperature,
+    'topP': topP,
+    'frequencyPenalty': frequencyPenalty,
+    'presencePenalty': presencePenalty,
+    'maxOutputTokens': maxOutputTokens,
+    'stopSequences': stopSequences,
   };
 
   factory ProviderConfig.fromJson(Map<String, dynamic> json) => ProviderConfig(
@@ -1070,6 +1114,27 @@ class ProviderConfig {
     model: json['model'] as String? ?? '',
     models: (json['models'] as List?)?.whereType<String>().toList() ?? const [],
     rememberKey: json['rememberKey'] as bool? ?? false,
+    temperature: ((json['temperature'] as num?)?.toDouble() ?? 0.85).clamp(
+      0,
+      2,
+    ),
+    topP: ((json['topP'] as num?)?.toDouble() ?? 1).clamp(0, 1),
+    frequencyPenalty:
+        ((json['frequencyPenalty'] as num?)?.toDouble() ?? 0).clamp(-2, 2),
+    presencePenalty:
+        ((json['presencePenalty'] as num?)?.toDouble() ?? 0).clamp(-2, 2),
+    maxOutputTokens: switch ((json['maxOutputTokens'] as num?)?.toInt()) {
+      final int value when value > 0 => value.clamp(1, 131072),
+      _ => null,
+    },
+    stopSequences:
+        (json['stopSequences'] as List?)
+            ?.whereType<String>()
+            .map((value) => value.trim())
+            .where((value) => value.isNotEmpty)
+            .take(4)
+            .toList() ??
+        const [],
   );
 }
 
