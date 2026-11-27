@@ -123,7 +123,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.textContaining('上轮变化'), findsOneWidget);
-    expect(find.textContaining('好感 +2'), findsOneWidget);
+    expect(find.textContaining('亲近 +2'), findsOneWidget);
     expect(find.text('你分享了真实近况'), findsOneWidget);
     expect(find.text('已完成 7 轮关系互动'), findsOneWidget);
     expect(tester.takeException(), isNull);
@@ -216,7 +216,8 @@ void main() {
       expect(find.text('https://api.deepseek.com'), findsWidgets);
       expect(find.text('拉取模型'), findsOneWidget);
       expect(find.text('拉取后点击选择，无需手填'), findsOneWidget);
-      expect(find.byType(EditableText), findsNWidgets(2));
+      expect(find.text('生成参数'), findsOneWidget);
+      expect(find.text('最大输出 Token'), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       container.dispose();
