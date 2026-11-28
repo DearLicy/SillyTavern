@@ -966,32 +966,135 @@ class RegexRule {
   );
 }
 
+enum PromptBlockRole {
+  system('System'),
+  user('User'),
+  assistant('Assistant');
+
+  const PromptBlockRole(this.label);
+
+  final String label;
+
+  static PromptBlockRole fromName(String? value) => values.firstWhere(
+    (item) => item.name == value,
+    orElse: () => PromptBlockRole.system,
+  );
+}
+
+enum PromptInjectionPosition {
+  beforeCharacter('角色卡前'),
+  afterCharacter('角色卡后'),
+  beforeHistory('历史前'),
+  atDepth('历史深度');
+
+  const PromptInjectionPosition(this.label);
+
+  final String label;
+
+  static PromptInjectionPosition fromName(String? value) => values.firstWhere(
+    (item) => item.name == value,
+    orElse: () => PromptInjectionPosition.beforeHistory,
+  );
+}
+
+/// A named, ordered prompt entry from a SillyTavern-style Prompt Manager.
+///
+/// These entries are declarative text only. They never contain executable
+/// scripts and remain below the app's hard safety and user-correction layers.
+class PromptBlock {
+  const PromptBlock({
+    required this.id,
+    required this.name,
+    required this.content,
+    this.role = PromptBlockRole.system,
+    this.position = PromptInjectionPosition.beforeHistory,
+    this.depth = 0,
+    this.enabled = true,
+    this.order = 100,
+  });
+
+  final String id;
+  final String name;
+  final String content;
+  final PromptBlockRole role;
+  final PromptInjectionPosition position;
+  final int depth;
+  final bool enabled;
+  final int order;
+
+  PromptBlock copyWith({
+    String? name,
+    String? content,
+    PromptBlockRole? role,
+    PromptInjectionPosition? position,
+    int? depth,
+    bool? enabled,
+    int? order,
+  }) => PromptBlock(
+    id: id,
+    name: name ?? this.name,
+    content: content ?? this.content,
+    role: role ?? this.role,
+    position: position ?? this.position,
+    depth: depth ?? this.depth,
+    enabled: enabled ?? this.enabled,
+    order: order ?? this.order,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'name': name,
+    'content': content,
+    'role': role.name,
+    'position': position.name,
+    'depth': depth,
+    'enabled': enabled,
+    'order': order,
+  };
+
+  factory PromptBlock.fromJson(Map<String, dynamic> json) => PromptBlock(
+    id: json['id'] as String? ?? '',
+    name: json['name'] as String? ?? '未命名提示词',
+    content: json['content'] as String? ?? '',
+    role: PromptBlockRole.fromName(json['role'] as String?),
+    position: PromptInjectionPosition.fromName(json['position'] as String?),
+    depth: ((json['depth'] as num?)?.toInt() ?? 0).clamp(0, 100),
+    enabled: json['enabled'] as bool? ?? true,
+    order: (json['order'] as num?)?.toInt() ?? 100,
+  );
+}
+
 class PromptConfig {
   const PromptConfig({
     this.systemPrefix = '',
     this.postHistoryInstructions = '',
     this.rules = const [],
+    this.blocks = const [],
   });
 
   final String systemPrefix;
   final String postHistoryInstructions;
   final List<RegexRule> rules;
+  final List<PromptBlock> blocks;
 
   PromptConfig copyWith({
     String? systemPrefix,
     String? postHistoryInstructions,
     List<RegexRule>? rules,
+    List<PromptBlock>? blocks,
   }) => PromptConfig(
     systemPrefix: systemPrefix ?? this.systemPrefix,
     postHistoryInstructions:
         postHistoryInstructions ?? this.postHistoryInstructions,
     rules: rules ?? this.rules,
+    blocks: blocks ?? this.blocks,
   );
 
   Map<String, dynamic> toJson() => {
     'systemPrefix': systemPrefix,
     'postHistoryInstructions': postHistoryInstructions,
     'rules': rules.map((e) => e.toJson()).toList(),
+    'blocks': blocks.map((e) => e.toJson()).toList(),
   };
 
   factory PromptConfig.fromJson(Map<String, dynamic> json) => PromptConfig(
@@ -1001,6 +1104,12 @@ class PromptConfig {
         (json['rules'] as List?)
             ?.whereType<Map>()
             .map((e) => RegexRule.fromJson(Map<String, dynamic>.from(e)))
+            .toList() ??
+        const [],
+    blocks:
+        (json['blocks'] as List?)
+            ?.whereType<Map>()
+            .map((e) => PromptBlock.fromJson(Map<String, dynamic>.from(e)))
             .toList() ??
         const [],
   );

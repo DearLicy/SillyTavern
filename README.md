@@ -29,6 +29,7 @@ SillyTavern APP 不是通用 AI 助手，也不是乙女/梦女社交产品。�
   <img src="assets/screenshots/03-characters.png" width="180" alt="角色库" />
   <img src="assets/screenshots/04-character-card.png" width="180" alt="角色卡详情" />
   <img src="assets/screenshots/05-chat.png" width="180" alt="全屏角色聊天" />
+  <img src="assets/screenshots/06-prompt-manager.png" width="180" alt="Prompt Manager 提示词块管理" />
 </div>
 
 ## 手机端结构
@@ -57,7 +58,7 @@ SillyTavern APP 不是通用 AI 助手，也不是乙女/梦女社交产品。�
 | Character Card V2 | ✅ | JSON 导入导出；PNG `ccv3` / `chara` 元数据导入与 PNG 回写 |
 | 角色卡字段 | ✅ | description、personality、scenario、first message、alternate greetings、mes_example、system_prompt、post_history_instructions、creator notes、tags、内嵌 character_book |
 | 世界书 / World Info | ✅ | 主/次关键词、常驻、概率、扫描深度、单书上限、递归层数、排序、启用开关、插入深度与作者注记 |
-| Prompt Manager | ✅ | 全局系统提示词与后置指令；Chat Completion Preset 导入与项目内预设导出 |
+| Prompt Manager | ✅ | 命名提示词块、System/User/Assistant 角色、角色卡前后与历史深度注入、排序与启停；预设导入不再丢弃命名条目 |
 | 正则与宏 | ✅ | 输入/输出正则、捕获组、局部变量；`{{char}}`、`{{user}}`、`{{getvar}}` 等宏 |
 | 长期记忆 | ✅ | 边界、固定项、相关事实检索；独立后台请求整理滚动摘要，不写入 UI 气泡 |
 | 聊天管理 | ✅ | 搜索、编辑、删除、批量删除、清空、重新开始、消息分支 |
@@ -75,7 +76,7 @@ SillyTavern APP 不是通用 AI 助手，也不是乙女/梦女社交产品。�
 - Character Card V2 JSON / PNG；
 - World Info / Lorebook 常用字段；
 - Chat Completion Preset；
-- Prompt Manager 与后置指令；
+- Prompt Manager 命名条目、消息角色、注入位置与后置指令；
 - 用户 personas；
 - 正则脚本与聊天变量；
 - 群聊、消息分支与聊天记录管理；

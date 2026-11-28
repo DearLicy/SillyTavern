@@ -16,6 +16,7 @@ import '../ui/screens/messages_page.dart';
 import '../ui/screens/persona_editor_page.dart';
 import '../ui/screens/personas_page.dart';
 import '../ui/screens/profile_edit_page.dart';
+import '../ui/screens/prompt_blocks_page.dart';
 import '../ui/screens/prompt_rules_page.dart';
 import '../ui/screens/provider_page.dart';
 import '../ui/screens/safety_page.dart';
@@ -101,6 +102,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/prompts',
         builder: (context, state) => const PromptRulesPage(),
+      ),
+      GoRoute(
+        path: '/prompt-blocks',
+        builder: (context, state) => const PromptBlocksPage(),
       ),
       GoRoute(
         path: '/tools',

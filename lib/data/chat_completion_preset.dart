@@ -41,8 +41,9 @@ class ChatCompletionPresetCodec {
     List<RegexRule> existingRules = const [],
   }) {
     final mainPrompt = <String>[];
-    final auxiliaryPrompt = <String>[];
+    var blocks = <PromptBlock>[];
     var postHistory = '';
+    var sourceIndex = 0;
     for (final value in json['prompts'] as List) {
       if (value is! Map) continue;
       final item = Map<String, dynamic>.from(value);
@@ -51,20 +52,44 @@ class ChatCompletionPresetCodec {
       final content = _text(item['content']);
       if (content.isEmpty || item['marker'] == true) continue;
       if (identifier == 'main' || name.toLowerCase() == 'main prompt') {
-        mainPrompt.add(content);
-      } else if (identifier == 'nsfw' ||
-          name.toLowerCase() == 'auxiliary prompt') {
-        auxiliaryPrompt.add(content);
+        mainPrompt.add(_bounded(content, 12000));
       } else if (identifier == 'jailbreak' ||
           name.toLowerCase() == 'post-history instructions') {
-        postHistory = content;
+        postHistory = _bounded(content, 12000);
+      } else if (blocks.length < 100) {
+        final depth = switch (item['injection_depth']) {
+          final num value => value.toInt().clamp(0, 100),
+          _ => 0,
+        };
+        final position = depth > 0
+            ? PromptInjectionPosition.atDepth
+            : item['system_prompt'] == true
+            ? PromptInjectionPosition.beforeCharacter
+            : PromptInjectionPosition.beforeHistory;
+        final resolvedName = name.isEmpty
+            ? (identifier.isEmpty ? '导入的提示词 ${blocks.length + 1}' : identifier)
+            : name;
+        final safeId = (identifier.isEmpty ? 'prompt' : identifier).replaceAll(
+          RegExp(r'[^A-Za-z0-9_-]'),
+          '_',
+        );
+        blocks.add(
+          PromptBlock(
+            id: 'prompt_${safeId}_$sourceIndex',
+            name: _bounded(resolvedName, 120),
+            content: _bounded(content, 12000),
+            role: _role(item['role']),
+            position: position,
+            depth: depth,
+            enabled: item['enabled'] as bool? ?? true,
+            order: sourceIndex,
+          ),
+        );
       }
+      sourceIndex++;
     }
-    final systemParts = <String>[
-      ...mainPrompt,
-      if (auxiliaryPrompt.isNotEmpty)
-        '【辅助提示词】\n${auxiliaryPrompt.join('\n\n')}',
-    ];
+    final appBlocks = _appBlocks(json['blocks']);
+    if (appBlocks != null) blocks = appBlocks;
     final stop = json['stop'];
     final stops = stop is List
         ? stop
@@ -79,9 +104,10 @@ class ChatCompletionPresetCodec {
           ? '导入的 Chat Completion 预设'
           : _text(json['name']),
       prompts: PromptConfig(
-        systemPrefix: systemParts.join('\n\n'),
+        systemPrefix: mainPrompt.join('\n\n'),
         postHistoryInstructions: postHistory,
         rules: [...existingRules],
+        blocks: blocks,
       ),
       temperature: _double(json['temperature'], 0, 2),
       topP: _double(json['top_p'], 0, 1),
@@ -100,6 +126,32 @@ class ChatCompletionPresetCodec {
 
   String _text(Object? value) =>
       value is String ? value.trim() : value?.toString() ?? '';
+
+  PromptBlockRole _role(Object? value) {
+    final name = value is String ? value.toLowerCase().trim() : '';
+    return switch (name) {
+      'user' => PromptBlockRole.user,
+      'assistant' => PromptBlockRole.assistant,
+      _ => PromptBlockRole.system,
+    };
+  }
+
+  List<PromptBlock>? _appBlocks(Object? value) {
+    if (value is! List) return null;
+    final blocks = <PromptBlock>[];
+    for (final entry in value.whereType<Map>().take(100)) {
+      final block = PromptBlock.fromJson(Map<String, dynamic>.from(entry));
+      if (block.name.trim().isEmpty || block.content.trim().isEmpty) continue;
+      blocks.add(block);
+    }
+    return blocks;
+  }
+
+  String _bounded(String value, int maxRunes) {
+    final runes = value.runes;
+    if (runes.length <= maxRunes) return value;
+    return '${String.fromCharCodes(runes.take(maxRunes)).trimRight()}…';
+  }
 
   double? _double(Object? value, double min, double max) {
     final number = value is num ? value.toDouble() : null;

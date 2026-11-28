@@ -78,6 +78,10 @@
 
 - 全局系统提示词；
 - post-history instructions；
+- 命名提示词块与独立启用开关；
+- System / User / Assistant 消息角色；
+- 角色卡前、角色卡后、历史前与消息深度注入；
+- Prompt Manager 条目排序，以及 Chat Completion Preset 中的命名提示词保留；
 - 输入与输出正则规则；
 - 捕获组替换、大小写、多行与点号匹配；
 - 工程内提示词预设导出；

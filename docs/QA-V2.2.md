@@ -1,6 +1,6 @@
 # V2.2.0 验收记录
 
-验收日期：2026-11-27
+验收日期：2026-11-28
 
 ## 静态与测试
 
@@ -9,7 +9,7 @@ flutter analyze
 No issues found
 
 flutter test
-234 tests passed
+238 tests passed
 
 flutter build web --release --base-href /SillyTavern/
 Built build/web
@@ -33,6 +33,7 @@ Built app-x86_64-release.apk
 - 聊天菜单不出现当前场景或安全词；
 - 测试夹具只在浏览器 QA 环境中注入，运行时空状态不包含演示数据。
 - 使用全新浏览器上下文走完成年确认、空白会话首页和空白角色库，没有旧联系人/动态导航、运行时异常或控制台错误。
+- Prompt Manager 在 390×844 浅色和深色真实 Web 构建中完成视觉检查，提示词块、角色、注入位置和启停状态均可见。
 
 截图位于 `assets/screenshots/`：
 
@@ -41,6 +42,7 @@ Built app-x86_64-release.apk
 - `03-characters.png`
 - `04-character-card.png`
 - `05-chat.png`
+- `06-prompt-manager.png`
 
 ## 已知环境限制
 

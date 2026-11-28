@@ -130,15 +130,31 @@ void main() {
           order: 5,
         ),
       ],
+      blocks: [
+        PromptBlock(
+          id: 'p1',
+          name: '短句规则',
+          content: '每次最多两句。',
+          role: PromptBlockRole.assistant,
+          position: PromptInjectionPosition.atDepth,
+          depth: 2,
+          order: 3,
+        ),
+      ],
     );
     final restored = PromptConfig.fromJson(config.toJson());
     expect(restored.systemPrefix, contains('{{char}}'));
     expect(restored.rules.single.target, RegexTarget.aiOutput);
     expect(restored.rules.single.caseSensitive, isTrue);
+    expect(restored.blocks.single.name, '短句规则');
+    expect(restored.blocks.single.role, PromptBlockRole.assistant);
+    expect(restored.blocks.single.position, PromptInjectionPosition.atDepth);
+    expect(restored.blocks.single.depth, 2);
 
     final legacySettings = AppSettings.fromJson(const {});
     expect(legacySettings.prompts.systemPrefix, '');
     expect(legacySettings.prompts.rules, isEmpty);
+    expect(legacySettings.prompts.blocks, isEmpty);
   });
 
   test(
@@ -226,4 +242,29 @@ void main() {
       expect(identical(controller.state.data.settings.prompts, before), isTrue);
     },
   );
+
+  test('prompt blocks are validated before saving', () async {
+    final seed = buildSeedData();
+    final controller = AppController(
+      store: FakeStore(seed),
+      keyStore: FakeKeyStore(),
+      toolKeyStore: FakeKeyStore(),
+      attachmentStore: MemoryAttachments(),
+    );
+    addTearDown(controller.dispose);
+    for (var i = 0; i < 40 && controller.state.loading; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 5));
+    }
+    await expectLater(
+      controller.savePromptConfig(
+        const PromptConfig(
+          blocks: [
+            PromptBlock(id: 'same', name: '一', content: '内容'),
+            PromptBlock(id: 'same', name: '二', content: '内容'),
+          ],
+        ),
+      ),
+      throwsA(isA<FormatException>()),
+    );
+  });
 }

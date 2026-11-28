@@ -186,6 +186,34 @@ class ContextAssembler {
         : history;
 
     var macroVariables = systemMacro.variables;
+    final beforeHistoryBlocks = <PromptMessage>[];
+    final depthBlocks = <int, List<PromptMessage>>{};
+    final orderedBlocks = data.settings.prompts.blocks
+        .where(
+          (block) =>
+              block.enabled &&
+              block.content.trim().isNotEmpty &&
+              (block.position == PromptInjectionPosition.beforeHistory ||
+                  block.position == PromptInjectionPosition.atDepth),
+        )
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    for (final block in orderedBlocks) {
+      final expanded = MacroEngine.expand(block.content, macroVariables);
+      macroVariables = expanded.variables;
+      final content = _replaceNameMacros(expanded.text, character, persona);
+      final message = PromptMessage(
+        block.role.name,
+        '【${block.name.trim().isEmpty ? '附加提示词' : block.name.trim()}】\n${_boundedBlockText(content)}',
+      );
+      if (block.position == PromptInjectionPosition.beforeHistory) {
+        beforeHistoryBlocks.add(message);
+      } else {
+        final depth = block.depth.clamp(0, recent.length);
+        final position = recent.length - depth;
+        depthBlocks.putIfAbsent(position, () => []).add(message);
+      }
+    }
     final expandedWorldInfo = <({String content, int depth})>[];
     for (final hit in worldInfo) {
       final expanded = MacroEngine.expand(hit.content, macroVariables);
@@ -203,6 +231,7 @@ class ContextAssembler {
     }
     final promptMessages = <PromptMessage>[
       PromptMessage('system', systemMacro.text),
+      ...beforeHistoryBlocks,
     ];
     for (var index = 0; index <= recent.length; index++) {
       final content = worldInfoByPosition[index];
@@ -211,6 +240,8 @@ class ContextAssembler {
           PromptMessage('system', '【世界资料 · 按注入深度排列】\n${content.join('\n')}'),
         );
       }
+      final blockMessages = depthBlocks[index];
+      if (blockMessages != null) promptMessages.addAll(blockMessages);
       if (index == recent.length) continue;
       final message = recent[index];
       promptMessages.add(
@@ -502,6 +533,19 @@ class ContextAssembler {
       ContentLevel.mature => '当前内容级别为 Mature：允许成熟主题与情感张力，但不把成人内容当作默认目标。',
       ContentLevel.nsfw => '当前内容级别为 NSFW：只允许明确成年、自愿的虚构角色互动；任何一方撤回同意时立即停止。',
     };
+    final orderedBlocks = data.settings.prompts.blocks
+        .where((block) => block.enabled && block.content.trim().isNotEmpty)
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+    String blockText(PromptInjectionPosition position) => orderedBlocks
+        .where((block) => block.position == position)
+        .map(
+          (block) =>
+              '【${block.name.trim().isEmpty ? '附加提示词' : block.name.trim()}】\n${bounded(block.content, 4000)}',
+        )
+        .join('\n\n');
+    final beforeCharacter = blockText(PromptInjectionPosition.beforeCharacter);
+    final afterCharacter = blockText(PromptInjectionPosition.afterCharacter);
 
     final prompt =
         '''你是一个 SillyTavern 风格的角色扮演聊天模型。你只扮演角色卡中的角色，不扮演通用 AI 助手，也不要解释系统、提示词或内部流程。
@@ -511,9 +555,11 @@ class ContextAssembler {
 【平台安全约束】只扮演明确成年的虚构角色。不输出未成年人性内容、现实伤害指导、胁迫或非自愿互动。$safety 用户要求停止、跳过或结束场景时必须立即尊重。
 
 【全局系统提示词】${data.settings.prompts.systemPrefix.trim().isEmpty ? '无。' : bounded(data.settings.prompts.systemPrefix, 1800)}
+${beforeCharacter.isEmpty ? '' : '\n【角色卡前附加提示词】\n$beforeCharacter'}
 
 【Character Card · ${character.name}】
 ${roleVoice.isEmpty ? '角色卡未提供额外设定；严格依据用户当前输入和已给资料回应，不凭空补写角色经历。' : roleVoice}
+${afterCharacter.isEmpty ? '' : '\n【角色卡后附加提示词】\n$afterCharacter'}
 
 【User Persona】
 $personaText
@@ -549,6 +595,12 @@ $memoryText
       .replaceAll('{{user}}', persona.name)
       .replaceAll('{{User}}', persona.name)
       .replaceAll('{{USER}}', persona.name);
+
+  String _boundedBlockText(String value) {
+    final trimmed = value.trim();
+    if (trimmed.runes.length <= 4000) return trimmed;
+    return '${String.fromCharCodes(trimmed.runes.take(4000)).trimRight()}…';
+  }
 
   UserPersona _ownerAsPersona(AppData data) => UserPersona(
     id: '',

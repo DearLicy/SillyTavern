@@ -33,6 +33,7 @@ void main() {
     expect(map['postHistoryInstructions'], isA<String>());
     expect(map['rules'], isA<List>());
     expect(map['prompts'], isA<List>());
+    expect(map['blocks'], isA<List>());
     expect(map['temperature'], isA<num>());
   });
 
@@ -134,6 +135,14 @@ void main() {
               'content': 'Do not use assistant filler.',
             },
             {
+              'identifier': 'depth_reminder',
+              'name': 'Depth Reminder',
+              'role': 'assistant',
+              'content': 'Keep the reply short.',
+              'injection_depth': 2,
+              'enabled': false,
+            },
+            {
               'identifier': 'chatHistory',
               'name': 'Chat History',
               'marker': true,
@@ -145,7 +154,7 @@ void main() {
 
       final settings = controller.state.data.settings;
       expect(settings.prompts.systemPrefix, contains('roleplay reply'));
-      expect(settings.prompts.systemPrefix, contains('Keep continuity'));
+      expect(settings.prompts.systemPrefix, isNot(contains('Keep continuity')));
       expect(
         settings.prompts.systemPrefix,
         isNot(contains('must not be copied')),
@@ -154,6 +163,20 @@ void main() {
         settings.prompts.postHistoryInstructions,
         contains('assistant filler'),
       );
+      expect(settings.prompts.blocks, hasLength(2));
+      expect(settings.prompts.blocks.first.name, 'Auxiliary Prompt');
+      expect(settings.prompts.blocks.first.content, 'Keep continuity.');
+      expect(
+        settings.prompts.blocks.first.position,
+        PromptInjectionPosition.beforeHistory,
+      );
+      expect(settings.prompts.blocks.last.role, PromptBlockRole.assistant);
+      expect(
+        settings.prompts.blocks.last.position,
+        PromptInjectionPosition.atDepth,
+      );
+      expect(settings.prompts.blocks.last.depth, 2);
+      expect(settings.prompts.blocks.last.enabled, isFalse);
       expect(settings.prompts.rules, originalRules);
       expect(settings.provider.baseUrl, originalProvider.baseUrl);
       expect(settings.provider.model, originalProvider.model);
@@ -166,4 +189,46 @@ void main() {
       expect(store.data!.settings.provider.temperature, 0.7);
     },
   );
+
+  test('app prompt preset round trips ordered prompt blocks', () async {
+    final seed = buildSeedData();
+    final source = seed.copyWith(
+      settings: seed.settings.copyWith(
+        prompts: const PromptConfig(
+          blocks: [
+            PromptBlock(
+              id: 'after',
+              name: '角色卡后规则',
+              content: '保持短句。',
+              position: PromptInjectionPosition.afterCharacter,
+              order: 1,
+            ),
+            PromptBlock(
+              id: 'depth',
+              name: '深度提醒',
+              content: '不要复读。',
+              role: PromptBlockRole.assistant,
+              position: PromptInjectionPosition.atDepth,
+              depth: 3,
+              order: 2,
+            ),
+          ],
+        ),
+      ),
+    );
+    final store = FakeStore(source);
+    final controller = await _loadedController(store);
+    addTearDown(controller.dispose);
+
+    final exported = controller.exportPromptPreset(name: 'roundtrip');
+    await controller.importPromptPreset(exported);
+
+    final blocks = controller.state.data.settings.prompts.blocks;
+    expect(blocks, hasLength(2));
+    expect(blocks.first.name, '角色卡后规则');
+    expect(blocks.first.position, PromptInjectionPosition.afterCharacter);
+    expect(blocks.last.role, PromptBlockRole.assistant);
+    expect(blocks.last.position, PromptInjectionPosition.atDepth);
+    expect(blocks.last.depth, 3);
+  });
 }

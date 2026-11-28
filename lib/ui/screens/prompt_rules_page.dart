@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../ai/regex_transformer.dart';
@@ -56,6 +57,12 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
               systemPrefix: _systemPrompt.text,
               postHistoryInstructions: _postHistory.text,
               rules: _rules,
+              blocks: ref
+                  .read(appControllerProvider)
+                  .data
+                  .settings
+                  .prompts
+                  .blocks,
             ),
           );
       if (!mounted) return;
@@ -224,6 +231,12 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
   @override
   Widget build(BuildContext context) {
     final sorted = [..._rules]..sort((a, b) => a.order.compareTo(b.order));
+    final promptBlocks = ref
+        .watch(appControllerProvider)
+        .data
+        .settings
+        .prompts
+        .blocks;
     return DtDetailPage(
       title: '提示词与正则',
       subtitle: '本地规则，不执行脚本或远程代码',
@@ -243,6 +256,42 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          DtSurface(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Prompt Manager',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    DtActionButton(
+                      onPressed: () => context.push('/prompt-blocks'),
+                      child: Text('${promptBlocks.length} 个提示词块'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 7),
+                const Text(
+                  '管理命名提示词、消息角色和注入位置。角色卡前/后、历史前与指定深度都由本地上下文装配器处理。',
+                  style: TextStyle(fontSize: 12, height: 1.6),
+                ),
+                const SizedBox(height: 10),
+                DtSettingRow(
+                  icon: Icons.view_list_outlined,
+                  title: '打开 Prompt Manager',
+                  subtitle: promptBlocks.isEmpty
+                      ? '可手动添加，也会从 Chat Completion 预设保留'
+                      : '${promptBlocks.where((block) => block.enabled).length} 个启用 · 共 ${promptBlocks.length} 个',
+                  onTap: () => context.push('/prompt-blocks'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
           DtSurface(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -305,7 +354,7 @@ class _PromptRulesPageState extends ConsumerState<PromptRulesPage> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '支持 SillyTavern Chat Completion 预设；会映射主提示词、辅助提示词、后置指令和常用生成参数，并合并本地正则规则。',
+                  '支持 SillyTavern Chat Completion 预设；保留主提示词、命名提示词条目、后置指令、常用生成参数，并合并本地正则规则。',
                   style: TextStyle(fontSize: 12, height: 1.6),
                 ),
                 const SizedBox(height: 10),

@@ -1,6 +1,22 @@
 part of 'app_controller.dart';
 
 extension PromptManagement on AppController {
+  List<String> _validatePromptBlocks(PromptConfig config) {
+    if (config.blocks.length > 100) return ['Prompt Manager 最多支持 100 个提示词块'];
+    final seen = <String>{};
+    for (final block in config.blocks) {
+      if (block.id.trim().isEmpty || !seen.add(block.id)) {
+        return ['Prompt Manager 包含重复或无效的提示词标识'];
+      }
+      if (block.name.trim().isEmpty) return ['提示词块名称不能为空'];
+      if (block.name.runes.length > 120) return ['提示词块名称不能超过 120 个字符'];
+      if (block.content.runes.length > 20000) {
+        return ['单个提示词块不能超过 20000 个字符'];
+      }
+    }
+    return const [];
+  }
+
   List<RegexRule> _mergePresetRules(
     Object? rawRules,
     List<RegexRule> existing,
@@ -38,6 +54,8 @@ extension PromptManagement on AppController {
   Future<void> savePromptConfig(PromptConfig config) async {
     final errors = RegexTransformer.validateAll(config);
     if (errors.isNotEmpty) throw FormatException(errors.first);
+    final blockErrors = _validatePromptBlocks(config);
+    if (blockErrors.isNotEmpty) throw FormatException(blockErrors.first);
     final before = _snapshot.data;
     if (_snapshot.generatingThreadId != null ||
         _activeGenerationAbort != null) {
@@ -145,9 +163,28 @@ extension PromptManagement on AppController {
           'system_prompt': true,
           'marker': false,
         },
+        for (var index = 0; index < prompts.blocks.length; index++)
+          {
+            'identifier': 'app_prompt_$index',
+            'name': prompts.blocks[index].name,
+            'role': prompts.blocks[index].role.name,
+            'content': prompts.blocks[index].content,
+            'system_prompt':
+                prompts.blocks[index].position ==
+                PromptInjectionPosition.beforeCharacter,
+            'marker': false,
+            'enabled': prompts.blocks[index].enabled,
+            'injection_position':
+                prompts.blocks[index].position ==
+                    PromptInjectionPosition.atDepth
+                ? 1
+                : 0,
+            'injection_depth': prompts.blocks[index].depth,
+          },
       ],
       'systemPrefix': prompts.systemPrefix,
       'postHistoryInstructions': prompts.postHistoryInstructions,
+      'blocks': prompts.blocks.map((block) => block.toJson()).toList(),
       'rules': [
         for (final rule in prompts.rules)
           {
@@ -213,11 +250,20 @@ extension PromptManagement on AppController {
     final postHistory = map['postHistoryInstructions'] is String
         ? map['postHistoryInstructions'] as String
         : '';
+    final blocks = <PromptBlock>[];
+    if (map['blocks'] is List) {
+      for (final entry in (map['blocks'] as List).whereType<Map>().take(100)) {
+        final block = PromptBlock.fromJson(Map<String, dynamic>.from(entry));
+        if (block.name.trim().isEmpty || block.content.trim().isEmpty) continue;
+        blocks.add(block);
+      }
+    }
     final mergedRules = _mergePresetRules(map['rules'], existing.rules);
     final config = PromptConfig(
       systemPrefix: systemPrefix,
       postHistoryInstructions: postHistory,
       rules: mergedRules,
+      blocks: blocks,
     );
     await savePromptConfig(config);
   }

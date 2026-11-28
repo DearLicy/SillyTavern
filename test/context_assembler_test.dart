@@ -88,4 +88,74 @@ void main() {
     );
     expect(result.map((item) => item.id), ['old']);
   });
+
+  test('prompt manager blocks honor position, role and enabled state', () {
+    final seed = buildSeedData();
+    final data = seed.copyWith(
+      settings: seed.settings.copyWith(
+        prompts: const PromptConfig(
+          blocks: [
+            PromptBlock(
+              id: 'before-character',
+              name: '角色前规则',
+              content: '这是角色卡前规则。',
+              position: PromptInjectionPosition.beforeCharacter,
+              order: 1,
+            ),
+            PromptBlock(
+              id: 'after-character',
+              name: '角色后规则',
+              content: '这是角色卡后规则。',
+              position: PromptInjectionPosition.afterCharacter,
+              order: 2,
+            ),
+            PromptBlock(
+              id: 'history-user',
+              name: '历史前用户提示',
+              content: '这是历史前的用户提示。',
+              role: PromptBlockRole.user,
+              position: PromptInjectionPosition.beforeHistory,
+              order: 3,
+            ),
+            PromptBlock(
+              id: 'depth-assistant',
+              name: '深度助手提示',
+              content: '这是当前消息前的助手提示。',
+              role: PromptBlockRole.assistant,
+              position: PromptInjectionPosition.atDepth,
+              depth: 0,
+              order: 4,
+            ),
+            PromptBlock(
+              id: 'disabled',
+              name: '已停用',
+              content: '绝不能出现。',
+              enabled: false,
+              order: 5,
+            ),
+          ],
+        ),
+      ),
+    );
+    final thread = data.threads.firstWhere((item) => item.id == 'thread_gu');
+    final bundle = assembler.assemble(
+      data: data,
+      thread: thread,
+      userInput: '继续',
+    );
+
+    final system = bundle.messages.first.content;
+    expect(system, contains('这是角色卡前规则。'));
+    expect(system, contains('这是角色卡后规则。'));
+    expect(system, isNot(contains('绝不能出现。')));
+    expect(system.indexOf('平台安全约束'), lessThan(system.indexOf('这是角色卡前规则。')));
+    expect(bundle.messages[1].role, 'user');
+    expect(bundle.messages[1].content, contains('这是历史前的用户提示。'));
+    expect(bundle.messages[bundle.messages.length - 2].role, 'assistant');
+    expect(
+      bundle.messages[bundle.messages.length - 2].content,
+      contains('这是当前消息前的助手提示。'),
+    );
+    expect(bundle.messages.last.content, '继续');
+  });
 }

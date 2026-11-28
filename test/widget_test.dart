@@ -217,6 +217,52 @@ void main() {
     container.dispose();
   });
 
+  testWidgets('prompt manager is a full-screen editable mobile page', (
+    tester,
+  ) async {
+    final fixture = buildSeedData();
+    final prompts = fixture.settings.prompts.copyWith(
+      blocks: const [
+        PromptBlock(
+          id: 'mobile-rule',
+          name: '移动端短句规则',
+          content: '每次最多两句。',
+          role: PromptBlockRole.assistant,
+          position: PromptInjectionPosition.atDepth,
+          depth: 1,
+        ),
+      ],
+    );
+    final container = await start(
+      tester,
+      fixture.copyWith(
+        settings: fixture.settings.copyWith(
+          ageConfirmed: true,
+          prompts: prompts,
+        ),
+      ),
+    );
+    container.read(appRouterProvider).go('/prompt-blocks');
+    await tester.pumpAndSettle();
+
+    expect(find.text('Prompt Manager'), findsOneWidget);
+    expect(find.text('移动端短句规则'), findsOneWidget);
+    expect(find.textContaining('Assistant · 历史深度 1'), findsOneWidget);
+    expect(find.byKey(const ValueKey('root-bottom-bar')), findsNothing);
+
+    container.read(appRouterProvider).go('/prompts');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('保存提示词规则'));
+    await tester.pumpAndSettle();
+    expect(
+      container.read(appControllerProvider).data.settings.prompts.blocks,
+      hasLength(1),
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    container.dispose();
+  });
+
   testWidgets(
     'world books and character cards are reachable full-screen pages',
     (tester) async {

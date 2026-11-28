@@ -38,6 +38,7 @@ Flutter 负责 Android、iOS、Web 的主 UI 与产品交互。Kotlin/Swift 承�
 - `Message`
 - `MemoryItem`
 - `WorldBook` / `WorldInfoEntry`
+- `PromptConfig` / `PromptBlock`
 - `ProviderConfig`
 - `AppData`
 
@@ -49,7 +50,7 @@ Flutter 负责 Android、iOS、Web 的主 UI 与产品交互。Kotlin/Swift 承�
 
 1. 不可覆盖的平台安全约束；
 2. 用户本轮明确纠正与停止要求；
-3. 用户人设和全局系统提示词；
+3. 用户人设、全局系统提示词与 Prompt Manager 条目；
 4. Character Card 字段；
 5. 世界书、作者注记与 post-history instructions；
 6. 固定与检索记忆；
@@ -57,7 +58,7 @@ Flutter 负责 Android、iOS、Web 的主 UI 与产品交互。Kotlin/Swift 承�
 8. 最近消息；
 9. 本轮用户输入。
 
-任何角色卡、世界书、preset 或记忆都不能覆盖第 1、2 层。Character Card 的 `system_prompt` 和 `post_history_instructions` 被保留为高优先级风格约束，但不是平台安全约束的替代品。
+Prompt Manager 支持命名提示词块、System/User/Assistant 角色、角色卡前后、历史前和消息深度注入。条目只保存声明式文本，不执行脚本。任何角色卡、世界书、preset、提示词块或记忆都不能覆盖第 1、2 层。Character Card 的 `system_prompt` 和 `post_history_instructions` 被保留为高优先级风格约束，但不是平台安全约束的替代品。
 
 ## 记忆检索
 
