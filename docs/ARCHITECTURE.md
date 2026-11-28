@@ -115,7 +115,15 @@ SQLite 保存 FTS5 索引。每个 `ChatThread` 另存 `contextMemo`、`summariz
 - 空内容和协议残留不进入 UI；
 - 键盘输入区使用安全区和 `resizeToAvoidBottomInset`；
 - 根页面没有常驻底栏，减少小屏永久占位；
+- Web 首屏只加载按界面文案裁剪的 WOFF2 字体，生僻字由运行时字体回退处理；
 - 网络请求异步，不阻塞主线程持久化。
+
+Web 字体可按以下方式重建：
+
+```bash
+pip install 'fonttools[woff]'
+tool/update_web_font.sh /path/to/NotoSansSC-VF.ttf
+```
 
 ## 原生桥
 

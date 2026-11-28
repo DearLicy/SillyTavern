@@ -148,6 +148,8 @@ flutter build ios --release --no-codesign
 
 所有临时文件、签名材料和调试输出放在仓库内 `.tmp/`，不使用系统 `/tmp`。GitHub Release 提供 Android APK、unsigned IPA、校验和与安装说明；完整流程见 [docs/RELEASE.md](docs/RELEASE.md)。
 
+Web 界面使用按应用文案裁剪的 WOFF2 字体。新增中文界面文案后，可用 `tool/update_web_font.sh /path/to/NotoSansSC-VF.ttf` 重新生成字库；完整字体仍由 Flutter Web 在遇到字库外字符时回退加载。
+
 ## 路线图
 
 | 版本 | 重点 |

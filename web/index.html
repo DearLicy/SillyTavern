@@ -30,13 +30,15 @@
 
   <style>
     @font-face {
-      font-family: 'SillyTavernWebCJK';
-      src: url('fonts/NotoSansSC-VF.ttf') format('truetype');
+      font-family: 'SillyTavernUI';
+      src: url('fonts/SillyTavernUI.woff2') format('woff2');
       font-weight: 100 900;
       font-display: swap;
     }
-    body { font-family: 'SillyTavernWebCJK', sans-serif; }
+    body { font-family: 'SillyTavernUI', sans-serif; }
   </style>
+
+  <link rel="preload" href="fonts/SillyTavernUI.woff2" as="font" type="font/woff2" crossorigin>
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
@@ -45,6 +47,11 @@
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
+  <script>
+    if ('fonts' in document) {
+      document.fonts.load('600 16px SillyTavernUI').catch(function () {});
+    }
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
